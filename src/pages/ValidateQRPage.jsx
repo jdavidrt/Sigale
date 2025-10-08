@@ -1,18 +1,20 @@
 import { QRScanner } from "../components/Scanner/QRScanner";
 import { TicketList } from "../components/Tickets/TicketList";
 import { useState } from "react";
+import { useLanguage } from "../context/LanguageContext";
 
 export const ValidateQRPage = () => {
   const [activeTab, setActiveTab] = useState("scanner");
+  const { t } = useLanguage();
 
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-3">
-          🎫 Check-In Validation
+          🎫 {t("checkInValidation")}
         </h1>
         <p className="text-lg text-gray-600">
-          Scan QR codes to validate and check in attendees
+          {t("scanQRValidate")}
         </p>
       </div>
 
@@ -27,7 +29,7 @@ export const ValidateQRPage = () => {
                 : "text-gray-700 hover:bg-gray-100"
             }`}
           >
-            📷 Scanner
+            📷 {t("scanner")}
           </button>
           <button
             onClick={() => setActiveTab("tickets")}
@@ -37,7 +39,7 @@ export const ValidateQRPage = () => {
                 : "text-gray-700 hover:bg-gray-100"
             }`}
           >
-            📋 Ticket List
+            📋 {t("ticketList")}
           </button>
         </div>
       </div>

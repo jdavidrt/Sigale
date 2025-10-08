@@ -1,0 +1,298 @@
+// translations.js - All app translations in Spanish and English
+
+export const translations = {
+  es: {
+    // Navbar
+    home: "Inicio",
+    sell: "Vender",
+    validate: "Validar",
+    dashboard: "Panel",
+
+    // Common
+    save: "Guardar",
+    cancel: "Cancelar",
+    delete: "Eliminar",
+    edit: "Editar",
+    create: "Crear",
+    update: "Actualizar",
+    search: "Buscar",
+    close: "Cerrar",
+    loading: "Cargando",
+    error: "Error",
+    success: "Éxito",
+    required: "Requerido",
+    optional: "Opcional",
+
+    // Event Creation
+    createNewEvent: "Crear Nuevo Evento",
+    setupEventDetails: "Configure los detalles de su evento y tipos de boletas",
+    sellTicketsTitle: "Vender Boletas",
+    manageTicketSales: "Crear y administrar ventas de boletas para su evento",
+    validateTicketsTitle: "Validar Boletas",
+    scanValidateTickets: "Escanear y validar boletas en el evento",
+    editEventTitle: "Editar Evento",
+    updateEventDetails: "Actualizar los detalles de su evento y tipos de boletas",
+    checkInValidation: "Validación de Registro",
+    scanQRValidate: "Escanear códigos QR para validar y registrar asistentes",
+    scanner: "Escáner",
+    ticketList: "Lista de Boletas",
+    eventDetails: "Detalles del Evento",
+    eventName: "Nombre del Evento",
+    date: "Fecha",
+    venue: "Lugar",
+    venueName: "Nombre del Lugar",
+    address: "Dirección",
+    fullAddress: "Dirección Completa",
+    entranceTime: "Hora de Entrada",
+    colorTheme: "Tema de Color",
+    baseColor: "Color Base",
+    baseColorDesc: "Usado para la barra de navegación",
+    accentColor: "Color de Acento",
+    accentColorDesc: "Usado para resaltes y acentos",
+    ticketTypes: "Tipos de Boletas",
+    ticketTypesDesc: "Se requiere al menos un tipo de boleta",
+    typeName: "Nombre del Tipo",
+    price: "Precio",
+    addType: "Agregar Tipo",
+    removeType: "Eliminar",
+    addNewTicketType: "Agregar Nuevo Tipo de Boleta",
+    createEvent: "Crear Evento",
+    updateEvent: "Actualizar Evento",
+
+    // Ticket Form
+    newTicketSale: "Nueva Venta de Boleta",
+    buyerInfo: "Información del Comprador",
+    buyerInfoDesc: "Complete la información del comprador para generar una boleta",
+    buyerName: "Nombre del Comprador",
+    idNumber: "Número de Identificación",
+    phoneNumber: "Número de Teléfono",
+    ticketType: "Tipo de Boleta",
+    selectTicketType: "Seleccione un tipo de boleta",
+    createTicket: "Crear Boleta",
+    creatingTicket: "Creando Boleta...",
+
+    // Ticket Display
+    ticketCreated: "¡Boleta Creada!",
+    ticketFor: "Boleta para",
+    ticketId: "ID de Boleta",
+    validationHash: "Hash de Validación",
+    purchaseDate: "Fecha de Compra",
+    qrCode: "Código QR",
+    copyAsSVG: "Copiar como SVG",
+    copyAsPNG: "Copiar como PNG",
+    share: "Compartir",
+    createAnother: "Crear Otra Boleta",
+    copiedToClipboard: "Copiado al portapapeles",
+    shareTicket: "Compartir Boleta",
+
+    // QR Scanner
+    scanQR: "Escanear Código QR",
+    scannerLoading: "Cargando escáner...",
+    scannerError: "Error al cargar el escáner",
+    pointCamera: "Apunte la cámara al código QR",
+
+    // Validation Results
+    validTicket: "¡Boleta Válida!",
+    invalidTicket: "Boleta Inválida",
+    duplicateCheckIn: "Check-in Duplicado",
+    ticketNotFound: "Boleta No Encontrada",
+    alreadyCheckedIn: "Ya registrado el",
+    checkedInAt: "Registrado a las",
+    scanAnother: "Escanear Otra",
+
+    // Ticket List
+    allTickets: "Todas las Boletas",
+    searchTickets: "Buscar boletas por nombre, ID o teléfono",
+    noTickets: "No hay boletas",
+    noTicketsDesc: "Aún no se han creado boletas",
+    ticketsFound: "boletas encontradas",
+    checkedIn: "Registrado",
+    notCheckedIn: "No Registrado",
+
+    // Home Page
+    welcome: "Bienvenido a",
+    noEvent: "No hay eventos configurados",
+    noEventDesc: "Cree un evento para comenzar a vender boletas",
+    setupEvent: "Configurar Evento",
+    eventInfo: "Información del Evento",
+    editEvent: "Editar Evento",
+
+    // Dashboard (placeholder for Stage 3)
+    salesDashboard: "Panel de Ventas",
+    checkInDashboard: "Panel de Registro",
+    totalSold: "Total Vendidas",
+    totalRevenue: "Ingresos Totales",
+    totalCheckedIn: "Total Registrados",
+    attendanceRate: "Tasa de Asistencia",
+
+    // Placeholders
+    eventNamePlaceholder: "Festival de Rock de Verano 2025",
+    venuePlaceholder: "Estadio Nacional",
+    addressPlaceholder: "Calle 123, Ciudad, Estado, Código Postal",
+    enterFullName: "Ingrese nombre completo",
+    enterIdNumber: "Ingrese número de identificación",
+    phoneNumberPlaceholder: "+57 300 1234567",
+    ticketTypeExample: "ej., VIP, General",
+
+    // Alerts
+    atLeastOneTicketType: "Por favor agregue al menos un tipo de boleta",
+    ticketTypeExists: "Este tipo de boleta ya existe",
+    enterTicketTypeName: "Por favor ingrese un nombre de tipo de boleta",
+    ticketTypeNameEmpty: "El nombre del tipo de boleta no puede estar vacío",
+    ticketTypeNameExists: "Ya existe un tipo de boleta con este nombre",
+    mustHaveOneTicketType: "Debe tener al menos un tipo de boleta",
+    failedToCreateTicket: "Error al crear la boleta. Por favor intente de nuevo.",
+  },
+
+  en: {
+    // Navbar
+    home: "Home",
+    sell: "Sell",
+    validate: "Validate",
+    dashboard: "Dashboard",
+
+    // Common
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    edit: "Edit",
+    create: "Create",
+    update: "Update",
+    search: "Search",
+    close: "Close",
+    loading: "Loading",
+    error: "Error",
+    success: "Success",
+    required: "Required",
+    optional: "Optional",
+
+    // Event Creation
+    createNewEvent: "Create New Event",
+    setupEventDetails: "Set up your event details and ticket types",
+    sellTicketsTitle: "Sell Tickets",
+    manageTicketSales: "Create and manage ticket sales for your event",
+    validateTicketsTitle: "Validate Tickets",
+    scanValidateTickets: "Scan and validate tickets at the event",
+    editEventTitle: "Edit Event",
+    updateEventDetails: "Update your event details and ticket types",
+    checkInValidation: "Check-In Validation",
+    scanQRValidate: "Scan QR codes to validate and check in attendees",
+    scanner: "Scanner",
+    ticketList: "Ticket List",
+    eventDetails: "Event Details",
+    eventName: "Event Name",
+    date: "Date",
+    venue: "Venue",
+    venueName: "Venue Name",
+    address: "Address",
+    fullAddress: "Full Address",
+    entranceTime: "Entrance Time",
+    colorTheme: "Color Theme",
+    baseColor: "Base Color",
+    baseColorDesc: "Used for navigation bar",
+    accentColor: "Accent Color",
+    accentColorDesc: "Used for highlights & accents",
+    ticketTypes: "Ticket Types",
+    ticketTypesDesc: "At least one ticket type is required",
+    typeName: "Type Name",
+    price: "Price",
+    addType: "Add Type",
+    removeType: "Remove",
+    addNewTicketType: "Add New Ticket Type",
+    createEvent: "Create Event",
+    updateEvent: "Update Event",
+
+    // Ticket Form
+    newTicketSale: "New Ticket Sale",
+    buyerInfo: "Buyer Information",
+    buyerInfoDesc: "Fill in the buyer information to generate a ticket",
+    buyerName: "Buyer Name",
+    idNumber: "ID Number",
+    phoneNumber: "Phone Number",
+    ticketType: "Ticket Type",
+    selectTicketType: "Select a ticket type",
+    createTicket: "Create Ticket",
+    creatingTicket: "Creating Ticket...",
+
+    // Ticket Display
+    ticketCreated: "Ticket Created!",
+    ticketFor: "Ticket for",
+    ticketId: "Ticket ID",
+    validationHash: "Validation Hash",
+    purchaseDate: "Purchase Date",
+    qrCode: "QR Code",
+    copyAsSVG: "Copy as SVG",
+    copyAsPNG: "Copy as PNG",
+    share: "Share",
+    createAnother: "Create Another Ticket",
+    copiedToClipboard: "Copied to clipboard",
+    shareTicket: "Share Ticket",
+
+    // QR Scanner
+    scanQR: "Scan QR Code",
+    scannerLoading: "Loading scanner...",
+    scannerError: "Error loading scanner",
+    pointCamera: "Point camera at QR code",
+
+    // Validation Results
+    validTicket: "Valid Ticket!",
+    invalidTicket: "Invalid Ticket",
+    duplicateCheckIn: "Duplicate Check-In",
+    ticketNotFound: "Ticket Not Found",
+    alreadyCheckedIn: "Already checked in on",
+    checkedInAt: "Checked in at",
+    scanAnother: "Scan Another",
+
+    // Ticket List
+    allTickets: "All Tickets",
+    searchTickets: "Search tickets by name, ID, or phone",
+    noTickets: "No tickets",
+    noTicketsDesc: "No tickets have been created yet",
+    ticketsFound: "tickets found",
+    checkedIn: "Checked In",
+    notCheckedIn: "Not Checked In",
+
+    // Home Page
+    welcome: "Welcome to",
+    noEvent: "No event configured",
+    noEventDesc: "Create an event to start selling tickets",
+    setupEvent: "Setup Event",
+    eventInfo: "Event Information",
+    editEvent: "Edit Event",
+
+    // Dashboard (placeholder for Stage 3)
+    salesDashboard: "Sales Dashboard",
+    checkInDashboard: "Check-In Dashboard",
+    totalSold: "Total Sold",
+    totalRevenue: "Total Revenue",
+    totalCheckedIn: "Total Checked In",
+    attendanceRate: "Attendance Rate",
+
+    // Placeholders
+    eventNamePlaceholder: "Summer Rock Festival 2025",
+    venuePlaceholder: "National Stadium",
+    addressPlaceholder: "123 Main Street, City, State, ZIP",
+    enterFullName: "Enter full name",
+    enterIdNumber: "Enter ID number",
+    phoneNumberPlaceholder: "+1 555 123 4567",
+    ticketTypeExample: "e.g., VIP, General",
+
+    // Alerts
+    atLeastOneTicketType: "Please add at least one ticket type",
+    ticketTypeExists: "This ticket type already exists",
+    enterTicketTypeName: "Please enter a ticket type name",
+    ticketTypeNameEmpty: "Ticket type name cannot be empty",
+    ticketTypeNameExists: "A ticket type with this name already exists",
+    mustHaveOneTicketType: "You must have at least one ticket type",
+    failedToCreateTicket: "Failed to create ticket. Please try again.",
+  }
+};
+
+// Detect browser language
+export const detectBrowserLanguage = () => {
+  const browserLang = navigator.language || navigator.userLanguage;
+  // Extract the language code (e.g., 'es-ES' -> 'es', 'en-US' -> 'en')
+  const langCode = browserLang.split('-')[0].toLowerCase();
+  // Default to Spanish if language is Spanish, otherwise English
+  return langCode === 'es' ? 'es' : 'en';
+};

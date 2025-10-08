@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useEvent } from "../context/EventContext";
+import { useLanguage } from "../context/LanguageContext";
 
 export const Home = () => {
   const navigate = useNavigate();
   const { event, hasEvent } = useEvent();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!hasEvent()) navigate("/create-event");
@@ -41,7 +43,7 @@ export const Home = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">⏰</span>
-                  <p className="font-semibold">Doors open at {event.entranceTime}</p>
+                  <p className="font-semibold">{event.entranceTime}</p>
                 </div>
               </div>
             </div>
@@ -51,7 +53,7 @@ export const Home = () => {
               style={{ color: event.colors.base }}
             >
               <span>✏️</span>
-              <span>Edit Event</span>
+              <span>{t("editEvent")}</span>
             </Link>
           </div>
         </div>
@@ -62,7 +64,7 @@ export const Home = () => {
         <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
           <div className="flex items-center gap-3 mb-6">
             <span className="text-3xl">🎫</span>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Ticket Types</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800">{t("ticketTypes")}</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(event.ticketTypes).map(([type, price]) => (
@@ -96,7 +98,7 @@ export const Home = () => {
       <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl shadow-xl p-6 md:p-8">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
           <span>⚡</span>
-          Quick Actions
+          {t("welcome")} Sígale
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Link
@@ -104,24 +106,24 @@ export const Home = () => {
             className="group bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-green-500 transform hover:scale-105"
           >
             <div className="text-4xl mb-3">🎫</div>
-            <h3 className="font-bold text-lg text-gray-800 mb-2">Sell Tickets</h3>
-            <p className="text-sm text-gray-600">Register new ticket sales</p>
+            <h3 className="font-bold text-lg text-gray-800 mb-2">{t("sell")} {t("ticketTypes")}</h3>
+            <p className="text-sm text-gray-600">{t("newTicketSale")}</p>
           </Link>
           <Link
             to="/validate-qr"
             className="group bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-blue-500 transform hover:scale-105"
           >
             <div className="text-4xl mb-3">✅</div>
-            <h3 className="font-bold text-lg text-gray-800 mb-2">Validate QR</h3>
-            <p className="text-sm text-gray-600">Scan and validate tickets</p>
+            <h3 className="font-bold text-lg text-gray-800 mb-2">{t("validate")} QR</h3>
+            <p className="text-sm text-gray-600">{t("scanQR")}</p>
           </Link>
           <Link
             to="/dashboard"
             className="group bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-purple-500 transform hover:scale-105"
           >
             <div className="text-4xl mb-3">📊</div>
-            <h3 className="font-bold text-lg text-gray-800 mb-2">Dashboard</h3>
-            <p className="text-sm text-gray-600">View sales and statistics</p>
+            <h3 className="font-bold text-lg text-gray-800 mb-2">{t("dashboard")}</h3>
+            <p className="text-sm text-gray-600">{t("salesDashboard")}</p>
           </Link>
         </div>
       </div>

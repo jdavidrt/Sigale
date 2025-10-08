@@ -6,15 +6,10 @@
  */
 export const generateQRData = (ticket, event) => {
   return JSON.stringify({
-    ticketId: ticket.ticketId,
+    id: ticket.ticketId,
     hash: ticket.validationHash,
     buyer: ticket.buyerName,
-    phone: ticket.buyerPhone,
     type: ticket.ticketType,
-    event: event.name,
-    date: event.date,
-    venue: event.venue,
-    time: event.entranceTime,
   });
 };
 
@@ -28,7 +23,7 @@ export const parseQRData = (qrString) => {
     const data = JSON.parse(qrString);
 
     // Validate required fields
-    if (!data.ticketId || !data.hash) {
+    if (!data.id || !data.hash) {
       return null;
     }
 

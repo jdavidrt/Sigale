@@ -28,6 +28,8 @@
 ### ✅ STAGE 2 - COMPLETE (Tickets & QR)
 **Implemented Files:**
 - ✅ `src/context/TicketContext.jsx` - Ticket state management
+- ✅ `src/context/LanguageContext.jsx` - i18n state management (Spanish/English)
+- ✅ `src/utils/translations.js` - Translation dictionary (ES/EN)
 - ✅ `src/utils/qrGenerator.js` - QR data encoding/parsing
 - ✅ `src/utils/qrCopy.js` - SVG/PNG copy & Web Share API
 - ✅ `src/components/Tickets/QRDisplay.jsx` - QR display with copy/share
@@ -40,6 +42,7 @@
 - ✅ `src/pages/ValidateQRPage.jsx` - QR validation page (Scanner + List tabs)
 
 **Working Features:**
+- ✅ **Bilingual Support (Spanish/English)** - Auto-detects browser language, manual toggle in navbar
 - ✅ Ticket creation with auto-generated ID (TKT-XXX-timestamp format)
 - ✅ 10-character validation hash using Web Crypto API
 - ✅ Dynamic QR code generation using qrcode.react
@@ -53,6 +56,7 @@
 - ✅ Ticket search by name, ID, phone, ticket number
 - ✅ Expandable ticket cards with QR display
 - ✅ Check-in status badges and timestamps
+- ✅ All UI text, alerts, and placeholders fully translated
 
 ### ⏳ STAGE 3 - NOT IMPLEMENTED (Dashboards & Export/Import)
 **Missing Files:**
@@ -69,11 +73,21 @@
 ## Project Overview
 
 **Name**: Sígale
-**Type**: Static React Web Application
+**Type**: Mobile-First Static React Web Application
 **Purpose**: Concert ticket management system with QR generation, validation, and analytics
 **Tech Stack**: React 19 + Vite + Tailwind CSS v4 + localStorage
+**Design Philosophy**: Mobile-first, touch-optimized, offline-capable
 
 ## Core Architecture Principles
+
+### 0. Mobile-First Design (CRITICAL)
+- **ALL components designed for mobile screens first** (320px minimum width)
+- **Touch-optimized UI** - Minimum 44x44px tap targets (Apple HIG standard)
+- **Responsive breakpoints**: Mobile (default) → Tablet (md:768px) → Desktop (lg:1024px)
+- **Progressive enhancement** - Start with mobile, add features for larger screens
+- **Camera integration** - Native QR scanning optimized for mobile devices
+- **Share API** - Native mobile sharing for QR codes (WhatsApp, Email, etc.)
+- **Offline-first** - Works without internet on mobile devices
 
 ### 1. Data Storage Strategy
 - **ALL data lives in browser localStorage as JSON**
@@ -84,9 +98,10 @@
 
 ### 2. React State Management
 - **Context API** for global state (no Redux/Zustand needed)
-- **Two main contexts**:
+- **Three main contexts**:
   - `EventContext`: Event details, colors, ticket types
   - `TicketContext`: Tickets, check-ins, statistics
+  - `LanguageContext`: i18n state (Spanish/English), auto-detection, persistence
 - **Custom hooks** for localStorage sync, QR generation, validation
 
 ### 3. Key Technical Decisions
@@ -301,6 +316,23 @@ Sígale/
 }
 ```
 
+### LanguageContext
+```javascript
+{
+  language: "es" | "en",           // Current language
+  t: (key: string) => string,      // Translation function
+  toggleLanguage: () => void,      // Switch between ES/EN
+  changeLanguage: (lang) => void   // Set specific language
+}
+```
+
+**How it works:**
+- Auto-detects browser language on first load (`navigator.language`)
+- Defaults to Spanish for 'es-*' locales, English for all others
+- Saves preference to `localStorage: sigale-language`
+- Updates HTML `lang` attribute for accessibility
+- Provides `t()` function for translations throughout the app
+
 ---
 
 ## Key Utilities
@@ -356,6 +388,42 @@ export const useLocalStorage = (initialValue) => {
   return [data, setData];
 };
 ```
+
+### `utils/translations.js`
+```javascript
+export const translations = {
+  es: {
+    // All Spanish translations
+    home: "Inicio",
+    sell: "Vender",
+    validate: "Validar",
+    createNewEvent: "Crear Nuevo Evento",
+    // ... 100+ translation keys
+  },
+  en: {
+    // All English translations
+    home: "Home",
+    sell: "Sell",
+    validate: "Validate",
+    createNewEvent: "Create New Event",
+    // ... 100+ translation keys
+  }
+};
+
+export const detectBrowserLanguage = () => {
+  const browserLang = navigator.language || navigator.userLanguage;
+  const langCode = browserLang.split('-')[0].toLowerCase();
+  return langCode === 'es' ? 'es' : 'en';
+};
+```
+
+**Translation Coverage:**
+- ✅ All navbar links and buttons
+- ✅ All form labels and placeholders
+- ✅ All page titles and descriptions
+- ✅ All alert messages and validations
+- ✅ All button text and CTAs
+- ✅ Tab labels, modal text, success/error messages
 
 ---
 
@@ -414,7 +482,7 @@ export const useLocalStorage = (initialValue) => {
 - Play error sound/vibration for duplicate
 - Display buyer details to verify identity
 
-### 3. Tailwind CSS Custom Styles - IMPORTANT
+### 3. Tailwind CSS Custom Styles - IMPORTANT (Mobile-First)
 **CRITICAL**: When adding custom CSS in `src/index.css`, NEVER use `@apply` directive with the new Tailwind CSS v4+. This will cause errors like "Cannot apply unknown utility class".
 
 **CORRECT WAY** to add custom styles in `index.css`:
@@ -435,11 +503,19 @@ export const useLocalStorage = (initialValue) => {
 body {
   color: #111827; /* Use hex colors, NOT @apply text-gray-900 */
   letter-spacing: -0.01em;
+  /* Mobile-friendly base font size */
+  font-size: 16px; /* Never less than 16px to prevent zoom on iOS */
 }
 
 h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
   font-weight: 700;
+}
+
+/* Touch-friendly input styling */
+input, select, textarea, button {
+  font-size: 16px; /* Prevents iOS zoom on focus */
+  min-height: 44px; /* Apple HIG minimum tap target */
 }
 ```
 
@@ -453,11 +529,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 ```
 
-**Typography Stack**:
-- Primary font: Inter (from Google Fonts)
+**Typography Stack** (Mobile-Optimized):
+- Primary font: Inter (from Google Fonts) - excellent screen readability
 - Fallback: System fonts for performance
-- Font smoothing: antialiased for crisp rendering
+- Font smoothing: antialiased for crisp rendering on mobile screens
 - Letter spacing: -0.01em (body), -0.02em (headings) for modern look
+- Base size: 16px (prevents iOS Safari zoom on input focus)
+- Line height: 1.5 minimum for touch-friendly text selection
 
 ### 4. Navbar Dynamic Theming
 - Read `event.colors.base` for navbar background
@@ -575,6 +653,42 @@ src/pages/ValidateQRPage.jsx
 
 ## Code Style Guidelines
 
+### 0. Mobile-First Tailwind Classes (CRITICAL)
+**ALWAYS write Tailwind classes mobile-first, then add responsive modifiers:**
+
+```javascript
+// ✅ CORRECT: Mobile-first approach
+<button className="px-2 py-2 text-xs md:px-4 md:py-3 md:text-base lg:px-6 lg:py-4 lg:text-lg">
+  Click Me
+</button>
+
+// ❌ WRONG: Desktop-first or missing mobile styles
+<button className="lg:px-6 lg:py-4 lg:text-lg">
+  Click Me
+</button>
+```
+
+**Common Mobile-First Patterns:**
+```javascript
+// Grid layouts
+<div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5">
+
+// Flex direction
+<div className="flex flex-col gap-2 md:flex-row md:gap-4">
+
+// Text sizes
+<h1 className="text-2xl font-bold md:text-3xl lg:text-4xl">
+
+// Padding/Spacing
+<div className="p-4 md:p-6 lg:p-8">
+
+// Hidden on mobile
+<span className="hidden md:inline">Desktop Only Text</span>
+
+// Truncate on mobile
+<span className="truncate max-w-[150px] md:max-w-none">Long Text</span>
+```
+
 ### 1. Component Structure
 ```javascript
 // Imports
@@ -597,10 +711,10 @@ export const ComponentName = ({ prop1, prop2 }) => {
     // side effects
   }, [dependencies]);
 
-  // Render
+  // Render - ALWAYS mobile-first classes
   return (
-    <div className="tailwind-classes">
-      {/* JSX */}
+    <div className="p-4 md:p-6 lg:p-8">
+      {/* JSX with mobile-first responsive classes */}
     </div>
   );
 };
@@ -628,32 +742,40 @@ export const ComponentName = ({ prop1, prop2 }) => {
 
 ## Testing Checklist (Per Stage)
 
-### Stage 1
+### Stage 1 (Mobile-First)
 - [ ] Project builds without errors
 - [ ] Can create event with all fields
 - [ ] Event persists in localStorage
 - [ ] Navbar displays event colors
 - [ ] Home redirects when no event
 - [ ] Color pickers work
+- [ ] **Mobile**: All forms work on 320px width
+- [ ] **Mobile**: Touch targets minimum 44x44px
+- [ ] **Mobile**: Text readable at base size (16px)
 
-### Stage 2
+### Stage 2 (Mobile-First)
 - [ ] Can create tickets
 - [ ] Hash generates (10 chars)
 - [ ] QR displays after creation
 - [ ] Copy SVG/PNG works
-- [ ] Share API works
-- [ ] Scanner opens camera
+- [ ] Share API works (mobile native sharing)
+- [ ] Scanner opens camera (mobile camera access)
 - [ ] Valid tickets check in
 - [ ] Duplicate scan shows warning
+- [ ] **Mobile**: Ticket forms work on phones
+- [ ] **Mobile**: QR scanning works on mobile camera
+- [ ] **Mobile**: Ticket cards scroll and tap well
 
-### Stage 3
+### Stage 3 (Mobile-First)
 - [ ] Sales dashboard shows stats
 - [ ] Check-in dashboard accurate
 - [ ] Export works (copy/download)
 - [ ] Import validates JSON
 - [ ] Import replaces data
 - [ ] Navbar highlights active route
-- [ ] Mobile responsive
+- [ ] **Mobile**: Dashboard cards stack vertically on mobile
+- [ ] **Mobile**: Statistics readable on small screens
+- [ ] **Mobile**: All interactions touch-friendly
 - [ ] Build succeeds
 
 ---

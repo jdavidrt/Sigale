@@ -20,19 +20,22 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
   const copyAsPNG = useCallback(async () => {
     if (qrRef.current) {
       const svg = qrRef.current.querySelector("svg");
-      const success = await copyPNGToClipboard(svg);
+      const success = await copyPNGToClipboard(svg, ticket, event);
       setCopyStatus(success ? "✓ PNG copied!" : "✗ Failed to copy");
       setTimeout(() => setCopyStatus(""), 2000);
     }
-  }, []);
+  }, [ticket, event]);
 
   const handleShare = useCallback(async () => {
-    const success = await shareQR(qrData, event.name);
-    if (!success) {
-      setCopyStatus("Share not supported");
-      setTimeout(() => setCopyStatus(""), 2000);
+    if (qrRef.current) {
+      const svg = qrRef.current.querySelector("svg");
+      const success = await shareQR(svg, ticket, event);
+      if (!success) {
+        setCopyStatus("Share not supported");
+        setTimeout(() => setCopyStatus(""), 2000);
+      }
     }
-  }, [qrData, event.name]);
+  }, [ticket, event]);
 
   return (
     <div className="space-y-4">
@@ -40,7 +43,7 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
         ref={qrRef}
         className="flex justify-center p-6 bg-white rounded-xl shadow-sm border border-gray-100"
       >
-        <QRCodeSVG value={qrData} size={256} level="H" includeMargin={true} />
+        <QRCodeSVG value={qrData} size={256} level="L" marginSize={2} />
       </div>
 
       <div className="text-center space-y-2">

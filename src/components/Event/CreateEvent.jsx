@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEvent } from "../../context/EventContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 export const CreateEvent = ({ isEditing = false }) => {
   const navigate = useNavigate();
   const { createEvent, updateEvent, event } = useEvent();
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -37,7 +39,7 @@ export const CreateEvent = ({ isEditing = false }) => {
 
     // Validate at least one ticket type exists
     if (Object.keys(formData.ticketTypes).length === 0) {
-      alert("Please add at least one ticket type");
+      alert(t("atLeastOneTicketType"));
       return;
     }
 
@@ -51,14 +53,14 @@ export const CreateEvent = ({ isEditing = false }) => {
 
   const addTicketType = () => {
     if (!newTicketType.name.trim()) {
-      alert("Please enter a ticket type name");
+      alert(t("enterTicketTypeName"));
       return;
     }
 
     const ticketTypeName = newTicketType.name.toLowerCase().trim();
 
     if (formData.ticketTypes[ticketTypeName]) {
-      alert("This ticket type already exists");
+      alert(t("ticketTypeExists"));
       return;
     }
 
@@ -75,7 +77,7 @@ export const CreateEvent = ({ isEditing = false }) => {
 
   const removeTicketType = (typeToRemove) => {
     if (Object.keys(formData.ticketTypes).length <= 1) {
-      alert("You must have at least one ticket type");
+      alert(t("mustHaveOneTicketType"));
       return;
     }
 
@@ -101,12 +103,12 @@ export const CreateEvent = ({ isEditing = false }) => {
     const trimmedName = newName.toLowerCase().trim();
 
     if (!trimmedName) {
-      alert("Ticket type name cannot be empty");
+      alert(t("ticketTypeNameEmpty"));
       return;
     }
 
     if (trimmedName !== oldName && formData.ticketTypes[trimmedName]) {
-      alert("A ticket type with this name already exists");
+      alert(t("ticketTypeNameExists"));
       return;
     }
 
@@ -135,13 +137,13 @@ export const CreateEvent = ({ isEditing = false }) => {
       <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
           <span>📋</span>
-          Event Details
+          {t("eventDetails")}
         </h2>
         <div className="space-y-5">
           <div>
             <label className="block mb-2 font-semibold text-gray-700 flex items-center gap-2">
               <span>🎪</span>
-              Event Name
+              {t("eventName")}
             </label>
             <input
               type="text"
@@ -149,7 +151,7 @@ export const CreateEvent = ({ isEditing = false }) => {
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-              placeholder="Summer Rock Festival 2025"
+              placeholder={t("eventNamePlaceholder")}
             />
           </div>
 
@@ -157,7 +159,7 @@ export const CreateEvent = ({ isEditing = false }) => {
             <div>
               <label className="block mb-2 font-semibold text-gray-700 flex items-center gap-2">
                 <span>📅</span>
-                Date
+                {t("date")}
               </label>
               <input
                 type="date"
@@ -171,7 +173,7 @@ export const CreateEvent = ({ isEditing = false }) => {
             <div>
               <label className="block mb-2 font-semibold text-gray-700 flex items-center gap-2">
                 <span>⏰</span>
-                Entrance Time
+                {t("entranceTime")}
               </label>
               <input
                 type="time"
@@ -186,7 +188,7 @@ export const CreateEvent = ({ isEditing = false }) => {
           <div>
             <label className="block mb-2 font-semibold text-gray-700 flex items-center gap-2">
               <span>📍</span>
-              Venue Name
+              {t("venueName")}
             </label>
             <input
               type="text"
@@ -194,14 +196,14 @@ export const CreateEvent = ({ isEditing = false }) => {
               value={formData.venue}
               onChange={(e) => setFormData({...formData, venue: e.target.value})}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-              placeholder="National Stadium"
+              placeholder={t("venuePlaceholder")}
             />
           </div>
 
           <div>
             <label className="block mb-2 font-semibold text-gray-700 flex items-center gap-2">
               <span>📫</span>
-              Full Address
+              {t("fullAddress")}
             </label>
             <input
               type="text"
@@ -209,7 +211,7 @@ export const CreateEvent = ({ isEditing = false }) => {
               value={formData.address}
               onChange={(e) => setFormData({...formData, address: e.target.value})}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-              placeholder="123 Main Street, City, State, ZIP"
+              placeholder={t("addressPlaceholder")}
             />
           </div>
         </div>
@@ -219,11 +221,11 @@ export const CreateEvent = ({ isEditing = false }) => {
       <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
           <span>🎨</span>
-          Color Theme
+          {t("colorTheme")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block mb-3 font-semibold text-gray-700">Base Color (Navbar)</label>
+            <label className="block mb-3 font-semibold text-gray-700">{t("baseColor")}</label>
             <div className="flex items-center gap-4">
               <input
                 type="color"
@@ -238,12 +240,12 @@ export const CreateEvent = ({ isEditing = false }) => {
                   onChange={(e) => setFormData({...formData, colors: {...formData.colors, base: e.target.value}})}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none font-mono"
                 />
-                <p className="text-xs text-gray-500 mt-1">Used for navigation bar</p>
+                <p className="text-xs text-gray-500 mt-1">{t("baseColorDesc")}</p>
               </div>
             </div>
           </div>
           <div>
-            <label className="block mb-3 font-semibold text-gray-700">Accent Color</label>
+            <label className="block mb-3 font-semibold text-gray-700">{t("accentColor")}</label>
             <div className="flex items-center gap-4">
               <input
                 type="color"
@@ -258,7 +260,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                   onChange={(e) => setFormData({...formData, colors: {...formData.colors, emphasis: e.target.value}})}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none font-mono"
                 />
-                <p className="text-xs text-gray-500 mt-1">Used for highlights & accents</p>
+                <p className="text-xs text-gray-500 mt-1">{t("accentColorDesc")}</p>
               </div>
             </div>
           </div>
@@ -269,16 +271,16 @@ export const CreateEvent = ({ isEditing = false }) => {
       <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-2">
           <span>🎫</span>
-          Ticket Types
+          {t("ticketTypes")}
         </h2>
-        <p className="text-sm text-gray-500 mb-6">At least one ticket type is required</p>
+        <p className="text-sm text-gray-500 mb-6">{t("ticketTypesDesc")}</p>
 
         {/* Existing ticket types */}
         <div className="space-y-4 mb-6">
           {Object.entries(formData.ticketTypes).map(([type, price]) => (
             <div key={type} className="flex flex-col md:flex-row gap-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200">
               <div className="flex-1">
-                <label className="block mb-2 font-semibold text-gray-700 text-sm">Type Name</label>
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">{t("typeName")}</label>
                 <input
                   type="text"
                   required
@@ -286,11 +288,11 @@ export const CreateEvent = ({ isEditing = false }) => {
                   onChange={(e) => updateTicketTypeName(type, e.target.value)}
                   onBlur={(e) => updateTicketTypeName(type, e.target.value)}
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl capitalize focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
-                  placeholder="e.g., VIP, General"
+                  placeholder={t("ticketTypeExample")}
                 />
               </div>
               <div className="flex-1">
-                <label className="block mb-2 font-semibold text-gray-700 text-sm">Price ($)</label>
+                <label className="block mb-2 font-semibold text-gray-700 text-sm">{t("price")} ($)</label>
                 <input
                   type="number"
                   min="0"
@@ -308,7 +310,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                   className="w-full md:w-auto px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-200 font-semibold shadow-md hover:shadow-lg disabled:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50 transform hover:scale-105"
                   disabled={Object.keys(formData.ticketTypes).length <= 1}
                 >
-                  🗑️ Remove
+                  🗑️ {t("removeType")}
                 </button>
               </div>
             </div>
@@ -319,21 +321,21 @@ export const CreateEvent = ({ isEditing = false }) => {
         <div className="border-t-2 border-dashed border-gray-300 pt-6">
           <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
             <span>➕</span>
-            Add New Ticket Type
+            {t("addNewTicketType")}
           </h3>
           <div className="flex flex-col md:flex-row gap-3 p-4 bg-green-50 rounded-xl border-2 border-green-200">
             <div className="flex-1">
-              <label className="block mb-2 font-semibold text-gray-700 text-sm">Type Name</label>
+              <label className="block mb-2 font-semibold text-gray-700 text-sm">{t("typeName")}</label>
               <input
                 type="text"
                 value={newTicketType.name}
                 onChange={(e) => setNewTicketType({ ...newTicketType, name: e.target.value })}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all outline-none"
-                placeholder="e.g., VIP, General"
+                placeholder={t("ticketTypeExample")}
               />
             </div>
             <div className="flex-1">
-              <label className="block mb-2 font-semibold text-gray-700 text-sm">Price ($)</label>
+              <label className="block mb-2 font-semibold text-gray-700 text-sm">{t("price")} ($)</label>
               <input
                 type="number"
                 min="0"
@@ -349,7 +351,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                 onClick={addTicketType}
                 className="w-full md:w-auto px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:scale-105"
               >
-                ➕ Add Type
+                ➕ {t("addType")}
               </button>
             </div>
           </div>
@@ -362,7 +364,7 @@ export const CreateEvent = ({ isEditing = false }) => {
           type="submit"
           className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center justify-center gap-2"
         >
-          {isEditing ? "💾 Update Event" : "✨ Create Event"}
+          {isEditing ? `💾 ${t("updateEvent")}` : `✨ ${t("createEvent")}`}
         </button>
       </div>
     </form>
