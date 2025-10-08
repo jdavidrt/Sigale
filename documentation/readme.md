@@ -3,7 +3,7 @@
 ## 🚧 Current Implementation Status
 
 **✅ STAGE 1 COMPLETE** - Foundation & Event Creation
-**⏳ STAGE 2 PENDING** - Tickets, QR Generation & Validation
+**✅ STAGE 2 COMPLETE** - Tickets, QR Generation & Validation
 **⏳ STAGE 3 PENDING** - Dashboards, Analytics & Database Management
 
 ### What's Working Now:
@@ -14,12 +14,15 @@
 - ✅ localStorage data persistence
 - ✅ Responsive design with Inter font
 - ✅ Address field for venue location
+- ✅ **Ticket sales & registration**
+- ✅ **QR code generation & display**
+- ✅ **QR code scanning & validation**
+- ✅ **Check-in system with duplicate detection**
+- ✅ **Ticket search functionality**
+- ✅ **Copy QR as SVG/PNG**
+- ✅ **Web Share API integration**
 
 ### What's Missing (To Be Implemented):
-- ⏳ Ticket sales & registration
-- ⏳ QR code generation & display
-- ⏳ QR code scanning & validation
-- ⏳ Check-in system with duplicate detection
 - ⏳ Sales dashboard & analytics
 - ⏳ Check-in dashboard & attendance tracking
 - ⏳ Database export/import functionality
@@ -31,11 +34,11 @@ A static React web application for managing concert ticket sales, QR code genera
 
 ## Core Features
 
-### 0. Event Creation
+### 0. Event Creation ✅
 Create a new event from scratch with the following information:
 - Event name
 - Event date
-- Venue location
+- Venue location & address
 - Time of entrance
 - Event colors (two colors: emphasis and base for navbar theming)
 - Ticket types with pricing (user can dynamically add custom ticket types with values):
@@ -43,23 +46,23 @@ Create a new event from scratch with the following information:
   - **Venta en Taquilla** (Box office price)
   - Additional custom ticket types as needed
 
-### 1. Ticket Sales Registration
+### 1. Ticket Sales Registration ✅
 - Capture buyer information:
   - Full name
   - ID number
   - Phone number
-  - Ticket purchase date (date only, no time)
+  - Ticket purchase date (auto-generated)
   - Ticket type (Preventa, Taquilla, or custom)
-  - Unique ticket ID (auto-generated)
-- Generate validation hash for ticket (10 characters)
+  - Unique ticket ID (auto-generated format: TKT-XXX-timestamp)
+- Generate validation hash for ticket (10 characters using Web Crypto API)
 - Display QR code dynamically generated from hash
 - Copy/share QR code functionality:
-  - Copy as SVG
-  - Copy as PNG image
+  - Copy as SVG (text to clipboard)
+  - Copy as PNG (image with white background)
   - Share via Web Share API
-- QR code displays event name, date, and entrance time prominently
+- QR code displays event name, date, venue, and entrance time
 
-### 2. Data Persistence Architecture
+### 2. Data Persistence Architecture ✅
 The entire database lives as a JSON structure in localStorage:
 
 ```json
@@ -68,6 +71,7 @@ The entire database lives as a JSON structure in localStorage:
     "name": "Summer Rock Festival 2025",
     "date": "2025-12-15",
     "venue": "National Stadium",
+    "address": "123 Main St, City",
     "entranceTime": "19:00",
     "colors": {
       "emphasis": "#FF6B6B",
@@ -81,7 +85,7 @@ The entire database lives as a JSON structure in localStorage:
   },
   "tickets": [
     {
-      "ticketId": "TKT-001-1728234567",
+      "ticketId": "TKT-123-1728234567",
       "buyerName": "María González",
       "buyerId": "1234567890",
       "buyerPhone": "+57 300 1234567",
@@ -95,53 +99,82 @@ The entire database lives as a JSON structure in localStorage:
 }
 ```
 
+**Storage Key**: `sigale-event-data`
+
 **Note**: QR codes are NOT stored in the JSON. They are dynamically generated on-demand from the validation hash, drastically reducing storage requirements.
 
-### 3. QR Code System
+### 3. QR Code System ✅
 - **Storage Strategy**: QR codes are NOT stored in JSON - only the validation hash is saved
-- **Generation**: QR codes are dynamically generated from the validation hash whenever needed
-- **QR Content Structure**: The validation hash encodes:
+- **Generation**: QR codes are dynamically generated from the validation hash using `qrcode.react`
+- **QR Content Structure**: JSON string containing:
   - Ticket ID
-  - Buyer name
-  - Phone number
+  - Validation hash
+  - Buyer name and phone
   - Ticket type
   - Event name, date, venue, entrance time
-- **Copy Functionality**: Built-in function to copy QR code as:
+- **Copy Functionality**: Built-in functions to copy QR code as:
   - SVG text to clipboard
-  - PNG image to clipboard
+  - PNG image to clipboard (with white background)
   - Direct share via Web Share API
-- **Display**: QR codes generated on-demand in ticket list and detail views
+- **Display**: QR codes generated on-demand in:
+  - Ticket creation success screen
+  - Ticket cards (expandable)
+  - Ticket list view
 - **Validation**: Scanner reads QR, extracts hash, verifies against stored ticket data
-- **Security**: 
+- **Security**:
   - Prevent duplicate entries for same ticket
   - Display clear warning when attempting to scan already-scanned QR
-  - Visual and audio feedback for duplicate scan attempts
-  
+  - Visual feedback with color-coded results (green/red/orange)
+  - Shows original check-in time for duplicates
+
 **Storage Advantage**: Without storing QR codes, database size reduces by ~95%, allowing 10,000+ tickets in localStorage.
 
-### 4. Dashboard Views
+### 4. QR Code Validation & Check-In ✅
+- Camera-based scanning using `html5-qrcode`
+- Real-time QR code validation
+- Duplicate detection system
+- Color-coded validation results:
+  - ✅ Green: Successful check-in
+  - ⚠️ Red: Duplicate scan (already checked in)
+  - ❌ Orange: Ticket not found
+  - ❌ Gray: Invalid QR format
+- Displays complete ticket information on scan
+- Auto-stops scanning after successful read
+- Manual start/stop controls
 
-#### Sales Dashboard
+### 5. Ticket Management ✅
+- Real-time search by name, ID, phone, or ticket number
+- Grid view of all tickets
+- Expandable ticket cards showing:
+  - Buyer information
+  - Ticket type and price
+  - Purchase date
+  - Check-in status
+  - QR code (on-demand)
+- Statistics: Total tickets, checked-in count
+- Check-in status badges
+
+### 6. Dashboard Views (To Be Implemented)
+
+#### Sales Dashboard ⏳
 - Total tickets sold by type (with custom types support)
 - Recent transactions list
 - Revenue tracking by ticket type
 - Total revenue calculation
-- Search functionality by name/ID/phone
-- **Ticket QR Viewer**: 
+- **Ticket QR Viewer**:
   - View any sold ticket's details
   - Regenerate QR code on-demand from validation hash
   - Copy/share regenerated QR code
   - Access ticket history and buyer information
-  - Quick actions: view QR, copy QR, share QR
 
-#### Check-In Dashboard
+#### Check-In Dashboard ⏳
 - Total attendees entered
 - Real-time entry list with timestamps
 - Entry rate visualization
 - Attendance percentage
 - Check-in status by ticket type
 
-### 5. Database Export/Import
+### 7. Database Export/Import ⏳
 - **Export**: Copy entire JSON to clipboard with share option
 - **Import**: Paste JSON to restore complete state
 - **Validate**: Validate JSON integrity and correctness before import
@@ -151,170 +184,170 @@ The entire database lives as a JSON structure in localStorage:
 ## Technical Stack
 
 ### React Setup
-- **Build Tool**: Vite (for fast development and optimized builds)
-- **React Version**: 18+
-- **State Management**: React Context API + useState/useReducer hooks
-- **Routing**: React Router v6 (for navigation between views)
+- **Build Tool**: Vite 7.1.9
+- **React Version**: 19.1.1
+- **State Management**: React Context API (EventContext + TicketContext)
+- **Routing**: React Router DOM 7.9.3
 - **Local Storage Hook**: Custom hook for localStorage synchronization
 
-### Required Libraries
-1. **QR Code Generation**: `qrcode.react` or `react-qr-code`
-   - npm: `npm install qrcode.react`
+### Libraries Installed
+1. **QR Code Generation**: `qrcode.react` 4.2.0 ✅
    - For dynamic SVG generation from hash
-   
-2. **QR Code Scanning**: `html5-qrcode` with React wrapper
-   - npm: `npm install html5-qrcode`
-   - Create custom React component wrapper
 
-3. **UI Framework**: Tailwind CSS
-   - npm: `npm install -D tailwindcss postcss autoprefixer`
-   - Configure with Vite
+2. **QR Code Scanning**: `html5-qrcode` 2.3.8 ✅
+   - Camera-based QR scanning
+   - React wrapper implemented
 
-4. **Hash Generation**: Built-in Web Crypto API (no external library needed)
+3. **UI Framework**: Tailwind CSS 4.1.14 ✅
+   - Utility-first styling with @tailwindcss/postcss
 
-5. **Clipboard API**: Built-in browser Clipboard API for copy functionality
+4. **Hash Generation**: Web Crypto API (built-in) ✅
+   - 10-character validation hash
 
-6. **Icons**: `lucide-react` (available in React artifacts)
-   - For UI icons and visual elements
+5. **Clipboard API**: Browser Clipboard API (built-in) ✅
+   - SVG and PNG copy functionality
 
-### Project Structure
+## Project Structure
+
 ```
-/sigale-ticket-system
-  ├── public/
-  │   └── index.html
-  ├── src/
-  │   ├── components/
-  │   │   ├── Layout/
-  │   │   │   ├── Navbar.jsx           # Dynamic colored navbar
-  │   │   │   └── Layout.jsx           # Main layout wrapper
-  │   │   ├── Event/
-  │   │   │   ├── CreateEvent.jsx      # Event creation form
-  │   │   │   └── EventHeader.jsx      # Event info display
-  │   │   ├── Tickets/
-  │   │   │   ├── TicketForm.jsx       # Ticket registration form
-  │   │   │   ├── TicketList.jsx       # List of sold tickets
-  │   │   │   ├── TicketCard.jsx       # Individual ticket display
-  │   │   │   └── QRDisplay.jsx        # QR code display component
-  │   │   ├── Scanner/
-  │   │   │   ├── QRScanner.jsx        # QR scanner component
-  │   │   │   └── ValidationResult.jsx # Scan result display
-  │   │   ├── Dashboard/
-  │   │   │   ├── SalesDashboard.jsx   # Sales statistics
-  │   │   │   ├── CheckInDashboard.jsx # Check-in statistics
-  │   │   │   └── Charts.jsx           # Data visualizations
-  │   │   └── Database/
-  │   │       ├── ExportDB.jsx         # Export functionality
-  │   │       └── ImportDB.jsx         # Import functionality
-  │   ├── context/
-  │   │   ├── EventContext.jsx         # Event state management
-  │   │   └── TicketContext.jsx        # Ticket state management
-  │   ├── hooks/
-  │   │   ├── useLocalStorage.js       # localStorage sync hook
-  │   │   ├── useQRGenerator.js        # QR generation hook
-  │   │   └── useTicketValidator.js    # Ticket validation hook
-  │   ├── utils/
-  │   │   ├── storage.js               # localStorage utilities
-  │   │   ├── hashGenerator.js         # Hash generation (10 chars)
-  │   │   ├── qrGenerator.js           # QR code generation utilities
-  │   │   ├── qrCopy.js                # QR copy/share utilities
-  │   │   └── validator.js             # JSON validation utilities
-  │   ├── pages/
-  │   │   ├── Home.jsx                 # Landing/event selection
-  │   │   ├── CreateEventPage.jsx      # Event creation page
-  │   │   ├── SellTicketsPage.jsx      # Ticket sales page
-  │   │   ├── ValidateQRPage.jsx       # QR scanning page
-  │   │   └── DashboardPage.jsx        # Analytics page
-  │   ├── App.jsx                      # Main app component
-  │   ├── main.jsx                     # Entry point
-  │   └── index.css                    # Global styles + Tailwind
-  ├── package.json
-  ├── vite.config.js
-  ├── tailwind.config.js
-  └── README.md
+Sígale/
+├── documentation/              # All documentation files
+│   ├── readme.md              # This file
+│   ├── claude.md              # Development context
+│   ├── stage1-foundation.md   # Stage 1 implementation guide
+│   ├── stage2-tickets-qr.md   # Stage 2 implementation guide
+│   └── stage3-dashboards.md   # Stage 3 implementation guide
+├── public/
+│   └── vite.svg
+├── src/
+│   ├── components/
+│   │   ├── Event/
+│   │   │   └── CreateEvent.jsx          # Event creation/edit form ✅
+│   │   ├── Layout/
+│   │   │   ├── Layout.jsx               # Main layout wrapper ✅
+│   │   │   └── Navbar.jsx               # Dynamic colored navbar ✅
+│   │   ├── Scanner/
+│   │   │   ├── QRScanner.jsx            # Camera QR scanner ✅
+│   │   │   └── ValidationResult.jsx     # Scan result display ✅
+│   │   ├── Tickets/
+│   │   │   ├── QRDisplay.jsx            # QR code display + copy/share ✅
+│   │   │   ├── TicketCard.jsx           # Individual ticket card ✅
+│   │   │   ├── TicketForm.jsx           # Ticket creation form ✅
+│   │   │   └── TicketList.jsx           # Searchable ticket grid ✅
+│   │   └── Dashboard/                   # ⏳ To be implemented
+│   │       ├── SalesDashboard.jsx
+│   │       ├── CheckInDashboard.jsx
+│   │       └── TicketViewer.jsx
+│   ├── context/
+│   │   ├── EventContext.jsx             # Event state management ✅
+│   │   └── TicketContext.jsx            # Ticket state management ✅
+│   ├── hooks/
+│   │   └── useLocalStorage.js           # localStorage sync hook ✅
+│   ├── pages/
+│   │   ├── CreateEventPage.jsx          # Event creation page ✅
+│   │   ├── EditEventPage.jsx            # Event editing page ✅
+│   │   ├── Home.jsx                     # Landing page ✅
+│   │   ├── SellTicketsPage.jsx          # Ticket sales page ✅
+│   │   ├── ValidateQRPage.jsx           # QR validation page ✅
+│   │   └── DashboardPage.jsx            # ⏳ Analytics page
+│   ├── utils/
+│   │   ├── hashGenerator.js             # Hash & ticket ID generation ✅
+│   │   ├── qrCopy.js                    # QR copy/share utilities ✅
+│   │   ├── qrGenerator.js               # QR data encoding/parsing ✅
+│   │   ├── storage.js                   # localStorage utilities ✅
+│   │   └── validator.js                 # ⏳ JSON validation
+│   ├── App.css                          # App-specific styles ✅
+│   ├── App.jsx                          # Main app component ✅
+│   ├── index.css                        # Global styles + Tailwind ✅
+│   └── main.jsx                         # Entry point ✅
+├── .gitignore                           # Git ignore rules ✅
+├── eslint.config.js                     # ESLint configuration ✅
+├── index.html                           # HTML template ✅
+├── package.json                         # Dependencies ✅
+├── postcss.config.js                    # PostCSS config ✅
+├── tailwind.config.js                   # Tailwind config ✅
+└── vite.config.js                       # Vite config ✅
 ```
 
 ## React Component Architecture
 
 ### State Management Strategy
 
-#### EventContext
+#### EventContext ✅
 ```javascript
 {
   event: {
-    name, date, venue, entranceTime, colors, ticketTypes
+    name, date, venue, address, entranceTime,
+    colors: { base, emphasis },
+    ticketTypes: { preventa: price, taquilla: price, ... }
   },
-  createEvent: (eventData) => {},
-  updateEvent: (eventData) => {},
-  clearEvent: () => {}
+  createEvent: (eventData) => void,
+  updateEvent: (eventData) => void,
+  clearEvent: () => void,
+  hasEvent: () => boolean
 }
 ```
 
-#### TicketContext
+#### TicketContext ✅
 ```javascript
 {
-  tickets: [],
-  addTicket: (ticketData) => {},
-  checkInTicket: (ticketId) => {},
-  searchTickets: (query) => {},
-  getStats: () => {}
+  tickets: Array<Ticket>,
+  addTicket: (ticketData) => Promise<Ticket>,
+  searchTickets: (query) => Array<Ticket>,
+  getTicketById: (ticketId) => Ticket,
+  getTicketByHash: (hash) => Ticket,
+  checkInTicket: (ticketId) => void,
+  getStats: () => {
+    totalSold, totalCheckedIn,
+    byType: { [type]: { sold, checkedIn } },
+    revenue: { total, byType: { [type]: amount } }
+  }
 }
-```
-
-### Key React Hooks
-
-#### useLocalStorage
-```javascript
-const [data, setData] = useLocalStorage('sigale-db', initialValue);
-// Automatically syncs with localStorage
-```
-
-#### useQRGenerator
-```javascript
-const { generateQR, copyAsSVG, copyAsPNG, shareQR } = useQRGenerator(hash);
-```
-
-#### useTicketValidator
-```javascript
-const { validate, isCheckedIn } = useTicketValidator();
 ```
 
 ## User Workflows
 
-### Workflow 1: Event Setup
+### Workflow 1: Event Setup ✅
 1. Open application
-2. If no event JSON in localStorage, auto-redirect to "Create Event"
+2. If no event in localStorage, auto-redirect to "Create Event"
 3. Fill event form:
-   - Name, date, venue, entrance time
+   - Name, date, venue, address, entrance time
    - Define event colors (emphasis & base for navbar theming)
    - Add ticket types dynamically with prices
 4. Save event - system loads details and applies colors to navbar
 5. Ready to sell tickets
 
-### Workflow 2: Selling Tickets
+### Workflow 2: Selling Tickets ✅
 1. Navigate to "Sell Tickets"
 2. Enter buyer information:
    - Name, ID, phone number
    - Select ticket type from available options
-3. Click "Generate Ticket"
-4. System generates 10-character validation hash
-5. Stores ticket data (no QR stored)
-6. QR code dynamically renders from hash
-7. Copy/share options:
-   - Copy as SVG text
-   - Copy as PNG image
-   - Share via Web Share API
-8. Ticket auto-saved to localStorage via React Context
+3. Click "Create Ticket"
+4. System generates:
+   - Unique ticket ID (TKT-XXX-timestamp)
+   - 10-character validation hash
+5. Success screen displays:
+   - Ticket details
+   - Dynamic QR code
+   - Copy/share options
+6. Ticket auto-saved to localStorage
 
-### Workflow 3: Venue Check-In
+### Workflow 3: Venue Check-In ✅
 1. Navigate to "Validate QR"
-2. Camera opens automatically
-3. Scan attendee's QR code
-4. System validates and checks duplicates
-5. Success: Show confirmation with buyer details
-6. Duplicate: Display warning with original check-in time
-7. Dashboard updates in real-time via React state
+2. Click "Start Scanning" to activate camera
+3. Position QR code in frame
+4. System automatically:
+   - Reads and parses QR data
+   - Validates hash against stored tickets
+   - Checks for duplicates
+5. Results:
+   - ✅ **Valid**: Shows buyer details, marks as checked in
+   - ⚠️ **Duplicate**: Shows warning with original check-in time
+   - ❌ **Not Found**: Displays error message
+   - ❌ **Invalid**: Shows invalid format error
+6. Can switch to "Ticket List" tab to view all tickets
 
-### Workflow 4: Multi-Day Operations
+### Workflow 4: Multi-Day Operations ⏳
 **End of day:**
 1. Go to dashboard
 2. Click "Export Database"
@@ -334,125 +367,93 @@ const { validate, isCheckedIn } = useTicketValidator();
 
 ### LocalStorage Limits
 - Most browsers allow ~5-10MB
-- Without storing QR codes: ~300-400 bytes per ticket (with phone number)
+- Without storing QR codes: ~300-400 bytes per ticket
 - Estimated capacity: 10,000-15,000 tickets
 - QR codes generated on-the-fly from validation hash
-- Monitor storage usage and warn at 80% capacity
 - React hook automatically syncs state with localStorage
 
-### QR Code Optimization
-- QR codes NOT stored - generated dynamically using React components
+### QR Code Optimization ✅
+- QR codes NOT stored - generated dynamically using `qrcode.react`
 - 10-character validation hash for security and uniqueness
 - On-demand generation: zero storage cost
 - React component memoization for performance
-- Copy functions convert hash to QR in multiple formats
+- Copy functions:
+  - SVG: Direct serialization to clipboard
+  - PNG: Canvas conversion with white background
 
-### Security Measures
+### Security Measures ✅
 - 10-character hash validation (using Web Crypto API)
-- Hash uniquely identifies ticket and encodes all data
-- Timestamp checks to prevent old ticket reuse
-- Visual and audio feedback for duplicate scans
+- Hash uniquely identifies ticket
+- Duplicate check-in prevention
+- Visual feedback for scan results
 - Clear warnings with check-in history
 
 ### Offline Functionality
 - Fully functional without internet (React app + localStorage)
-- Service Worker for PWA behavior (Vite PWA plugin)
-- Install as standalone app on mobile devices
-
-### React-Specific Optimizations
-- Component memoization (React.memo) for lists
-- useMemo for expensive calculations
-- useCallback for event handlers
-- Lazy loading for route components
-- Context API to avoid prop drilling
-
-## Development Phases
-
-**Phase 1**: Vite + React setup, routing, and base layout  
-**Phase 2**: Event creation form with color picker and dynamic ticket types  
-**Phase 3**: Context API setup for state management  
-**Phase 4**: localStorage hook integration  
-**Phase 5**: Ticket creation form and hash generation  
-**Phase 6**: Dynamic QR generation component with React  
-**Phase 7**: QR copy/share utilities (SVG, PNG, Web Share)  
-**Phase 8**: Scanner integration with React wrapper  
-**Phase 9**: Validation logic with duplicate detection  
-**Phase 10**: Dashboard components with charts  
-**Phase 11**: Import/export functionality with validation  
-**Phase 12**: Navbar dynamic theming based on event colors  
-**Phase 13**: Polish UI/UX, error handling, and loading states  
-**Phase 14**: PWA configuration for offline support  
+- No server dependencies
+- Can be deployed as static site
 
 ## Installation & Setup
 
 ```bash
-# Navigate to project
-cd sigale-ticket-system
+# Navigate to project root
+cd Sígale
 
-# Install dependencies (if not already done)
+# Install dependencies
 npm install
 
 # Start development server
 npm run dev
 
+# Start with network access (for mobile testing)
+npm run dev -- --host
+
 # Build for production
 npm run build
+
+# Preview production build
+npm preview
 ```
 
 ### Current Tech Stack (Installed):
 - ✅ React 19.1.1
 - ✅ React Router DOM 7.9.3
-- ✅ Vite 7.1.7
+- ✅ Vite 7.1.9
 - ✅ Tailwind CSS 4.1.14
-- ✅ qrcode.react 4.2.0 (ready for Stage 2)
-- ✅ html5-qrcode 2.3.8 (ready for Stage 2)
+- ✅ qrcode.react 4.2.0
+- ✅ html5-qrcode 2.3.8
+- ✅ @tailwindcss/postcss 4.1.14
 
 ---
 
-## 📁 Current File Structure
+## 🚀 Next Steps: Implementing Stage 3
 
-```
-sigale-ticket-system/
-├── src/
-│   ├── components/
-│   │   ├── Event/
-│   │   │   └── CreateEvent.jsx ✅
-│   │   └── Layout/
-│   │       ├── Layout.jsx ✅
-│   │       └── Navbar.jsx ✅
-│   ├── context/
-│   │   └── EventContext.jsx ✅
-│   ├── hooks/
-│   │   └── useLocalStorage.js ✅
-│   ├── pages/
-│   │   ├── CreateEventPage.jsx ✅
-│   │   ├── EditEventPage.jsx ✅
-│   │   └── Home.jsx ✅
-│   ├── utils/
-│   │   ├── hashGenerator.js ✅
-│   │   └── storage.js ✅
-│   ├── App.jsx ✅
-│   ├── index.css ✅
-│   └── main.jsx ✅
-├── package.json ✅
-├── tailwind.config.js ✅
-├── postcss.config.js ✅
-└── vite.config.js ✅
-```
+To complete the project, implement Stage 3 features:
+
+1. **Sales Dashboard** - Revenue tracking and statistics
+2. **Check-In Dashboard** - Attendance analytics
+3. **Database Export/Import** - Backup and restore functionality
+4. **Ticket Viewer Modal** - View and regenerate QR codes
+5. **Storage Monitoring** - Usage warnings
+
+See `/documentation/stage3-dashboards.md` for implementation guide.
 
 ---
 
-## 🚀 Next Steps: Implementing Stage 2
+## Access URLs
 
-To continue development, follow `stage2-tickets-qr.md` to implement:
+**Local Development:**
+- http://localhost:5173/
 
-1. **TicketContext** - Ticket state management
-2. **QR Utilities** - Generate QR codes from validation hash
-3. **Ticket Form** - Register ticket sales
-4. **QR Scanner** - Camera-based validation
-5. **Duplicate Detection** - Prevent double check-ins
+**Network Access (with --host flag):**
+- http://[your-ip]:5173/
 
-All dependencies are already installed. See `stage2-tickets-qr.md` for complete implementation guide.
+**Available Routes:**
+- `/` - Home page
+- `/create-event` - Create new event
+- `/edit-event` - Edit current event
+- `/sell-tickets` - Sell tickets
+- `/validate-qr` - Scan QR codes (Scanner + Ticket List tabs)
 
 ---
 

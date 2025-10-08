@@ -13,8 +13,8 @@ This stage establishes the project foundation, creates the event system, and set
 
 **Create Vite + React project**:
 ```bash
-npm create vite@latest sigale-ticket-system -- --template react
-cd sigale-ticket-system
+npm create vite@latest Sígale -- --template react
+cd Sígale
 npm install
 npm install react-router-dom qrcode.react html5-qrcode
 npm install -D tailwindcss postcss autoprefixer @tailwindcss/postcss
