@@ -48,9 +48,12 @@ Create and customize your event with:
 
 ### 3. Ticket Sales (Mobile Optimized)
 - Quick buyer registration form
-- Auto-generated QR codes
+- Auto-generated QR codes with ticket details
 - Instant ticket creation
-- Copy/share QR codes via mobile Share API
+- Copy/share QR codes as PNG images via mobile Share API
+- **PNG Export** - Ticket QR includes event name, venue address, and all details
+- **12-hour time format** - User-friendly time display across the app
+- **Delete tickets** - Remove tickets with confirmation dialog
 - One-handed operation friendly
 - All text translated to user's language
 
@@ -58,11 +61,21 @@ Create and customize your event with:
 - Real-time camera scanning
 - Duplicate check-in detection
 - Visual and audio feedback
+- **Searchable ticket list** - Find tickets by name, ID, or phone
+- **Check-in status tracking** - Visual indicators for validated tickets
 - Works offline with localStorage
 - Optimized for scanning on phones
 - Validation messages in selected language
+- Dark theme UI matching mockup designs
 
-### 5. Analytics Dashboard
+### 5. Data Management
+- **Copy Event Data** - Export complete event JSON to clipboard
+- **Download JSON** - Save event and ticket data as file
+- **Collapsible JSON preview** - Review data before export
+- Backup and restore functionality
+- Transfer data between devices
+
+### 6. Analytics Dashboard
 - Sales statistics by ticket type
 - Check-in tracking
 - Revenue calculations
@@ -151,15 +164,33 @@ LanguageContext → i18n state (ES/EN), auto-detection, persistence
 1. Open app on mobile device
 2. Navigate to "Sell" / "Vender" tab
 3. Fill buyer form (optimized for mobile keyboards, in your language)
-4. Generate QR code
-5. Share QR via WhatsApp/Email using native Share API
+4. Generate QR code with full event details
+5. Share QR as PNG via WhatsApp/Email using native Share API
+6. PNG includes event name, venue address, date/time in 12h format
 
 ### Validating at Venue (Tablet/Phone)
 1. Open "Validate" / "Validar" page on mobile
-2. Camera activates automatically
-3. Scan attendee's QR code from their phone
-4. Instant validation with visual feedback (in selected language)
-5. Duplicate detection with alerts
+2. Choose between Scanner or Ticket List tabs
+3. **Scanner**: Camera activates automatically for QR scanning
+4. **Ticket List**: Search tickets by name, ID, or phone number
+5. Instant validation with visual feedback (in selected language)
+6. Duplicate detection with alerts
+7. View ticket details and check-in status
+
+### Managing Tickets
+1. Navigate to Validate → Ticket List
+2. Search for specific tickets using the search bar
+3. View ticket details (type, price, buyer info, purchase date)
+4. Delete tickets with confirmation (🗑️ button)
+5. Toggle QR code visibility per ticket
+6. Check-in status shown with green checkmark badge
+
+### Exporting Event Data
+1. Navigate to "Copy Event" in menu
+2. View event summary (name, date, venue, ticket count)
+3. Click "Copy to Clipboard" for instant JSON copy
+4. Or "Download JSON File" to save locally
+5. Expand JSON preview to review data before export
 
 ### Managing Events (Any Device)
 1. Dashboard adapts to screen size
@@ -167,6 +198,8 @@ LanguageContext → i18n state (ES/EN), auto-detection, persistence
 3. Touch-friendly buttons and controls
 4. Responsive tables and lists
 5. All text in your preferred language
+6. Circular color pickers for theme customization
+7. Times displayed in 12-hour format throughout app
 
 ## 🎨 Mobile Design Guidelines
 
