@@ -8,6 +8,7 @@ import { CreateEventPage } from "./pages/CreateEventPage";
 import { EditEventPage } from "./pages/EditEventPage";
 import { SellTicketsPage } from "./pages/SellTicketsPage";
 import { ValidateQRPage } from "./pages/ValidateQRPage";
+import { CopyEventPage } from "./pages/CopyEventPage";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
                 <Route path="/edit-event" element={<EditEventPage />} />
                 <Route path="/sell-tickets" element={<SellTicketsPage />} />
                 <Route path="/validate-qr" element={<ValidateQRPage />} />
+                <Route path="/copy-event" element={<CopyEventPage />} />
               </Routes>
             </Layout>
           </BrowserRouter>

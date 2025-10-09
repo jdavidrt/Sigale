@@ -1,1 +1,12 @@
 add readme.md, documentation/claude.md and readme.md to context
+
+1. All the inputs across the whole project should have some padding from the borders so they dont ocupe all the screen and title dont get conffussed with them
+2. Color selectors should be circular, not ovoidal
+3. Ticket Types section should have paddings too so inputs and filed names dont get confused 
+4. Ticket types price shoudl allow clearing the input, just making sure they have a value on event creation
+5. Once event is created and recirected to home page, scrool should reset to top of the page so event details can be seen 
+6. Times all across the project should be displayed with 12h format
+7. When copyng or sharing the PNG of the ticket, make sure the whole name of the event is displayed, also, venue adress should be displayed
+8. After doing that changes, make improvements on the current project styling takign in consideration the styles from /mockups, make sure all looks the same, same roundness, same colors, same buttons, just ignore the navigation menu at the top 
+
+add a new page called Copy Event, so I can go there and copy the current event json to my clipboard

@@ -69,8 +69,8 @@
   <text x="120" y="310" font-family="Arial, sans-serif" font-size="13" fill="#758BFD">0checked in</text>
   
   <!-- Ticket card -->
-  <rect x="40" y="330" width="310" height="220" rx="12" fill="#2a2a2a"/>
-  <rect x="40" y="330" width="310" height="220" rx="12" fill="none" stroke="#4ade80" stroke-width="2" opacity="0.5"/>
+  <rect x="40" y="330" width="310" height="230" rx="12" fill="#2a2a2a"/>
+  <rect x="40" y="330" width="310" height="230" rx="12" fill="none" stroke="#4ade80" stroke-width="2" opacity="0.5"/>
   
   <!-- Checkmark badge -->
   <circle cx="320" cy="350" r="16" fill="#4ade80"/>
@@ -98,12 +98,12 @@
   <text x="55" y="500" font-family="Arial, sans-serif" font-size="14" fill="#FFEDD8">1010241962</text>
   <text x="220" y="500" font-family="Arial, sans-serif" font-size="14" fill="#FFEDD8">3212619103</text>
   
-  <!-- Purchase date -->
+  <!-- Purchase date and Show QR button side by side -->
   <text x="55" y="525" font-family="Arial, sans-serif" font-size="12" fill="#BEADFF" opacity="0.7">Purchase Date</text>
   <text x="55" y="545" font-family="Arial, sans-serif" font-size="14" fill="#FFEDD8">Oct 7, 2025</text>
   
-  <!-- Show QR button -->
-  <rect x="55" y="565" width="280" height="40" rx="8" fill="#4a3d8f"/>
-  <rect x="55" y="565" width="280" height="40" rx="8" fill="none" stroke="#758BFD" stroke-width="1" opacity="0.3"/>
-  <text x="195" y="590" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#FFEDD8" text-anchor="middle">Show QR Code</text>
+  <!-- Show QR button (compact, to the right) -->
+  <rect x="220" y="522" width="115" height="32" rx="6" fill="#4a3d8f"/>
+  <rect x="220" y="522" width="115" height="32" rx="6" fill="none" stroke="#758BFD" stroke-width="1" opacity="0.3"/>
+  <text x="277.5" y="542" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FFEDD8" text-anchor="middle">Show QR Code</text>
 </svg>

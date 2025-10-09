@@ -43,11 +43,21 @@ export const CreateEvent = ({ isEditing = false }) => {
       return;
     }
 
+    // Validate all ticket types have prices
+    const hasInvalidPrice = Object.values(formData.ticketTypes).some(price => !price || price <= 0);
+    if (hasInvalidPrice) {
+      alert(t("allTicketTypesMustHavePrice") || "All ticket types must have a valid price");
+      return;
+    }
+
     if (isEditing) {
       updateEvent(formData);
     } else {
       createEvent(formData);
     }
+
+    // Scroll to top and navigate
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     navigate("/");
   };
 
@@ -267,7 +277,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                     type="color"
                     value={formData.colors.base}
                     onChange={(e) => setFormData({...formData, colors: {...formData.colors, base: e.target.value}})}
-                    className="w-12 h-10 md:w-14 md:h-12 rounded-lg cursor-pointer border-2 border-[#758BFD] border-opacity-50"
+                    className="w-12 h-12 md:w-14 md:h-14 rounded-full cursor-pointer border-2 border-[#758BFD] border-opacity-50"
                   />
                   <input
                     type="text"
@@ -289,7 +299,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                     type="color"
                     value={formData.colors.emphasis}
                     onChange={(e) => setFormData({...formData, colors: {...formData.colors, emphasis: e.target.value}})}
-                    className="w-12 h-10 md:w-14 md:h-12 rounded-lg cursor-pointer border-2 border-[#BEADFF] border-opacity-50"
+                    className="w-12 h-12 md:w-14 md:h-14 rounded-full cursor-pointer border-2 border-[#BEADFF] border-opacity-50"
                   />
                   <input
                     type="text"
@@ -315,8 +325,8 @@ export const CreateEvent = ({ isEditing = false }) => {
             {/* Existing Ticket Types */}
             <div className="space-y-3 mb-4">
               {Object.entries(formData.ticketTypes).map(([type, price]) => (
-                <div key={type} className="bg-[#2a2a2a] rounded-lg p-4 border border-[#758BFD] border-opacity-30">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div key={type} className="bg-[#2a2a2a] rounded-lg p-5 md:p-6 border border-[#758BFD] border-opacity-30">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block mb-2 text-xs text-[#BEADFF] opacity-70">
                         {t("typeName")}
@@ -327,7 +337,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                         value={type}
                         onChange={(e) => updateTicketTypeName(type, e.target.value)}
                         onBlur={(e) => updateTicketTypeName(type, e.target.value)}
-                        className="w-full px-3 py-2 bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] capitalize text-sm focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50"
+                        className="w-full px-4 py-3 bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] capitalize text-sm focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50"
                         placeholder={t("ticketTypeExample")}
                       />
                     </div>
@@ -338,10 +348,9 @@ export const CreateEvent = ({ isEditing = false }) => {
                       <input
                         type="number"
                         min="0"
-                        required
-                        value={price}
+                        value={price || ''}
                         onChange={(e) => updateTicketPrice(type, e.target.value)}
-                        className="w-full px-3 py-2 bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] text-sm focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50"
+                        className="w-full px-4 py-3 bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] text-sm focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50"
                         placeholder="0"
                       />
                     </div>
@@ -349,7 +358,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                       <button
                         type="button"
                         onClick={() => removeTicketType(type)}
-                        className="w-full px-4 py-2 bg-red-600 bg-opacity-80 text-[#FFEDD8] rounded-lg hover:bg-opacity-100 transition-all font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-3 bg-red-600 bg-opacity-80 text-[#FFEDD8] rounded-lg hover:bg-opacity-100 transition-all font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed"
                         disabled={Object.keys(formData.ticketTypes).length <= 1}
                       >
                         🗑️ {t("removeType")}
@@ -361,12 +370,12 @@ export const CreateEvent = ({ isEditing = false }) => {
             </div>
 
             {/* Add New Ticket Type */}
-            <div className="bg-[#2a2a2a] bg-opacity-50 rounded-lg p-4 border-2 border-dashed border-[#758BFD] border-opacity-30">
-              <h3 className="text-sm font-bold text-[#FFEDD8] mb-3 flex items-center gap-2">
+            <div className="bg-[#2a2a2a] bg-opacity-50 rounded-lg p-5 md:p-6 border-2 border-dashed border-[#758BFD] border-opacity-30">
+              <h3 className="text-sm font-bold text-[#FFEDD8] mb-4 flex items-center gap-2">
                 <span>➕</span>
                 {t("addNewTicketType")}
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block mb-2 text-xs text-[#BEADFF] opacity-70">
                     {t("typeName")}
@@ -375,7 +384,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                     type="text"
                     value={newTicketType.name}
                     onChange={(e) => setNewTicketType({ ...newTicketType, name: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] text-sm focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50"
+                    className="w-full px-4 py-3 bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] text-sm focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50"
                     placeholder={t("ticketTypeExample")}
                   />
                 </div>
@@ -386,9 +395,9 @@ export const CreateEvent = ({ isEditing = false }) => {
                   <input
                     type="number"
                     min="0"
-                    value={newTicketType.price}
+                    value={newTicketType.price || ''}
                     onChange={(e) => setNewTicketType({ ...newTicketType, price: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] text-sm focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50"
+                    className="w-full px-4 py-3 bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] text-sm focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50"
                     placeholder="0"
                   />
                 </div>
@@ -396,7 +405,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                   <button
                     type="button"
                     onClick={addTicketType}
-                    className="w-full px-4 py-2 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] rounded-lg hover:opacity-90 transition-opacity font-bold text-sm border border-[#BEADFF] border-opacity-30"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] rounded-lg hover:opacity-90 transition-opacity font-bold text-sm border border-[#BEADFF] border-opacity-30"
                   >
                     ➕ {t("addType")}
                   </button>

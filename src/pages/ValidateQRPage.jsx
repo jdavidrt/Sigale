@@ -30,10 +30,10 @@ export const ValidateQRPage = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-6">
+          <div className="flex gap-3 mb-6">
             <button
               onClick={() => setActiveTab("scanner")}
-              className={`flex-1 px-4 py-3 rounded-lg font-bold transition-all text-sm md:text-base ${
+              className={`px-6 py-2.5 rounded-lg font-bold transition-all text-sm ${
                 activeTab === "scanner"
                   ? "bg-[#4a3d8f] text-[#FFEDD8] border border-[#758BFD] border-opacity-50"
                   : "bg-[#2a2a2a] text-[#BEADFF] border border-[#758BFD] border-opacity-30 hover:bg-[#3a3a3a]"
@@ -43,7 +43,7 @@ export const ValidateQRPage = () => {
             </button>
             <button
               onClick={() => setActiveTab("tickets")}
-              className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all text-sm md:text-base ${
+              className={`px-6 py-2.5 rounded-lg font-medium transition-all text-sm ${
                 activeTab === "tickets"
                   ? "bg-[#4a3d8f] text-[#FFEDD8] border border-[#758BFD] border-opacity-50"
                   : "bg-[#2a2a2a] text-[#BEADFF] border border-[#758BFD] border-opacity-30 hover:bg-[#3a3a3a]"

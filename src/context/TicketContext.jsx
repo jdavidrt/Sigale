@@ -56,6 +56,11 @@ export const TicketProvider = ({ children }) => {
     setData({ ...data, tickets: updatedTickets });
   };
 
+  const deleteTicket = (ticketId) => {
+    const updatedTickets = data.tickets.filter((ticket) => ticket.ticketId !== ticketId);
+    setData({ ...data, tickets: updatedTickets });
+  };
+
   const getStats = () => {
     const stats = {
       totalSold: data.tickets.length,
@@ -88,6 +93,7 @@ export const TicketProvider = ({ children }) => {
         getTicketById,
         getTicketByHash,
         checkInTicket,
+        deleteTicket,
         getStats,
       }}
     >

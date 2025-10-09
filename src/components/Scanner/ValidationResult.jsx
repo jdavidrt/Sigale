@@ -14,40 +14,40 @@ export const ValidationResult = ({ result, onClose }) => {
     switch (type) {
       case "success":
         return {
-          container: "bg-green-50 border-green-200",
+          container: "bg-[#2a2a2a] border-[#4ade80]",
           icon: "text-6xl mb-4",
           iconEmoji: "✅",
-          title: "text-green-900",
-          message: "text-green-800",
-          button: "bg-green-600 hover:bg-green-700",
+          title: "text-[#4ade80]",
+          message: "text-[#BEADFF]",
+          button: "bg-gradient-to-r from-[#758BFD] to-[#BEADFF] hover:opacity-90",
         };
       case "duplicate":
         return {
-          container: "bg-red-50 border-red-200",
+          container: "bg-[#2a2a2a] border-red-500",
           icon: "text-6xl mb-4",
           iconEmoji: "⚠️",
-          title: "text-red-900",
-          message: "text-red-800",
+          title: "text-red-400",
+          message: "text-[#BEADFF]",
           button: "bg-red-600 hover:bg-red-700",
         };
       case "not_found":
         return {
-          container: "bg-orange-50 border-orange-200",
+          container: "bg-[#2a2a2a] border-orange-500",
           icon: "text-6xl mb-4",
           iconEmoji: "❌",
-          title: "text-orange-900",
-          message: "text-orange-800",
+          title: "text-orange-400",
+          message: "text-[#BEADFF]",
           button: "bg-orange-600 hover:bg-orange-700",
         };
       case "invalid":
       default:
         return {
-          container: "bg-gray-50 border-gray-200",
+          container: "bg-[#2a2a2a] border-[#758BFD]",
           icon: "text-6xl mb-4",
           iconEmoji: "❌",
-          title: "text-gray-900",
-          message: "text-gray-800",
-          button: "bg-gray-600 hover:bg-gray-700",
+          title: "text-[#FFEDD8]",
+          message: "text-[#BEADFF]",
+          button: "bg-[#4a3d8f] hover:bg-[#5a4d9f]",
         };
     }
   };
@@ -67,43 +67,43 @@ export const ValidationResult = ({ result, onClose }) => {
 
         {/* Ticket Details */}
         {ticket && (
-          <div className="bg-white rounded-lg p-6 mb-6 text-left shadow-sm">
-            <h4 className="font-bold text-gray-900 mb-4 text-center">
+          <div className="bg-[#1a1a1a] rounded-lg p-6 mb-6 text-left border border-[#758BFD] border-opacity-20">
+            <h4 className="font-bold text-[#FFEDD8] mb-4 text-center">
               Ticket Details
             </h4>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Buyer Name:</span>
-                <span className="font-semibold text-gray-900">
+                <span className="text-[#BEADFF] opacity-70">Buyer Name:</span>
+                <span className="font-semibold text-[#FFEDD8]">
                   {ticket.buyerName}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">ID Number:</span>
-                <span className="font-semibold text-gray-900">{ticket.buyerId}</span>
+                <span className="text-[#BEADFF] opacity-70">ID Number:</span>
+                <span className="font-semibold text-[#FFEDD8]">{ticket.buyerId}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Phone:</span>
-                <span className="font-semibold text-gray-900">
+                <span className="text-[#BEADFF] opacity-70">Phone:</span>
+                <span className="font-semibold text-[#FFEDD8]">
                   {ticket.buyerPhone}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Ticket Type:</span>
-                <span className="font-semibold text-gray-900 capitalize">
+                <span className="text-[#BEADFF] opacity-70">Ticket Type:</span>
+                <span className="font-semibold text-[#FFEDD8] capitalize">
                   {ticket.ticketType}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Ticket ID:</span>
-                <span className="font-mono text-sm text-gray-900">
+                <span className="text-[#BEADFF] opacity-70">Ticket ID:</span>
+                <span className="font-mono text-sm text-[#758BFD]">
                   {ticket.ticketId}
                 </span>
               </div>
               {ticket.checkedIn && ticket.checkInTime && (
-                <div className="flex justify-between pt-3 border-t border-gray-200">
-                  <span className="text-gray-600">Original Check-In:</span>
-                  <span className="font-semibold text-red-700">
+                <div className="flex justify-between pt-3 border-t border-[#758BFD] border-opacity-30">
+                  <span className="text-[#BEADFF] opacity-70">Original Check-In:</span>
+                  <span className="font-semibold text-red-400">
                     {formatTime(ticket.checkInTime)}
                   </span>
                 </div>
@@ -114,12 +114,12 @@ export const ValidationResult = ({ result, onClose }) => {
 
         {/* QR Data (for debugging not found tickets) */}
         {qrData && !ticket && (
-          <div className="bg-white rounded-lg p-4 mb-6 text-left">
-            <p className="text-sm text-gray-600 mb-2">QR Code Data:</p>
-            <p className="text-xs font-mono text-gray-700 break-all">
+          <div className="bg-[#1a1a1a] rounded-lg p-4 mb-6 text-left border border-[#758BFD] border-opacity-20">
+            <p className="text-sm text-[#BEADFF] opacity-70 mb-2">QR Code Data:</p>
+            <p className="text-xs font-mono text-[#FFEDD8] break-all">
               Ticket ID: {qrData.ticketId || "N/A"}
             </p>
-            <p className="text-xs font-mono text-gray-700 break-all">
+            <p className="text-xs font-mono text-[#FFEDD8] break-all">
               Hash: {qrData.hash || "N/A"}
             </p>
           </div>
@@ -128,7 +128,7 @@ export const ValidationResult = ({ result, onClose }) => {
         {/* Action Buttons */}
         <button
           onClick={onClose}
-          className={`w-full px-6 py-3 text-white rounded-lg transition-colors font-medium shadow-md ${styles.button}`}
+          className={`w-full px-6 py-3 text-[#FFEDD8] rounded-lg transition-all font-bold border border-[#BEADFF] border-opacity-30 ${styles.button}`}
         >
           {success ? "✓ Continue" : "Try Again"}
         </button>

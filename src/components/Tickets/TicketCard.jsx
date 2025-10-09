@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { QRDisplay } from "./QRDisplay";
 import { useEvent } from "../../context/EventContext";
+import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
 
 export const TicketCard = ({ ticket }) => {
   const { event } = useEvent();
+  const { deleteTicket } = useTickets();
   const { t } = useLanguage();
   const [showQR, setShowQR] = useState(false);
 
@@ -25,88 +27,106 @@ export const TicketCard = ({ ticket }) => {
     });
   };
 
+  const handleDelete = () => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete this ticket?\n\nBuyer: ${ticket.buyerName}\nTicket ID: ${ticket.ticketId}\n\nThis action cannot be undone.`
+    );
+
+    if (confirmDelete) {
+      deleteTicket(ticket.ticketId);
+    }
+  };
+
   return (
-    <div className="bg-[#2a2a2a] rounded-xl border-2 border-[#4ade80] border-opacity-50 overflow-hidden hover:border-opacity-70 transition-all">
-      <div className="p-5 md:p-6">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h3 className="text-lg md:text-xl font-bold text-[#FFEDD8] mb-1">
-              {ticket.buyerName}
-            </h3>
-            <p className="text-xs md:text-sm text-[#758BFD] font-mono">{ticket.ticketId}</p>
-          </div>
-          {ticket.checkedIn && (
-            <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#4ade80]">
-              <span className="text-base md:text-xl font-bold text-black">✓</span>
-            </div>
-          )}
+    <div className={`bg-[#2a2a2a] rounded-xl border-2 ${ticket.checkedIn ? 'border-[#4ade80] border-opacity-50' : 'border-[#758BFD] border-opacity-20'} overflow-hidden transition-all relative`}>
+      {/* Checkmark Badge - Top Right */}
+      {ticket.checkedIn && (
+        <div className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 rounded-full bg-[#4ade80] z-10">
+          <span className="text-lg font-bold text-black">✓</span>
+        </div>
+      )}
+
+      <div className="p-5">
+        {/* Header - Name and Ticket ID */}
+        <div className="mb-3 pr-10">
+          <h3 className="text-lg font-bold text-[#FFEDD8] mb-1.5">
+            {ticket.buyerName}
+          </h3>
+          <p className="text-xs text-[#758BFD] font-mono">{ticket.ticketId}</p>
         </div>
 
         {/* Divider */}
         <div className="h-px bg-[#758BFD] opacity-30 mb-4"></div>
 
-        {/* Details Grid */}
-        <div className="grid grid-cols-2 gap-4 mb-4 text-sm md:text-base">
-          <div>
-            <p className="text-xs md:text-sm text-[#BEADFF] opacity-70 mb-1">
-              {t("ticketType")}
-            </p>
-            <p className="font-bold text-[#FFEDD8] capitalize">
-              {ticket.ticketType}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs md:text-sm text-[#BEADFF] opacity-70 mb-1">
-              {t("price")}
-            </p>
-            <p className="font-bold text-[#FFEDD8]">
-              ${event.ticketTypes[ticket.ticketType]?.toLocaleString()}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs md:text-sm text-[#BEADFF] opacity-70 mb-1">
-              {t("idNumber")}
-            </p>
-            <p className="text-[#FFEDD8]">{ticket.buyerId}</p>
-          </div>
-          <div>
-            <p className="text-xs md:text-sm text-[#BEADFF] opacity-70 mb-1">
-              {t("phoneNumber")}
-            </p>
-            <p className="text-[#FFEDD8]">{ticket.buyerPhone}</p>
-          </div>
-          <div>
-            <p className="text-xs md:text-sm text-[#BEADFF] opacity-70 mb-1">
-              {t("purchaseDate")}
-            </p>
-            <p className="text-[#FFEDD8]">
-              {formatDate(ticket.purchaseDate)}
-            </p>
-          </div>
-          {ticket.checkedIn && (
+        {/* Details Grid - 2 Columns */}
+        <div className="space-y-4">
+          {/* Row 1: Ticket Type and Price */}
+          <div className="grid grid-cols-2 gap-x-8">
             <div>
-              <p className="text-xs md:text-sm text-[#BEADFF] opacity-70 mb-1">
-                {t("checkedInAt")}
+              <p className="text-xs text-[#BEADFF] opacity-70 mb-1.5">
+                {t("ticketType")}
               </p>
-              <p className="text-[#4ade80] font-medium">
-                {formatTime(ticket.checkInTime)}
+              <p className="text-[15px] font-bold text-[#FFEDD8] capitalize">
+                {ticket.ticketType}
               </p>
             </div>
-          )}
-        </div>
+            <div>
+              <p className="text-xs text-[#BEADFF] opacity-70 mb-1.5">
+                {t("price")}
+              </p>
+              <p className="text-[15px] font-bold text-[#FFEDD8]">
+                ${event.ticketTypes[ticket.ticketType]?.toLocaleString()}
+              </p>
+            </div>
+          </div>
 
-        {/* Show QR Button */}
-        <button
-          onClick={() => setShowQR(!showQR)}
-          className="w-full px-4 py-3 bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-lg transition-colors font-bold border border-[#758BFD] border-opacity-30 text-sm md:text-base"
-        >
-          {showQR ? "Hide QR Code" : "Show QR Code"}
-        </button>
+          {/* Row 2: ID Number and Phone */}
+          <div className="grid grid-cols-2 gap-x-8">
+            <div>
+              <p className="text-xs text-[#BEADFF] opacity-70 mb-1.5">
+                {t("idNumber")}
+              </p>
+              <p className="text-sm text-[#FFEDD8]">{ticket.buyerId}</p>
+            </div>
+            <div>
+              <p className="text-xs text-[#BEADFF] opacity-70 mb-1.5">
+                {t("phoneNumber")}
+              </p>
+              <p className="text-sm text-[#FFEDD8]">{ticket.buyerPhone}</p>
+            </div>
+          </div>
+
+          {/* Row 3: Purchase Date and Action Buttons */}
+          <div className="grid grid-cols-2 gap-x-8 items-end">
+            <div>
+              <p className="text-xs text-[#BEADFF] opacity-70 mb-1.5">
+                {t("purchaseDate")}
+              </p>
+              <p className="text-sm text-[#FFEDD8]">
+                {formatDate(ticket.purchaseDate)}
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={handleDelete}
+                className="px-3 py-2 bg-red-600 hover:bg-red-700 text-[#FFEDD8] rounded-md transition-colors font-bold border border-red-500 border-opacity-30 text-xs whitespace-nowrap"
+                title="Delete ticket"
+              >
+                🗑️
+              </button>
+              <button
+                onClick={() => setShowQR(!showQR)}
+                className="px-4 py-2 bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30 text-xs whitespace-nowrap"
+              >
+                {showQR ? "Hide QR Code" : "Show QR Code"}
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* QR Code Display */}
         {showQR && (
-          <div className="mt-6 pt-6 border-t border-[#758BFD] border-opacity-30">
+          <div className="mt-5 pt-5 border-t border-[#758BFD] border-opacity-30">
             <QRDisplay ticket={ticket} event={event} />
           </div>
         )}

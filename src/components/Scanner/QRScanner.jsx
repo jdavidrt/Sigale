@@ -118,20 +118,20 @@ export const QRScanner = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="space-y-6">
       {/* Control Buttons */}
       <div className="flex gap-4 justify-center">
         {!isScanning ? (
           <button
             onClick={handleStartScanning}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-md"
+            className="px-6 py-3 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] hover:opacity-90 text-[#FFEDD8] rounded-lg transition-opacity font-bold border border-[#BEADFF] border-opacity-30"
           >
             📷 Start Scanning
           </button>
         ) : (
           <button
             onClick={handleStopScanning}
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium shadow-md"
+            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-[#FFEDD8] rounded-lg transition-colors font-bold"
           >
             ⏹️ Stop Scanning
           </button>
@@ -140,9 +140,9 @@ export const QRScanner = () => {
 
       {/* Scanner Container */}
       {isScanning && (
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+        <div className="bg-[#2a2a2a] rounded-xl p-6 border border-[#758BFD] border-opacity-30">
           <div id="qr-reader" className="overflow-hidden rounded-lg"></div>
-          <p className="text-center text-sm text-gray-600 mt-4">
+          <p className="text-center text-sm text-[#BEADFF] mt-4">
             Position the QR code within the frame
           </p>
         </div>
@@ -153,23 +153,23 @@ export const QRScanner = () => {
 
       {/* Instructions */}
       {!isScanning && !scanResult && (
-        <div className="bg-white rounded-xl shadow-md p-8 border border-gray-100">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">📱 How to Use</h3>
-          <ol className="space-y-3 text-gray-700">
+        <div className="bg-[#2a2a2a] rounded-xl p-8 border border-[#758BFD] border-opacity-30">
+          <h3 className="text-xl font-bold text-[#FFEDD8] mb-4">📱 How to Use</h3>
+          <ol className="space-y-3 text-[#BEADFF]">
             <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-bold">
+              <span className="flex-shrink-0 w-6 h-6 bg-[#758BFD] bg-opacity-30 text-[#758BFD] rounded-full flex items-center justify-center text-sm font-bold">
                 1
               </span>
               <span>Click "Start Scanning" to activate the camera</span>
             </li>
             <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-bold">
+              <span className="flex-shrink-0 w-6 h-6 bg-[#758BFD] bg-opacity-30 text-[#758BFD] rounded-full flex items-center justify-center text-sm font-bold">
                 2
               </span>
               <span>Position the ticket QR code within the scanning frame</span>
             </li>
             <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-bold">
+              <span className="flex-shrink-0 w-6 h-6 bg-[#758BFD] bg-opacity-30 text-[#758BFD] rounded-full flex items-center justify-center text-sm font-bold">
                 3
               </span>
               <span>
@@ -177,7 +177,7 @@ export const QRScanner = () => {
               </span>
             </li>
             <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-bold">
+              <span className="flex-shrink-0 w-6 h-6 bg-[#758BFD] bg-opacity-30 text-[#758BFD] rounded-full flex items-center justify-center text-sm font-bold">
                 4
               </span>
               <span>Duplicate scans will be detected and rejected</span>

@@ -54,12 +54,6 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
         <div className="space-y-3">
           <div className="flex gap-2 justify-center flex-wrap">
             <button
-              onClick={copyAsSVG}
-              className="px-3 md:px-4 py-2 bg-[#4a3d8f] text-[#FFEDD8] rounded-lg hover:bg-[#5a4d9f] transition-colors font-medium border border-[#758BFD] border-opacity-30 text-xs md:text-sm"
-            >
-              📄 Copy SVG
-            </button>
-            <button
               onClick={copyAsPNG}
               className="px-3 md:px-4 py-2 bg-[#4a3d8f] text-[#FFEDD8] rounded-lg hover:bg-[#5a4d9f] transition-colors font-medium border border-[#758BFD] border-opacity-30 text-xs md:text-sm"
             >

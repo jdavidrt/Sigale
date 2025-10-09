@@ -20,7 +20,7 @@ export const TicketList = () => {
   }, [filteredTickets]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Search Bar */}
       <div>
         <input
@@ -28,22 +28,18 @@ export const TicketList = () => {
           placeholder={`🔍 ${t("searchTickets")}...`}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] placeholder-[#BEADFF] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50 text-sm md:text-base"
+          className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] placeholder-[#BEADFF] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50 text-sm"
         />
       </div>
 
       {/* Stats */}
-      <div className="flex gap-4 flex-wrap text-sm">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-[#4ade80]">{stats.total}</span>
-          <span className="text-[#BEADFF]">
-            {t("ticketsFound")}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-[#758BFD]">{stats.checkedIn}</span>
-          <span className="text-[#BEADFF]">{t("checkedIn")}</span>
-        </div>
+      <div className="flex gap-3 text-[13px]">
+        <span className="text-[#4ade80] font-semibold">
+          {stats.total} {stats.total === 1 ? 'ticket found' : 'tickets found'}
+        </span>
+        <span className="text-[#758BFD] font-semibold">
+          {stats.checkedIn} {t("checkedIn")}
+        </span>
       </div>
 
       {/* Tickets Grid */}
@@ -58,7 +54,7 @@ export const TicketList = () => {
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {filteredTickets.map((ticket) => (
             <TicketCard key={ticket.ticketId} ticket={ticket} />
           ))}

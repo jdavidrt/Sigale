@@ -1,3 +1,31 @@
+import { formatTo12Hour } from './timeFormat';
+
+/**
+ * Helper function to wrap text to fit within a maximum width
+ * @param {CanvasRenderingContext2D} ctx - Canvas context
+ * @param {string} text - Text to wrap
+ * @param {number} maxWidth - Maximum width for text
+ * @returns {string[]} Array of text lines
+ */
+const wrapText = (ctx, text, maxWidth) => {
+  const words = text.split(' ');
+  const lines = [];
+  let currentLine = words[0];
+
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i];
+    const width = ctx.measureText(currentLine + ' ' + word).width;
+    if (width < maxWidth) {
+      currentLine += ' ' + word;
+    } else {
+      lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  lines.push(currentLine);
+  return lines;
+};
+
 /**
  * Copy SVG QR code to clipboard as text
  * @param {SVGElement} svgElement - The SVG element to copy
@@ -31,9 +59,13 @@ export const copyPNGToClipboard = async (svgElement, ticket, event) => {
       img.onload = async () => {
         // Set canvas size with extra space for text
         const padding = 40;
-        const textHeight = 200;
+        const maxTextWidth = img.width + padding * 2 - 80; // Leave margin on sides
+
+        // Calculate dynamic height based on text wrapping
+        let estimatedTextHeight = 250; // Base height
+
         canvas.width = img.width + padding * 2;
-        canvas.height = img.height + textHeight + padding * 2;
+        canvas.height = img.height + estimatedTextHeight + padding * 2;
 
         // White background
         ctx.fillStyle = "white";
@@ -43,33 +75,53 @@ export const copyPNGToClipboard = async (svgElement, ticket, event) => {
         ctx.drawImage(img, padding, padding);
 
         // Add text below QR code
-        const textY = img.height + padding + 30;
-        ctx.fillStyle = "#111827";
+        let textY = img.height + padding + 30;
         ctx.textAlign = "center";
         const centerX = canvas.width / 2;
 
-        // Event name
+        // Event name with text wrapping
         ctx.font = "bold 24px system-ui, -apple-system, sans-serif";
-        ctx.fillText(event.name, centerX, textY);
+        ctx.fillStyle = "#111827";
+        const eventNameLines = wrapText(ctx, event.name, maxTextWidth);
+        eventNameLines.forEach((line, index) => {
+          ctx.fillText(line, centerX, textY + (index * 30));
+        });
+        textY += eventNameLines.length * 30 + 10;
 
         // Buyer name
         ctx.font = "20px system-ui, -apple-system, sans-serif";
-        ctx.fillText(ticket.buyerName, centerX, textY + 35);
+        ctx.fillText(ticket.buyerName, centerX, textY);
+        textY += 35;
 
-        // Event details
+        // Event details with 12h format
         ctx.font = "16px system-ui, -apple-system, sans-serif";
         ctx.fillStyle = "#4B5563";
+        const formattedTime = formatTo12Hour(event.entranceTime);
         ctx.fillText(
-          `📅 ${event.date} • ⏰ ${event.entranceTime}`,
+          `📅 ${event.date} • 🕐 ${formattedTime}`,
           centerX,
-          textY + 70
+          textY
         );
-        ctx.fillText(`📍 ${event.venue}`, centerX, textY + 95);
+        textY += 25;
+
+        // Venue name
+        ctx.fillText(`📍 ${event.venue}`, centerX, textY);
+        textY += 25;
+
+        // Venue address with text wrapping
+        if (event.address) {
+          ctx.font = "14px system-ui, -apple-system, sans-serif";
+          const addressLines = wrapText(ctx, event.address, maxTextWidth);
+          addressLines.forEach((line, index) => {
+            ctx.fillText(line, centerX, textY + (index * 20));
+          });
+          textY += addressLines.length * 20 + 10;
+        }
 
         // Ticket ID
         ctx.font = "12px monospace";
         ctx.fillStyle = "#9CA3AF";
-        ctx.fillText(`ID: ${ticket.ticketId}`, centerX, textY + 125);
+        ctx.fillText(`ID: ${ticket.ticketId}`, centerX, textY + 10);
 
         canvas.toBlob(async (blob) => {
           try {
@@ -124,9 +176,11 @@ export const shareQR = async (svgElement, ticket, event) => {
       img.onload = async () => {
         // Set canvas size with extra space for text
         const padding = 40;
-        const textHeight = 200;
+        const maxTextWidth = img.width + padding * 2 - 80;
+        let estimatedTextHeight = 250;
+
         canvas.width = img.width + padding * 2;
-        canvas.height = img.height + textHeight + padding * 2;
+        canvas.height = img.height + estimatedTextHeight + padding * 2;
 
         // White background
         ctx.fillStyle = "white";
@@ -136,33 +190,53 @@ export const shareQR = async (svgElement, ticket, event) => {
         ctx.drawImage(img, padding, padding);
 
         // Add text below QR code
-        const textY = img.height + padding + 30;
-        ctx.fillStyle = "#111827";
+        let textY = img.height + padding + 30;
         ctx.textAlign = "center";
         const centerX = canvas.width / 2;
 
-        // Event name
+        // Event name with text wrapping
         ctx.font = "bold 24px system-ui, -apple-system, sans-serif";
-        ctx.fillText(event.name, centerX, textY);
+        ctx.fillStyle = "#111827";
+        const eventNameLines = wrapText(ctx, event.name, maxTextWidth);
+        eventNameLines.forEach((line, index) => {
+          ctx.fillText(line, centerX, textY + (index * 30));
+        });
+        textY += eventNameLines.length * 30 + 10;
 
         // Buyer name
         ctx.font = "20px system-ui, -apple-system, sans-serif";
-        ctx.fillText(ticket.buyerName, centerX, textY + 35);
+        ctx.fillText(ticket.buyerName, centerX, textY);
+        textY += 35;
 
-        // Event details
+        // Event details with 12h format
         ctx.font = "16px system-ui, -apple-system, sans-serif";
         ctx.fillStyle = "#4B5563";
+        const formattedTime = formatTo12Hour(event.entranceTime);
         ctx.fillText(
-          `📅 ${event.date} • ⏰ ${event.entranceTime}`,
+          `📅 ${event.date} • 🕐 ${formattedTime}`,
           centerX,
-          textY + 70
+          textY
         );
-        ctx.fillText(`📍 ${event.venue}`, centerX, textY + 95);
+        textY += 25;
+
+        // Venue name
+        ctx.fillText(`📍 ${event.venue}`, centerX, textY);
+        textY += 25;
+
+        // Venue address with text wrapping
+        if (event.address) {
+          ctx.font = "14px system-ui, -apple-system, sans-serif";
+          const addressLines = wrapText(ctx, event.address, maxTextWidth);
+          addressLines.forEach((line, index) => {
+            ctx.fillText(line, centerX, textY + (index * 20));
+          });
+          textY += addressLines.length * 20 + 10;
+        }
 
         // Ticket ID
         ctx.font = "12px monospace";
         ctx.fillStyle = "#9CA3AF";
-        ctx.fillText(`ID: ${ticket.ticketId}`, centerX, textY + 125);
+        ctx.fillText(`ID: ${ticket.ticketId}`, centerX, textY + 10);
 
         canvas.toBlob(async (blob) => {
           try {

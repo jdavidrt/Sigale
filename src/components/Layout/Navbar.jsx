@@ -15,6 +15,7 @@ export const Navbar = () => {
     { path: "/", label: t("home"), icon: "🏠" },
     { path: "/sell-tickets", label: t("sell"), icon: "🎫" },
     { path: "/validate-qr", label: t("validate"), icon: "✅" },
+    { path: "/copy-event", label: "Copy Event", icon: "📋" },
     { path: "/dashboard", label: t("dashboard"), icon: "📊" },
   ];
 
@@ -103,8 +104,8 @@ export const Navbar = () => {
                   key={link.path}
                   to={link.path}
                   onClick={handleLinkClick}
-                  className={`block px-12 py-10 rounded-3xl font-black transition-all duration-300 flex items-center gap-10 text-6xl md:text-8xl ${isActive(link.path)
-                    ? "bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] shadow-2xl scale-105"
+                  className={`block px-12 py-10 rounded-3xl font-black transition-all duration-300 flex items-center gap-10 text-16xl md:text-32xl ${isActive(link.path)
+                    ? "bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] shadow-2xl"
                     : "text-[#BEADFF] hover:bg-[#4a3d8f] hover:bg-opacity-50 hover:scale-105"
                     }`}
                 >
@@ -112,7 +113,7 @@ export const Navbar = () => {
                   <span className="text-7xl md:text-9xl flex-shrink-0">{link.icon}</span>
 
                   {/* HUGE Label */}
-                  <span className="tracking-wider">{link.label}</span>
+                  <span className="h1">{link.label}</span>
                 </Link>
               ))}
             </nav>
