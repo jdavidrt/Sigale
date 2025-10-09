@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { QRDisplay } from "./QRDisplay";
 import { useEvent } from "../../context/EventContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 export const TicketCard = ({ ticket }) => {
   const { event } = useEvent();
+  const { t } = useLanguage();
   const [showQR, setShowQR] = useState(false);
 
   const formatDate = (dateString) => {
@@ -24,74 +26,87 @@ export const TicketCard = ({ ticket }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="p-6">
+    <div className="bg-[#2a2a2a] rounded-xl border-2 border-[#4ade80] border-opacity-50 overflow-hidden hover:border-opacity-70 transition-all">
+      <div className="p-5 md:p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900 mb-1">
+            <h3 className="text-lg md:text-xl font-bold text-[#FFEDD8] mb-1">
               {ticket.buyerName}
             </h3>
-            <p className="text-sm text-gray-500 font-mono">{ticket.ticketId}</p>
+            <p className="text-xs md:text-sm text-[#758BFD] font-mono">{ticket.ticketId}</p>
           </div>
-          <div className="flex items-center gap-2">
-            {ticket.checkedIn && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                ✓ Checked In
-              </span>
-            )}
-          </div>
+          {ticket.checkedIn && (
+            <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-[#4ade80]">
+              <span className="text-base md:text-xl font-bold text-black">✓</span>
+            </div>
+          )}
         </div>
 
+        {/* Divider */}
+        <div className="h-px bg-[#758BFD] opacity-30 mb-4"></div>
+
         {/* Details Grid */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-2 gap-4 mb-4 text-sm md:text-base">
           <div>
-            <p className="text-xs text-gray-500 mb-1">Ticket Type</p>
-            <p className="text-sm font-semibold text-gray-900 capitalize">
+            <p className="text-xs md:text-sm text-[#BEADFF] opacity-70 mb-1">
+              {t("ticketType")}
+            </p>
+            <p className="font-bold text-[#FFEDD8] capitalize">
               {ticket.ticketType}
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-1">Price</p>
-            <p className="text-sm font-semibold text-gray-900">
+            <p className="text-xs md:text-sm text-[#BEADFF] opacity-70 mb-1">
+              {t("price")}
+            </p>
+            <p className="font-bold text-[#FFEDD8]">
               ${event.ticketTypes[ticket.ticketType]?.toLocaleString()}
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-1">ID Number</p>
-            <p className="text-sm font-medium text-gray-700">{ticket.buyerId}</p>
+            <p className="text-xs md:text-sm text-[#BEADFF] opacity-70 mb-1">
+              {t("idNumber")}
+            </p>
+            <p className="text-[#FFEDD8]">{ticket.buyerId}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-1">Phone</p>
-            <p className="text-sm font-medium text-gray-700">{ticket.buyerPhone}</p>
+            <p className="text-xs md:text-sm text-[#BEADFF] opacity-70 mb-1">
+              {t("phoneNumber")}
+            </p>
+            <p className="text-[#FFEDD8]">{ticket.buyerPhone}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-1">Purchase Date</p>
-            <p className="text-sm font-medium text-gray-700">
+            <p className="text-xs md:text-sm text-[#BEADFF] opacity-70 mb-1">
+              {t("purchaseDate")}
+            </p>
+            <p className="text-[#FFEDD8]">
               {formatDate(ticket.purchaseDate)}
             </p>
           </div>
           {ticket.checkedIn && (
             <div>
-              <p className="text-xs text-gray-500 mb-1">Check-in Time</p>
-              <p className="text-sm font-medium text-green-700">
+              <p className="text-xs md:text-sm text-[#BEADFF] opacity-70 mb-1">
+                {t("checkedInAt")}
+              </p>
+              <p className="text-[#4ade80] font-medium">
                 {formatTime(ticket.checkInTime)}
               </p>
             </div>
           )}
         </div>
 
-        {/* Actions */}
+        {/* Show QR Button */}
         <button
           onClick={() => setShowQR(!showQR)}
-          className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium text-sm"
+          className="w-full px-4 py-3 bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-lg transition-colors font-bold border border-[#758BFD] border-opacity-30 text-sm md:text-base"
         >
           {showQR ? "Hide QR Code" : "Show QR Code"}
         </button>
 
         {/* QR Code Display */}
         {showQR && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="mt-6 pt-6 border-t border-[#758BFD] border-opacity-30">
             <QRDisplay ticket={ticket} event={event} />
           </div>
         )}

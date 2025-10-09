@@ -1,0 +1,91 @@
+<svg viewBox="0 0 390 844" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#27187E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#030312;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="cardGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1152;stop-opacity:0.95" />
+      <stop offset="100%" style="stop-color:#0a0620;stop-opacity:0.95" />
+    </linearGradient>
+    
+    <linearGradient id="buttonGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#758BFD;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#BEADFF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main background -->
+  <rect width="390" height="844" fill="url(#bgGradient)"/>
+  
+  <!-- Decorative circle -->
+  <circle cx="340" cy="150" r="100" fill="#758BFD" opacity="0.04"/>
+  
+  <!-- Top bar -->
+  <rect width="390" height="60" fill="#030312" opacity="0.95"/>
+  <text x="20" y="28" font-family="Arial, sans-serif" font-size="14" fill="#758BFD">Sígale</text>
+  <text x="20" y="48" font-family="Arial, sans-serif" font-size="14" fill="#BEADFF">Prueba 2</text>
+  
+  <!-- Icons placeholder (top right) -->
+  <rect x="260" y="18" width="24" height="24" rx="4" fill="#FF8C00" opacity="0.3"/>
+  <rect x="290" y="18" width="24" height="24" rx="4" fill="#FF8C00" opacity="0.3"/>
+  <rect x="320" y="18" width="24" height="24" rx="4" fill="#FF8C00" opacity="0.3"/>
+  
+  <!-- Burger menu icon -->
+  <rect x="345" y="22" width="24" height="2" rx="1" fill="#BEADFF"/>
+  <rect x="345" y="29" width="24" height="2" rx="1" fill="#BEADFF"/>
+  <rect x="345" y="36" width="24" height="2" rx="1" fill="#BEADFF"/>
+  
+  <!-- Main card container -->
+  <rect x="20" y="90" width="350" height="720" rx="24" fill="url(#cardGradient)"/>
+  <rect x="20" y="90" width="350" height="720" rx="24" fill="none" stroke="#758BFD" stroke-width="1" opacity="0.2"/>
+  
+  <!-- Page title -->
+  <text x="40" y="130" font-size="20" fill="#FF8C00">🎫</text>
+  <text x="70" y="130" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#FFEDD8">Vender Boletas</text>
+  
+  <!-- Subtitle -->
+  <text x="40" y="160" font-family="Arial, sans-serif" font-size="13" fill="#BEADFF" opacity="0.8">Crear y administrar ventas de boletas para su evento</text>
+  
+  <!-- Section title -->
+  <text x="40" y="200" font-size="18" fill="#FF8C00">🎫</text>
+  <text x="70" y="200" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#FF8C00">Nueva Venta de Boleta</text>
+  
+  <!-- Section description -->
+  <text x="40" y="230" font-family="Arial, sans-serif" font-size="13" fill="#BEADFF" opacity="0.7">Complete la información del comprador para generar</text>
+  <text x="40" y="248" font-family="Arial, sans-serif" font-size="13" fill="#BEADFF" opacity="0.7">una boleta</text>
+  
+  <!-- Buyer Name field -->
+  <text x="40" y="280" font-family="Arial, sans-serif" font-size="12" fill="#FFEDD8">Nombre del Comprador *</text>
+  <rect x="40" y="288" width="310" height="42" rx="8" fill="#4a3d8f"/>
+  <rect x="40" y="288" width="310" height="42" rx="8" fill="none" stroke="#758BFD" stroke-width="1" opacity="0.3"/>
+  <text x="52" y="314" font-family="Arial, sans-serif" font-size="14" fill="#BEADFF" opacity="0.5">Ingrese nombre completo</text>
+  
+  <!-- ID Number field -->
+  <text x="40" y="355" font-family="Arial, sans-serif" font-size="12" fill="#FFEDD8">Número de Identificación *</text>
+  <rect x="40" y="363" width="310" height="42" rx="8" fill="#4a3d8f"/>
+  <rect x="40" y="363" width="310" height="42" rx="8" fill="none" stroke="#758BFD" stroke-width="1" opacity="0.3"/>
+  <text x="52" y="389" font-family="Arial, sans-serif" font-size="14" fill="#BEADFF" opacity="0.5">Ingrese número de identificación</text>
+  
+  <!-- Phone Number field -->
+  <text x="40" y="430" font-family="Arial, sans-serif" font-size="12" fill="#FFEDD8">Número de Teléfono *</text>
+  <rect x="40" y="438" width="310" height="42" rx="8" fill="#4a3d8f"/>
+  <rect x="40" y="438" width="310" height="42" rx="8" fill="none" stroke="#758BFD" stroke-width="1" opacity="0.3"/>
+  <text x="52" y="464" font-family="Arial, sans-serif" font-size="14" fill="#BEADFF" opacity="0.5">+57 300 1234567</text>
+  
+  <!-- Ticket Type field -->
+  <text x="40" y="505" font-family="Arial, sans-serif" font-size="12" fill="#FFEDD8">Tipo de Boleta *</text>
+  <rect x="40" y="513" width="310" height="42" rx="8" fill="#4a3d8f"/>
+  <rect x="40" y="513" width="310" height="42" rx="8" fill="none" stroke="#758BFD" stroke-width="1" opacity="0.3"/>
+  <text x="52" y="539" font-family="Arial, sans-serif" font-size="14" fill="#BEADFF" opacity="0.5">Seleccione un tipo de boleta</text>
+  
+  <!-- Dropdown arrow -->
+  <path d="M 335 527 L 340 533 L 345 527" stroke="#758BFD" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Create Button -->
+  <rect x="40" y="580" width="310" height="50" rx="12" fill="url(#buttonGradient)"/>
+  <rect x="40" y="580" width="310" height="50" rx="12" fill="none" stroke="#BEADFF" stroke-width="1" opacity="0.3"/>
+  <text x="195" y="610" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#FFEDD8" text-anchor="middle">🎫 Crear Boleta</text>
+</svg>

@@ -8,44 +8,57 @@ export const ValidateQRPage = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-3">
-          🎫 {t("checkInValidation")}
-        </h1>
-        <p className="text-lg text-gray-600">
-          {t("scanQRValidate")}
-        </p>
-      </div>
+    <div className="min-h-screen px-4 md:px-6 py-6">
+      {/* Decorative circles */}
+      <div className="fixed top-[700px] left-[50px] w-[160px] h-[160px] rounded-full bg-[#758BFD] opacity-[0.03] pointer-events-none" />
+      <div className="fixed top-[200px] right-[-50px] w-[200px] h-[200px] rounded-full bg-[#BEADFF] opacity-[0.04] pointer-events-none" />
 
-      {/* Tabs */}
-      <div className="flex justify-center mb-6">
-        <div className="inline-flex bg-white rounded-lg shadow-md border border-gray-100 p-1">
-          <button
-            onClick={() => setActiveTab("scanner")}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-              activeTab === "scanner"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            📷 {t("scanner")}
-          </button>
-          <button
-            onClick={() => setActiveTab("tickets")}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-              activeTab === "tickets"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            📋 {t("ticketList")}
-          </button>
+      {/* Main Card */}
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-gradient-to-b from-[#1a1152] to-[#0a0620] rounded-3xl p-6 md:p-8 border border-[#758BFD] border-opacity-20 shadow-2xl">
+          {/* Page Title */}
+          <div className="mb-6 md:mb-8">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-2xl">🎫</span>
+              <h1 className="text-2xl md:text-3xl font-bold text-[#FFEDD8]">
+                {t("checkInValidation")}
+              </h1>
+            </div>
+            <p className="text-sm md:text-base text-[#BEADFF] opacity-80">
+              {t("scanQRValidate")}
+            </p>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setActiveTab("scanner")}
+              className={`flex-1 px-4 py-3 rounded-lg font-bold transition-all text-sm md:text-base ${
+                activeTab === "scanner"
+                  ? "bg-[#4a3d8f] text-[#FFEDD8] border border-[#758BFD] border-opacity-50"
+                  : "bg-[#2a2a2a] text-[#BEADFF] border border-[#758BFD] border-opacity-30 hover:bg-[#3a3a3a]"
+              }`}
+            >
+              📷 {t("scanner")}
+            </button>
+            <button
+              onClick={() => setActiveTab("tickets")}
+              className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all text-sm md:text-base ${
+                activeTab === "tickets"
+                  ? "bg-[#4a3d8f] text-[#FFEDD8] border border-[#758BFD] border-opacity-50"
+                  : "bg-[#2a2a2a] text-[#BEADFF] border border-[#758BFD] border-opacity-30 hover:bg-[#3a3a3a]"
+              }`}
+            >
+              📋 {t("ticketList")}
+            </button>
+          </div>
+
+          {/* Content */}
+          <div>
+            {activeTab === "scanner" ? <QRScanner /> : <TicketList />}
+          </div>
         </div>
       </div>
-
-      {/* Content */}
-      {activeTab === "scanner" ? <QRScanner /> : <TicketList />}
     </div>
   );
 };

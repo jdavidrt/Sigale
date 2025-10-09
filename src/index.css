@@ -14,7 +14,10 @@
 }
 
 body {
-  color: #111827;
+  /* New color scheme from mockups */
+  background: linear-gradient(180deg, #27187E 0%, #030312 100%);
+  background-attachment: fixed;
+  color: #FFEDD8;
   letter-spacing: -0.01em;
   /* Mobile-friendly base font size - prevents iOS zoom on input focus */
   font-size: 16px;
@@ -23,6 +26,7 @@ body {
   overflow-x: hidden;
   /* Smooth scrolling for better mobile UX */
   -webkit-overflow-scrolling: touch;
+  min-height: 100vh;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -66,8 +70,42 @@ input, textarea, select {
 /* Mobile-friendly focus states */
 input:focus, textarea:focus, select:focus, button:focus {
   outline: none;
-  /* Visual feedback for accessibility */
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  /* Visual feedback for accessibility - using new accent color */
+  box-shadow: 0 0 0 3px rgba(117, 139, 253, 0.3);
+}
+
+/* CSS Custom Properties for new design system */
+:root {
+  /* Main gradient colors */
+  --bg-gradient-start: #27187E;
+  --bg-gradient-end: #030312;
+
+  /* Card colors */
+  --card-gradient-start: #1a1152;
+  --card-gradient-end: #0a0620;
+  --card-bg-dark: #2a2a2a;
+  --card-bg-darker: #1a1a1a;
+
+  /* Input/field background */
+  --input-bg: #4a3d8f;
+
+  /* Accent colors */
+  --accent-primary: #758BFD;
+  --accent-secondary: #BEADFF;
+  --accent-orange: #FF8C00;
+
+  /* Text colors */
+  --text-primary: #FFEDD8;
+  --text-secondary: #BEADFF;
+
+  /* Status colors */
+  --success: #4ade80;
+  --error: #ef4444;
+  --warning: #f59e0b;
+
+  /* Opacity variations */
+  --border-opacity: 0.2;
+  --text-muted-opacity: 0.7;
 }
 
 /* Smooth transitions for better mobile feel */
@@ -119,10 +157,23 @@ html {
   }
 }
 
+@keyframes slideFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
 
 .animate-slideFromLeft {
   animation: slideFromLeft 0.3s ease-out;
+}
+
+.animate-slideFromRight {
+  animation: slideFromRight 0.3s ease-out;
 }

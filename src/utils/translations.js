@@ -7,6 +7,7 @@ export const translations = {
     sell: "Vender",
     validate: "Validar",
     dashboard: "Panel",
+    event: "Evento",
 
     // Common
     save: "Guardar",
@@ -116,6 +117,10 @@ export const translations = {
     setupEvent: "Configurar Evento",
     eventInfo: "Información del Evento",
     editEvent: "Editar Evento",
+    sellTicketTypes: "Vender Tipos de Boletas",
+    viewAnalytics: "Ver análisis y estadísticas",
+    mobileFirst: "Diseño móvil primero",
+    toggleLanguage: "Cambiar idioma",
 
     // Dashboard (placeholder for Stage 3)
     salesDashboard: "Panel de Ventas",
@@ -150,6 +155,7 @@ export const translations = {
     sell: "Sell",
     validate: "Validate",
     dashboard: "Dashboard",
+    event: "Event",
 
     // Common
     save: "Save",
@@ -259,6 +265,10 @@ export const translations = {
     setupEvent: "Setup Event",
     eventInfo: "Event Information",
     editEvent: "Edit Event",
+    sellTicketTypes: "Sell Ticket Types",
+    viewAnalytics: "View analytics and statistics",
+    mobileFirst: "Mobile-first design",
+    toggleLanguage: "Toggle language",
 
     // Dashboard (placeholder for Stage 3)
     salesDashboard: "Sales Dashboard",

@@ -1,0 +1,93 @@
+<svg viewBox="0 0 390 844" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#27187E;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#4a3d8f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B4757;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="cardGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2a2a2a;stop-opacity:0.95" />
+      <stop offset="100%" style="stop-color:#1a1a1a;stop-opacity:0.95" />
+    </linearGradient>
+    
+    <linearGradient id="buttonGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#758BFD;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#BEADFF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main background -->
+  <rect width="390" height="844" fill="url(#bgGradient)"/>
+  
+  <!-- Top bar -->
+  <rect width="390" height="60" fill="#030312" opacity="0.95"/>
+  <text x="20" y="28" font-family="Arial, sans-serif" font-size="14" fill="#758BFD">Sígale</text>
+  <text x="20" y="48" font-family="Arial, sans-serif" font-size="14" fill="#BEADFF">Prueba 2</text>
+  
+  <!-- Icons placeholder (top right) -->
+  <rect x="260" y="18" width="24" height="24" rx="4" fill="#FF8C00" opacity="0.3"/>
+  <rect x="290" y="18" width="24" height="24" rx="4" fill="#FF8C00" opacity="0.3"/>
+  <rect x="320" y="18" width="24" height="24" rx="4" fill="#FF8C00" opacity="0.3"/>
+  
+  <!-- Burger menu icon -->
+  <rect x="345" y="22" width="24" height="2" rx="1" fill="#BEADFF"/>
+  <rect x="345" y="29" width="24" height="2" rx="1" fill="#BEADFF"/>
+  <rect x="345" y="36" width="24" height="2" rx="1" fill="#BEADFF"/>
+  
+  <!-- Event title section -->
+  <text x="20" y="110" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#FFEDD8">Prueba 2</text>
+  
+  <!-- Location icon and text -->
+  <text x="20" y="155" font-size="18" fill="#FFEDD8">📍</text>
+  <text x="45" y="155" font-family="Arial, sans-serif" font-size="16" fill="#FFEDD8">Acá Parchamos</text>
+  
+  <!-- Address -->
+  <text x="20" y="185" font-family="Arial, sans-serif" font-size="15" fill="#BEADFF">Calle 123 #14-89</text>
+  
+  <!-- Calendar icon and date -->
+  <text x="20" y="220" font-size="18" fill="#FFEDD8">📅</text>
+  <text x="45" y="220" font-family="Arial, sans-serif" font-size="15" fill="#FFEDD8">Wednesday, October 8, 2025</text>
+  
+  <!-- Clock icon and time -->
+  <text x="20" y="255" font-size="18" fill="#FFEDD8">🕐</text>
+  <text x="45" y="255" font-family="Arial, sans-serif" font-size="15" fill="#FFEDD8">17:33</text>
+  
+  <!-- Edit link -->
+  <text x="20" y="295" font-size="16" fill="#FFEDD8">✏️</text>
+  <text x="45" y="295" font-family="Arial, sans-serif" font-size="15" fill="#758BFD" text-decoration="underline">Editar Evento</text>
+  
+  <!-- Ticket types section -->
+  <rect x="0" y="330" width="390" height="514" fill="url(#cardGradient)"/>
+  
+  <text x="20" y="370" font-size="18" fill="#FF8C00">🎫</text>
+  <text x="45" y="370" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#FFEDD8">Tipos de Boletas</text>
+  
+  <!-- PREVENTA card -->
+  <rect x="20" y="400" width="350" height="100" rx="8" fill="#2a2a2a"/>
+  <rect x="20" y="400" width="350" height="100" rx="8" fill="none" stroke="#8B4757" stroke-width="2"/>
+  <text x="30" y="430" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#FFEDD8">PREVENTA</text>
+  <text x="30" y="470" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#758BFD">$25.000</text>
+  
+  <!-- TAQUILLA card -->
+  <rect x="20" y="515" width="350" height="100" rx="8" fill="#2a2a2a"/>
+  <rect x="20" y="515" width="350" height="100" rx="8" fill="none" stroke="#8B4757" stroke-width="2"/>
+  <text x="30" y="545" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#FFEDD8">TAQUILLA</text>
+  <text x="30" y="585" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#758BFD">$30.000</text>
+  
+  <!-- Welcome section -->
+  <text x="20" y="650" font-size="18" fill="#FF8C00">⚡</text>
+  <text x="45" y="650" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#FFEDD8">Bienvenido a Sígale</text>
+  
+  <text x="20" y="685" font-size="18" fill="#FF8C00">🎫</text>
+  
+  <!-- Action links -->
+  <text x="20" y="725" font-family="Arial, sans-serif" font-size="16" fill="#758BFD" font-weight="bold" text-decoration="underline">Vender Tipos de Boletas</text>
+  
+  <text x="20" y="765" font-family="Arial, sans-serif" font-size="16" fill="#758BFD" text-decoration="underline">Nueva Venta de Boleta</text>
+  
+  <text x="20" y="805" font-size="18" fill="#4ade80">✓</text>
+  
+  <text x="20" y="835" font-family="Arial, sans-serif" font-size="16" fill="#758BFD" font-weight="bold" text-decoration="underline">Validar QR</text>
+</svg>

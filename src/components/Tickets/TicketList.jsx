@@ -1,9 +1,11 @@
 import { useState, useMemo } from "react";
 import { useTickets } from "../../context/TicketContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { TicketCard } from "./TicketCard";
 
 export const TicketList = () => {
   const { tickets, searchTickets } = useTickets();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredTickets = useMemo(() => {
@@ -20,55 +22,43 @@ export const TicketList = () => {
   return (
     <div className="space-y-6">
       {/* Search Bar */}
-      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <div className="flex-1 w-full">
-            <input
-              type="text"
-              placeholder="🔍 Search by name, ID, phone, or ticket number..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-            />
-          </div>
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium whitespace-nowrap"
-            >
-              Clear Search
-            </button>
-          )}
-        </div>
+      <div>
+        <input
+          type="text"
+          placeholder={`🔍 ${t("searchTickets")}...`}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] placeholder-[#BEADFF] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50 text-sm md:text-base"
+        />
+      </div>
 
-        {/* Stats */}
-        <div className="mt-4 flex gap-4 flex-wrap">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold text-gray-900">{stats.total}</span>
-            <span className="text-gray-600">
-              {stats.total === 1 ? "ticket" : "tickets"} found
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold text-green-700">{stats.checkedIn}</span>
-            <span className="text-gray-600">checked in</span>
-          </div>
+      {/* Stats */}
+      <div className="flex gap-4 flex-wrap text-sm">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-[#4ade80]">{stats.total}</span>
+          <span className="text-[#BEADFF]">
+            {t("ticketsFound")}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-[#758BFD]">{stats.checkedIn}</span>
+          <span className="text-[#BEADFF]">{t("checkedIn")}</span>
         </div>
       </div>
 
       {/* Tickets Grid */}
       {filteredTickets.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-md p-12 border border-gray-100 text-center">
+        <div className="bg-[#2a2a2a] rounded-xl p-12 border border-[#758BFD] border-opacity-20 text-center">
           <div className="text-6xl mb-4">🎫</div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">No Tickets Found</h3>
-          <p className="text-gray-600">
+          <h3 className="text-xl font-bold text-[#FFEDD8] mb-2">{t("noTickets")}</h3>
+          <p className="text-[#BEADFF]">
             {searchQuery
               ? "Try a different search query"
-              : "No tickets have been created yet"}
+              : t("noTicketsDesc")}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-4">
           {filteredTickets.map((ticket) => (
             <TicketCard key={ticket.ticketId} ticket={ticket} />
           ))}

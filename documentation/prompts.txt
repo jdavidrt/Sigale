@@ -1,2 +1,1 @@
-now, when I copy or share the QR png, it must include the event information and the name of the buyer
-also, ID must be a number input when selling a tiket, as the phone is
+add readme.md, documentation/claude.md and readme.md to context

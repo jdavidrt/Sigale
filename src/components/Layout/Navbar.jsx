@@ -1,20 +1,15 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
-import { useState } from "react";
 
 export const Navbar = () => {
   const { event } = useEvent();
-  const { language, toggleLanguage, t } = useLanguage();
+  const { t, toggleLanguage, language } = useLanguage();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const navStyle = event ? { backgroundColor: event.colors.base } : { backgroundColor: "#1A1A2E" };
-  const accentColor = event ? event.colors.emphasis : "#FF6B6B";
-
   const isActive = (path) => location.pathname === path;
-
-  const closeMenu = () => setIsMenuOpen(false);
 
   const navLinks = [
     { path: "/", label: t("home"), icon: "🏠" },
@@ -23,92 +18,118 @@ export const Navbar = () => {
     { path: "/dashboard", label: t("dashboard"), icon: "📊" },
   ];
 
+  const handleLinkClick = () => {
+    setIsMenuOpen(false);
+  };
+
   return (
     <>
-      <nav style={navStyle} className="shadow-xl sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex justify-between items-center">
-            {/* Logo Section */}
-            <Link to="/" className="flex flex-col text-white hover:opacity-80 transition-opacity">
-              <span className="text-2xl md:text-3xl font-bold tracking-tight">Sígale</span>
-              {event && <span className="text-xs md:text-sm opacity-80 truncate max-w-[150px] md:max-w-none">{event.name}</span>}
-            </Link>
+      {/* Top Bar */}
+      <nav className="bg-[#030312] bg-opacity-95 shadow-xl sticky top-0 z-50">
+        <div className="px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
+          {/* Logo Section */}
+          <Link to="/" className="flex flex-col hover:opacity-80 transition-opacity">
+            <span className="text-base md:text-lg font-bold text-[#BEADFF] tracking-tight">
+              Sígale
+            </span>
+            {event && (
+              <span className="text-xs md:text-sm text-[#BEADFF] opacity-90 truncate max-w-[150px] md:max-w-[200px]">
+                {event.name}
+              </span>
+            )}
+          </Link>
+
+          {/* Right Side: Language Toggle + Burger Menu */}
+          <div className="flex items-center gap-3 md:gap-4">
+            {/* Language Toggle Button */}
+            <button
+              onClick={toggleLanguage}
+              className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 text-[#BEADFF] text-xs md:text-sm font-medium hover:bg-[#5a4d9f] transition-all"
+              aria-label={t("toggleLanguage")}
+            >
+              🌐 {language.toUpperCase()}
+            </button>
 
             {/* Burger Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-all duration-200"
+              className="flex flex-col gap-1.5 w-6 h-6 md:w-7 md:h-7 justify-center items-center hover:opacity-70 transition-opacity"
               aria-label="Toggle menu"
             >
-              <svg
-                className="w-6 h-6 md:w-8 md:h-8"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                {isMenuOpen ? (
-                  <path d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
+              <span
+                className={`w-6 h-0.5 bg-[#BEADFF] rounded-full transition-all duration-300 ${isMenuOpen ? "rotate-45 translate-y-2" : ""
+                  }`}
+              ></span>
+              <span
+                className={`w-6 h-0.5 bg-[#BEADFF] rounded-full transition-all duration-300 ${isMenuOpen ? "opacity-0" : ""
+                  }`}
+              ></span>
+              <span
+                className={`w-6 h-0.5 bg-[#BEADFF] rounded-full transition-all duration-300 ${isMenuOpen ? "-rotate-45 -translate-y-2" : ""
+                  }`}
+              ></span>
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Overlay Menu */}
+      {/* Slide-out Menu Overlay */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[9999]">
-          {/* Dark Overlay */}
+        <>
+          {/* Backdrop */}
           <div
-            className="absolute inset-0 animate-fadeIn"
-            onClick={closeMenu}
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
-          />
+            className="fixed inset-0 bg-black bg-opacity-60 z-40 animate-fadeIn"
+            onClick={() => setIsMenuOpen(false)}
+          ></div>
 
-          {/* Menu Panel from Left */}
-          <div
-            className="absolute top-0 left-0 bottom-0 h-screen w-[85%] max-w-[400px] bg-white shadow-2xl flex flex-col animate-slideFromLeft z-[10000]"
-          >
-            {/* Navigation Links */}
-            <div className="flex flex-col pt-16 flex-1">
+          {/* Menu Panel */}
+          <div className="fixed top-0 right-0 h-full w-full md:w-80 bg-gradient-to-b from-[#1a1152] to-[#0a0620] shadow-2xl z-50 animate-slideFromRight border-l border-[#758BFD] border-opacity-20">
+            {/* Menu Header */}
+            <div className="p-6 border-b border-[#758BFD] border-opacity-20">
+              <h2 className="text-xl md:text-2xl font-bold text-[#FFEDD8] mb-1">
+                Menu
+              </h2>
+              {event && (
+                <p className="text-xs md:text-sm text-[#BEADFF] opacity-80">
+                  {event.name}
+                </p>
+              )}
+            </div>
+
+            {/* Menu Links */}
+            <nav className="p-10 space-y-8">
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
-                  onClick={closeMenu}
-                  className="px-6 py-6 transition-all duration-200 flex items-center gap-5 text-gray-800 hover:bg-gray-50 border-b border-gray-100"
+                  onClick={handleLinkClick}
+                  className={`block px-12 py-10 rounded-3xl font-black transition-all duration-300 flex items-center gap-10 text-6xl md:text-8xl ${isActive(link.path)
+                    ? "bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] shadow-2xl scale-105"
+                    : "text-[#BEADFF] hover:bg-[#4a3d8f] hover:bg-opacity-50 hover:scale-105"
+                    }`}
                 >
-                  <span className="text-5xl">{link.icon}</span>
-                  <span className="text-3xl font-normal">{link.label}</span>
+                  {/* HUGE Icon */}
+                  <span className="text-7xl md:text-9xl flex-shrink-0">{link.icon}</span>
+
+                  {/* HUGE Label */}
+                  <span className="tracking-wider">{link.label}</span>
                 </Link>
               ))}
+            </nav>
 
-              {/* Edit Event Link */}
-              <Link
-                to="/edit-event"
-                onClick={closeMenu}
-                className="px-6 py-6 transition-all duration-200 flex items-center gap-5 text-gray-800 hover:bg-gray-50 border-b border-gray-100"
-              >
-                <span className="text-5xl">⚙️</span>
-                <span className="text-3xl font-normal">{t("editEvent") || "Editar Evento"}</span>
-              </Link>
-
-              {/* Language Toggle */}
-              <button
-                onClick={toggleLanguage}
-                className="px-6 py-6 transition-all duration-200 flex items-center gap-5 text-gray-800 hover:bg-gray-50 border-b border-gray-100"
-              >
-                <span className="text-5xl">🌐</span>
-                <span className="text-3xl font-normal">{language === "es" ? "Español" : "English"}</span>
-              </button>
+            {/* Menu Footer */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-[#758BFD] border-opacity-20">
+              <div className="text-center">
+                <p className="text-xs text-[#BEADFF] opacity-60">
+                  Sígale v1.0
+                </p>
+                <p className="text-xs text-[#758BFD] opacity-50 mt-1">
+                  {t("mobileFirst")}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );

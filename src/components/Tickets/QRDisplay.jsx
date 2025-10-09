@@ -2,29 +2,31 @@ import { useRef, useCallback, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { generateQRData } from "../../utils/qrGenerator";
 import { copySVGToClipboard, copyPNGToClipboard, shareQR } from "../../utils/qrCopy";
+import { useLanguage } from "../../context/LanguageContext";
 
 export const QRDisplay = ({ ticket, event, showActions = true }) => {
   const qrRef = useRef(null);
   const [copyStatus, setCopyStatus] = useState("");
+  const { t } = useLanguage();
   const qrData = generateQRData(ticket, event);
 
   const copyAsSVG = useCallback(async () => {
     if (qrRef.current) {
       const svg = qrRef.current.querySelector("svg");
       const success = await copySVGToClipboard(svg);
-      setCopyStatus(success ? "✓ SVG copied!" : "✗ Failed to copy");
+      setCopyStatus(success ? `✓ ${t("copiedToClipboard")}` : "✗ Failed to copy");
       setTimeout(() => setCopyStatus(""), 2000);
     }
-  }, []);
+  }, [t]);
 
   const copyAsPNG = useCallback(async () => {
     if (qrRef.current) {
       const svg = qrRef.current.querySelector("svg");
       const success = await copyPNGToClipboard(svg, ticket, event);
-      setCopyStatus(success ? "✓ PNG copied!" : "✗ Failed to copy");
+      setCopyStatus(success ? `✓ ${t("copiedToClipboard")}` : "✗ Failed to copy");
       setTimeout(() => setCopyStatus(""), 2000);
     }
-  }, [ticket, event]);
+  }, [ticket, event, t]);
 
   const handleShare = useCallback(async () => {
     if (qrRef.current) {
@@ -39,49 +41,40 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
 
   return (
     <div className="space-y-4">
+      {/* QR Code with white background */}
       <div
         ref={qrRef}
-        className="flex justify-center p-6 bg-white rounded-xl shadow-sm border border-gray-100"
+        className="flex justify-center p-4 bg-white rounded-lg mx-auto max-w-fit"
       >
-        <QRCodeSVG value={qrData} size={256} level="L" marginSize={2} />
+        <QRCodeSVG value={qrData} size={160} level="L" marginSize={2} />
       </div>
 
-      <div className="text-center space-y-2">
-        <p className="font-semibold text-lg text-gray-900">{event.name}</p>
-        <p className="text-sm text-gray-600">
-          📅 {event.date} • ⏰ {event.entranceTime}
-        </p>
-        <p className="text-sm text-gray-600">📍 {event.venue}</p>
-        <p className="text-xs text-gray-500 font-mono mt-2">
-          ID: {ticket.ticketId}
-        </p>
-      </div>
-
+      {/* Action Buttons */}
       {showActions && (
         <div className="space-y-3">
           <div className="flex gap-2 justify-center flex-wrap">
             <button
               onClick={copyAsSVG}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+              className="px-3 md:px-4 py-2 bg-[#4a3d8f] text-[#FFEDD8] rounded-lg hover:bg-[#5a4d9f] transition-colors font-medium border border-[#758BFD] border-opacity-30 text-xs md:text-sm"
             >
               📄 Copy SVG
             </button>
             <button
               onClick={copyAsPNG}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm"
+              className="px-3 md:px-4 py-2 bg-[#4a3d8f] text-[#FFEDD8] rounded-lg hover:bg-[#5a4d9f] transition-colors font-medium border border-[#758BFD] border-opacity-30 text-xs md:text-sm"
             >
               🖼️ Copy PNG
             </button>
             <button
               onClick={handleShare}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium shadow-sm"
+              className="px-3 md:px-4 py-2 bg-[#4a3d8f] text-[#FFEDD8] rounded-lg hover:bg-[#5a4d9f] transition-colors font-medium border border-[#758BFD] border-opacity-30 text-xs md:text-sm"
             >
-              📤 Share
+              📤 {t("share")}
             </button>
           </div>
 
           {copyStatus && (
-            <p className="text-center text-sm font-medium text-gray-700">
+            <p className="text-center text-xs md:text-sm font-medium text-[#4ade80]">
               {copyStatus}
             </p>
           )}
