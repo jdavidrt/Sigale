@@ -15,7 +15,7 @@ export const Navbar = () => {
     { path: "/", label: t("home"), icon: "🏠" },
     { path: "/sell-tickets", label: t("sell"), icon: "🎫" },
     { path: "/validate-qr", label: t("validate"), icon: "✅" },
-    { path: "/copy-event", label: "Copy Event", icon: "📋" },
+    { path: "/copy-event", label: "Copy", icon: "📋" },
     { path: "/dashboard", label: t("dashboard"), icon: "📊" },
   ];
 
@@ -125,7 +125,7 @@ export const Navbar = () => {
                   Sígale v1.0
                 </p>
                 <p className="text-xs text-[#758BFD] opacity-50 mt-1">
-                  {t("mobileFirst")}
+                  {t("madeIn")}
                 </p>
               </div>
             </div>

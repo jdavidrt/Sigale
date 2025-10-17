@@ -119,7 +119,7 @@ export const translations = {
     editEvent: "Editar Evento",
     sellTicketTypes: "Vender Tipos de Boletas",
     viewAnalytics: "Ver análisis y estadísticas",
-    mobileFirst: "Diseño móvil primero",
+    madeIn: "Hecho en Colombia con Amor - ARMA",
     toggleLanguage: "Cambiar idioma",
 
     // Dashboard (placeholder for Stage 3)
@@ -267,7 +267,7 @@ export const translations = {
     editEvent: "Edit Event",
     sellTicketTypes: "Sell Ticket Types",
     viewAnalytics: "View analytics and statistics",
-    mobileFirst: "Mobile-first design",
+    madeIn: "Made in Colombia with Love - ARMA",
     toggleLanguage: "Toggle language",
 
     // Dashboard (placeholder for Stage 3)

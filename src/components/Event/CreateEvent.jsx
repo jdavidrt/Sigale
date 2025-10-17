@@ -45,10 +45,12 @@ export const CreateEvent = ({ isEditing = false }) => {
       return;
     }
 
-    // Validate all ticket types have prices
-    const hasInvalidPrice = Object.values(formData.ticketTypes).some(price => !price || price <= 0);
+    // Validate all ticket types have non-negative prices (0 is allowed for courtesy/artist tickets)
+    const hasInvalidPrice = Object.values(formData.ticketTypes).some(price =>
+      price === null || price === undefined || price === '' || Number(price) < 0
+    );
     if (hasInvalidPrice) {
-      alert(t("allTicketTypesMustHavePrice") || "All ticket types must have a valid price");
+      alert(t("allTicketTypesMustHavePrice") || "All ticket types must have a valid price (0 or positive). Negative values are not allowed.");
       return;
     }
 
