@@ -1,40 +1,53 @@
 import { formatTo12Hour } from './timeFormat';
+import { generateTicketSVG } from './svgTicketTemplate';
 
 /**
- * Helper function to wrap text to fit within a maximum width
- * @param {CanvasRenderingContext2D} ctx - Canvas context
- * @param {string} text - Text to wrap
- * @param {number} maxWidth - Maximum width for text
- * @returns {string[]} Array of text lines
+ * Convert QR code SVG to data URL
+ * @param {SVGElement} svgElement - The QR code SVG element
+ * @returns {Promise<string>} Data URL of the QR code
  */
-const wrapText = (ctx, text, maxWidth) => {
-  const words = text.split(' ');
-  const lines = [];
-  let currentLine = words[0];
+const qrToDataURL = (svgElement) => {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
 
-  for (let i = 1; i < words.length; i++) {
-    const word = words[i];
-    const width = ctx.measureText(currentLine + ' ' + word).width;
-    if (width < maxWidth) {
-      currentLine += ' ' + word;
-    } else {
-      lines.push(currentLine);
-      currentLine = word;
-    }
-  }
-  lines.push(currentLine);
-  return lines;
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL("image/png"));
+    };
+
+    img.onerror = reject;
+
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const svgBlob = new Blob([svgData], {
+      type: "image/svg+xml;charset=utf-8",
+    });
+    const url = URL.createObjectURL(svgBlob);
+    img.src = url;
+  });
 };
 
 /**
- * Copy SVG QR code to clipboard as text
- * @param {SVGElement} svgElement - The SVG element to copy
+ * Copy SVG ticket to clipboard as text
+ * @param {SVGElement} qrSvgElement - The QR code SVG element
+ * @param {Object} ticket - Ticket object with buyer information
+ * @param {Object} event - Event object with event details
  * @returns {Promise<boolean>} True if successful, false otherwise
  */
-export const copySVGToClipboard = async (svgElement) => {
+export const copySVGToClipboard = async (qrSvgElement, ticket, event) => {
   try {
-    const svgData = new XMLSerializer().serializeToString(svgElement);
-    await navigator.clipboard.writeText(svgData);
+    // Convert QR code to data URL
+    const qrDataURL = await qrToDataURL(qrSvgElement);
+
+    // Generate complete ticket SVG using template
+    const ticketSVG = generateTicketSVG(ticket, event, qrDataURL);
+
+    await navigator.clipboard.writeText(ticketSVG);
     return true;
   } catch (error) {
     console.error("Error copying SVG:", error);
@@ -43,85 +56,40 @@ export const copySVGToClipboard = async (svgElement) => {
 };
 
 /**
- * Convert SVG to PNG with event info and copy to clipboard
- * @param {SVGElement} svgElement - The SVG element to convert and copy
+ * Convert SVG ticket to PNG and copy to clipboard
+ * @param {SVGElement} qrSvgElement - The QR code SVG element
  * @param {Object} ticket - Ticket object with buyer information
  * @param {Object} event - Event object with event details
  * @returns {Promise<boolean>} True if successful, false otherwise
  */
-export const copyPNGToClipboard = async (svgElement, ticket, event) => {
+export const copyPNGToClipboard = async (qrSvgElement, ticket, event) => {
   try {
+    // Convert QR code to data URL
+    const qrDataURL = await qrToDataURL(qrSvgElement);
+
+    // Generate complete ticket SVG using template
+    const ticketSVG = generateTicketSVG(ticket, event, qrDataURL);
+
+    // Convert ticket SVG to PNG
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     const img = new Image();
 
     return new Promise((resolve) => {
       img.onload = async () => {
-        // Set canvas size with extra space for text
-        const padding = 40;
-        const maxTextWidth = img.width + padding * 2 - 80; // Leave margin on sides
+        // Scale factor for high-definition output (4x for high quality)
+        const scale = 4;
 
-        // Calculate dynamic height based on text wrapping
-        let estimatedTextHeight = 250; // Base height
+        // Set canvas size to scaled dimensions (300x500 * 4 = 1200x2000)
+        canvas.width = 300 * scale;
+        canvas.height = 500 * scale;
 
-        canvas.width = img.width + padding * 2;
-        canvas.height = img.height + estimatedTextHeight + padding * 2;
+        // Enable image smoothing for better quality
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
-        // White background
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Draw QR code centered
-        ctx.drawImage(img, padding, padding);
-
-        // Add text below QR code
-        let textY = img.height + padding + 30;
-        ctx.textAlign = "center";
-        const centerX = canvas.width / 2;
-
-        // Event name with text wrapping
-        ctx.font = "bold 24px system-ui, -apple-system, sans-serif";
-        ctx.fillStyle = "#111827";
-        const eventNameLines = wrapText(ctx, event.name, maxTextWidth);
-        eventNameLines.forEach((line, index) => {
-          ctx.fillText(line, centerX, textY + (index * 30));
-        });
-        textY += eventNameLines.length * 30 + 10;
-
-        // Buyer name
-        ctx.font = "20px system-ui, -apple-system, sans-serif";
-        ctx.fillText(ticket.buyerName, centerX, textY);
-        textY += 35;
-
-        // Event details with 12h format
-        ctx.font = "16px system-ui, -apple-system, sans-serif";
-        ctx.fillStyle = "#4B5563";
-        const formattedTime = formatTo12Hour(event.entranceTime);
-        ctx.fillText(
-          `📅 ${event.date} • 🕐 ${formattedTime}`,
-          centerX,
-          textY
-        );
-        textY += 25;
-
-        // Venue name
-        ctx.fillText(`📍 ${event.venue}`, centerX, textY);
-        textY += 25;
-
-        // Venue address with text wrapping
-        if (event.address) {
-          ctx.font = "14px system-ui, -apple-system, sans-serif";
-          const addressLines = wrapText(ctx, event.address, maxTextWidth);
-          addressLines.forEach((line, index) => {
-            ctx.fillText(line, centerX, textY + (index * 20));
-          });
-          textY += addressLines.length * 20 + 10;
-        }
-
-        // Ticket ID
-        ctx.font = "12px monospace";
-        ctx.fillStyle = "#9CA3AF";
-        ctx.fillText(`ID: ${ticket.ticketId}`, centerX, textY + 10);
+        // Draw the ticket SVG scaled up
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         canvas.toBlob(async (blob) => {
           try {
@@ -133,16 +101,15 @@ export const copyPNGToClipboard = async (svgElement, ticket, event) => {
             console.error("Error copying PNG:", error);
             resolve(false);
           }
-        });
+        }, 'image/png', 1.0); // Maximum quality
       };
 
       img.onerror = () => {
-        console.error("Error loading SVG as image");
+        console.error("Error loading ticket SVG as image");
         resolve(false);
       };
 
-      const svgData = new XMLSerializer().serializeToString(svgElement);
-      const svgBlob = new Blob([svgData], {
+      const svgBlob = new Blob([ticketSVG], {
         type: "image/svg+xml;charset=utf-8",
       });
       const url = URL.createObjectURL(svgBlob);
@@ -155,92 +122,49 @@ export const copyPNGToClipboard = async (svgElement, ticket, event) => {
 };
 
 /**
- * Share QR code as PNG image with event info via Web Share API
- * @param {SVGElement} svgElement - The SVG element to convert and share
+ * Share ticket as PNG image via Web Share API
+ * @param {SVGElement} qrSvgElement - The QR code SVG element
  * @param {Object} ticket - Ticket object with buyer information
  * @param {Object} event - Event object with event details
  * @returns {Promise<boolean>} True if successful, false otherwise
  */
-export const shareQR = async (svgElement, ticket, event) => {
+export const shareQR = async (qrSvgElement, ticket, event) => {
   if (!navigator.share || !navigator.canShare) {
     console.warn("Web Share API not supported");
     return false;
   }
 
   try {
+    // Convert QR code to data URL
+    const qrDataURL = await qrToDataURL(qrSvgElement);
+
+    // Generate complete ticket SVG using template
+    const ticketSVG = generateTicketSVG(ticket, event, qrDataURL);
+
+    // Convert ticket SVG to PNG
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     const img = new Image();
 
     return new Promise((resolve) => {
       img.onload = async () => {
-        // Set canvas size with extra space for text
-        const padding = 40;
-        const maxTextWidth = img.width + padding * 2 - 80;
-        let estimatedTextHeight = 250;
+        // Scale factor for high-definition output (4x for high quality)
+        const scale = 4;
 
-        canvas.width = img.width + padding * 2;
-        canvas.height = img.height + estimatedTextHeight + padding * 2;
+        // Set canvas size to scaled dimensions (300x500 * 4 = 1200x2000)
+        canvas.width = 300 * scale;
+        canvas.height = 500 * scale;
 
-        // White background
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Enable image smoothing for better quality
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
-        // Draw QR code centered
-        ctx.drawImage(img, padding, padding);
-
-        // Add text below QR code
-        let textY = img.height + padding + 30;
-        ctx.textAlign = "center";
-        const centerX = canvas.width / 2;
-
-        // Event name with text wrapping
-        ctx.font = "bold 24px system-ui, -apple-system, sans-serif";
-        ctx.fillStyle = "#111827";
-        const eventNameLines = wrapText(ctx, event.name, maxTextWidth);
-        eventNameLines.forEach((line, index) => {
-          ctx.fillText(line, centerX, textY + (index * 30));
-        });
-        textY += eventNameLines.length * 30 + 10;
-
-        // Buyer name
-        ctx.font = "20px system-ui, -apple-system, sans-serif";
-        ctx.fillText(ticket.buyerName, centerX, textY);
-        textY += 35;
-
-        // Event details with 12h format
-        ctx.font = "16px system-ui, -apple-system, sans-serif";
-        ctx.fillStyle = "#4B5563";
-        const formattedTime = formatTo12Hour(event.entranceTime);
-        ctx.fillText(
-          `📅 ${event.date} • 🕐 ${formattedTime}`,
-          centerX,
-          textY
-        );
-        textY += 25;
-
-        // Venue name
-        ctx.fillText(`📍 ${event.venue}`, centerX, textY);
-        textY += 25;
-
-        // Venue address with text wrapping
-        if (event.address) {
-          ctx.font = "14px system-ui, -apple-system, sans-serif";
-          const addressLines = wrapText(ctx, event.address, maxTextWidth);
-          addressLines.forEach((line, index) => {
-            ctx.fillText(line, centerX, textY + (index * 20));
-          });
-          textY += addressLines.length * 20 + 10;
-        }
-
-        // Ticket ID
-        ctx.font = "12px monospace";
-        ctx.fillStyle = "#9CA3AF";
-        ctx.fillText(`ID: ${ticket.ticketId}`, centerX, textY + 10);
+        // Draw the ticket SVG scaled up
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         canvas.toBlob(async (blob) => {
           try {
-            const file = new File([blob], `ticket-${event.name}.png`, {
+            const file = new File([blob], `ticket-${ticket.ticketId}.png`, {
               type: "image/png",
             });
 
@@ -248,6 +172,7 @@ export const shareQR = async (svgElement, ticket, event) => {
               await navigator.share({
                 files: [file],
                 title: `Ticket - ${event.name}`,
+                text: `${ticket.buyerName} - ${event.name}`,
               });
               resolve(true);
             } else {
@@ -260,16 +185,15 @@ export const shareQR = async (svgElement, ticket, event) => {
             }
             resolve(false);
           }
-        });
+        }, 'image/png', 1.0); // Maximum quality
       };
 
       img.onerror = () => {
-        console.error("Error loading SVG as image");
+        console.error("Error loading ticket SVG as image");
         resolve(false);
       };
 
-      const svgData = new XMLSerializer().serializeToString(svgElement);
-      const svgBlob = new Blob([svgData], {
+      const svgBlob = new Blob([ticketSVG], {
         type: "image/svg+xml;charset=utf-8",
       });
       const url = URL.createObjectURL(svgBlob);

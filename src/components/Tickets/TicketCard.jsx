@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { QRDisplay } from "./QRDisplay";
+import { useState, useRef, useCallback } from "react";
+import { QRCodeSVG } from "qrcode.react";
+import { generateQRData } from "../../utils/qrGenerator";
+import { copyPNGToClipboard, shareQR } from "../../utils/qrCopy";
 import { useEvent } from "../../context/EventContext";
 import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
@@ -8,7 +10,9 @@ export const TicketCard = ({ ticket }) => {
   const { event } = useEvent();
   const { deleteTicket } = useTickets();
   const { t } = useLanguage();
-  const [showQR, setShowQR] = useState(false);
+  const qrRef = useRef(null);
+  const [copyStatus, setCopyStatus] = useState("");
+  const qrData = generateQRData(ticket, event);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -37,8 +41,33 @@ export const TicketCard = ({ ticket }) => {
     }
   };
 
+  const copyAsPNG = useCallback(async () => {
+    if (qrRef.current) {
+      const svg = qrRef.current.querySelector("svg");
+      const success = await copyPNGToClipboard(svg, ticket, event);
+      setCopyStatus(success ? `✓ ${t("copiedToClipboard")}` : "✗ Failed to copy");
+      setTimeout(() => setCopyStatus(""), 2000);
+    }
+  }, [ticket, event, t]);
+
+  const handleShare = useCallback(async () => {
+    if (qrRef.current) {
+      const svg = qrRef.current.querySelector("svg");
+      const success = await shareQR(svg, ticket, event);
+      if (!success) {
+        setCopyStatus("Share not supported");
+        setTimeout(() => setCopyStatus(""), 2000);
+      }
+    }
+  }, [ticket, event]);
+
   return (
     <div className={`bg-[#2a2a2a] rounded-xl border-2 ${ticket.checkedIn ? 'border-[#4ade80] border-opacity-50' : 'border-[#758BFD] border-opacity-20'} overflow-hidden transition-all relative`}>
+      {/* Hidden QR Code for processing */}
+      <div ref={qrRef} className="hidden">
+        <QRCodeSVG value={qrData} size={200} level="L" marginSize={2} />
+      </div>
+
       {/* Checkmark Badge - Top Right */}
       {ticket.checkedIn && (
         <div className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 rounded-full bg-[#4ade80] z-10">
@@ -106,7 +135,7 @@ export const TicketCard = ({ ticket }) => {
                 {formatDate(ticket.purchaseDate)}
               </p>
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 flex-wrap">
               <button
                 onClick={handleDelete}
                 className="px-3 py-2 bg-red-600 hover:bg-red-700 text-[#FFEDD8] rounded-md transition-colors font-bold border border-red-500 border-opacity-30 text-xs whitespace-nowrap"
@@ -115,21 +144,31 @@ export const TicketCard = ({ ticket }) => {
                 🗑️
               </button>
               <button
-                onClick={() => setShowQR(!showQR)}
-                className="px-4 py-2 bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30 text-xs whitespace-nowrap"
+                onClick={copyAsPNG}
+                className="px-3 py-2 bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30 text-xs whitespace-nowrap"
+                title="Copy ticket as PNG"
               >
-                {showQR ? "Hide QR Code" : "Show QR Code"}
+                🖼️
+              </button>
+              <button
+                onClick={handleShare}
+                className="px-3 py-2 bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30 text-xs whitespace-nowrap"
+                title="Share ticket"
+              >
+                📤
               </button>
             </div>
           </div>
-        </div>
 
-        {/* QR Code Display */}
-        {showQR && (
-          <div className="mt-5 pt-5 border-t border-[#758BFD] border-opacity-30">
-            <QRDisplay ticket={ticket} event={event} />
-          </div>
-        )}
+          {/* Copy Status */}
+          {copyStatus && (
+            <div className="text-center pt-2">
+              <p className="text-xs font-medium text-[#4ade80]">
+                {copyStatus}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

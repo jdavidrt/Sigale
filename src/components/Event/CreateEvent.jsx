@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEvent } from "../../context/EventContext";
+import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
 
 export const CreateEvent = ({ isEditing = false }) => {
   const navigate = useNavigate();
   const { createEvent, updateEvent, event } = useEvent();
+  const { importData } = useTickets();
   const { t } = useLanguage();
 
   const [formData, setFormData] = useState({
@@ -141,6 +143,65 @@ export const CreateEvent = ({ isEditing = false }) => {
     });
   };
 
+  const handlePasteFromClipboard = async () => {
+    try {
+      // Read clipboard
+      const clipboardText = await navigator.clipboard.readText();
+
+      // Parse JSON
+      const parsedData = JSON.parse(clipboardText);
+
+      // Validate structure
+      if (!parsedData.event) {
+        alert("❌ Invalid JSON format: Missing 'event' object");
+        return;
+      }
+
+      const { event: eventData, tickets = [] } = parsedData;
+
+      // Validate required event fields
+      const requiredFields = ['name', 'date', 'venue', 'address', 'entranceTime', 'colors', 'ticketTypes'];
+      const missingFields = requiredFields.filter(field => !eventData[field]);
+
+      if (missingFields.length > 0) {
+        alert(`❌ Invalid event data: Missing required fields: ${missingFields.join(', ')}`);
+        return;
+      }
+
+      // Validate colors
+      if (!eventData.colors.base || !eventData.colors.emphasis) {
+        alert("❌ Invalid event data: Missing color values");
+        return;
+      }
+
+      // Validate ticket types
+      if (!eventData.ticketTypes || Object.keys(eventData.ticketTypes).length === 0) {
+        alert("❌ Invalid event data: Must have at least one ticket type");
+        return;
+      }
+
+      // Import the complete data (event + tickets)
+      importData(parsedData);
+
+      // Show success message
+      alert(`✅ Event imported successfully!\n\nEvent: ${eventData.name}\nTickets: ${tickets.length}`);
+
+      // Redirect to home
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      navigate("/");
+
+    } catch (error) {
+      console.error("Error pasting from clipboard:", error);
+      if (error instanceof SyntaxError) {
+        alert("❌ Invalid JSON format. Please copy valid event data.");
+      } else if (error.message.includes("clipboard")) {
+        alert("❌ Could not read from clipboard. Please try again.");
+      } else {
+        alert(`❌ Error importing event: ${error.message}`);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen px-4 md:px-6 py-6">
       {/* Decorative circles */}
@@ -148,6 +209,17 @@ export const CreateEvent = ({ isEditing = false }) => {
       <div className="fixed top-[200px] right-[-50px] w-[200px] h-[200px] rounded-full bg-[#BEADFF] opacity-[0.04] pointer-events-none" />
 
       <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
+        {/* Paste Event Button - Top of Form */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={handlePasteFromClipboard}
+            className="w-full px-4 py-3 bg-gradient-to-r from-[#4ade80] to-[#22c55e] text-white rounded-xl font-bold hover:opacity-90 transition-opacity border border-[#4ade80] border-opacity-30 text-sm md:text-base flex items-center justify-center gap-2"
+          >
+            📋 Paste Event from Clipboard
+          </button>
+        </div>
+
         {/* Main Card */}
         <div className="bg-gradient-to-b from-[#1a1152] to-[#0a0620] rounded-3xl p-6 md:p-8 border border-[#758BFD] border-opacity-20 shadow-2xl space-y-6 md:space-y-8">
 

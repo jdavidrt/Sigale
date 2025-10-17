@@ -84,6 +84,10 @@ export const TicketProvider = ({ children }) => {
     return stats;
   };
 
+  const importData = (importedData) => {
+    setData(importedData);
+  };
+
   return (
     <TicketContext.Provider
       value={{
@@ -95,6 +99,7 @@ export const TicketProvider = ({ children }) => {
         checkInTicket,
         deleteTicket,
         getStats,
+        importData,
       }}
     >
       {children}
