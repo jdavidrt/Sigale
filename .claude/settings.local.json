@@ -10,7 +10,10 @@
       "Bash(taskkill:*)",
       "Bash(git rm:*)",
       "Bash(git add:*)",
-      "Bash(cmd.exe /c \"rd /s /q \"\"C:\\Users\\jdk_l\\OneDrive\\Documents\\Sígale\\sigale-ticket-system\"\"\")"
+      "Bash(cmd.exe /c \"rd /s /q \"\"C:\\Users\\jdk_l\\OneDrive\\Documents\\Sígale\\sigale-ticket-system\"\"\")",
+      "Bash(powershell:*)",
+      "Bash(npm run build:*)",
+      "Bash(start \"\" \"c:\\Users\\jdk_l\\OneDrive\\Documents\\Sígale\\test-ticket.svg\")"
     ],
     "deny": [],
     "ask": []

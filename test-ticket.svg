@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500">
+  <!-- Test ticket to verify notches -->
+  <defs>
+    <clipPath id="testclip">
+      <!-- Simple path with just the right edge and notch -->
+      <path d="M0,0 h400 v290 c-6.7,0-10,3.3-10,10 s3.3,10,10,10 v190 h-400 v-500 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="500" fill="white"/>
+
+  <!-- Clipped content -->
+  <g clip-path="url(#testclip)">
+    <rect width="400" height="500" fill="#f0f0f0"/>
+    <line x1="0" y1="300" x2="400" y2="300" stroke="red" stroke-width="2" stroke-dasharray="5,5"/>
+    <text x="200" y="150" text-anchor="middle" font-size="20">TEST TICKET</text>
+    <text x="200" y="350" text-anchor="middle" font-size="16">Right notch should be at x=400</text>
+  </g>
+
+  <!-- Border -->
+  <path d="M0,0 h400 v290 c-6.7,0-10,3.3-10,10 s3.3,10,10,10 v190 h-400 v-500 Z"
+        fill="none" stroke="black" stroke-width="2"/>
+
+  <!-- Debug markers -->
+  <circle cx="400" cy="300" r="5" fill="green"/>
+  <text x="395" y="295" text-anchor="end" font-size="12" fill="green">x=400</text>
+</svg>

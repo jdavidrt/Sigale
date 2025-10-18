@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./context/LanguageContext";
 import { EventProvider } from "./context/EventContext";
@@ -9,8 +10,15 @@ import { EditEventPage } from "./pages/EditEventPage";
 import { SellTicketsPage } from "./pages/SellTicketsPage";
 import { ValidateQRPage } from "./pages/ValidateQRPage";
 import { CopyEventPage } from "./pages/CopyEventPage";
+import { loadCharlyIllustration } from "./utils/svgTicketTemplate";
+import { CHARLY_ILLUSTRATION_BASE64 } from "./assets/charlyIllustration";
 
 function App() {
+  // Load assets (Charly illustration) on app initialization
+  useEffect(() => {
+    loadCharlyIllustration(CHARLY_ILLUSTRATION_BASE64);
+  }, []);
+
   return (
     <LanguageProvider>
       <EventProvider>

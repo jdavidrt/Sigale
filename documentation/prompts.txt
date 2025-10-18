@@ -61,3 +61,9 @@
 
 **Last Updated**: 2025-10-08
 **Current Stage**: Stage 2 Complete + Enhancements
+
+read readme, and documentation/claude.md and documentation/readme and add to context
+and think on how we can add the image on base64 from dibujosCharly64.txt to the bottom right of the ticket
+
+remove Copy SVG when ticket is sold, only copy PNG option should be available, and it should be shown as "Copy Ticket"
+

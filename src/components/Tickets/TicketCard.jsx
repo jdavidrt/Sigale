@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { generateQRData } from "../../utils/qrGenerator";
 import { copyPNGToClipboard, shareQR } from "../../utils/qrCopy";
@@ -7,6 +8,7 @@ import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
 
 export const TicketCard = ({ ticket }) => {
+  const navigate = useNavigate();
   const { event } = useEvent();
   const { deleteTicket } = useTickets();
   const { t } = useLanguage();
@@ -29,6 +31,10 @@ export const TicketCard = ({ ticket }) => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleEdit = () => {
+    navigate("/sell-tickets", { state: { editTicket: ticket } });
   };
 
   const handleDelete = () => {
@@ -136,6 +142,13 @@ export const TicketCard = ({ ticket }) => {
               </p>
             </div>
             <div className="flex justify-end gap-2 flex-wrap">
+              <button
+                onClick={handleEdit}
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-[#FFEDD8] rounded-md transition-colors font-bold border border-blue-500 border-opacity-30 text-xs whitespace-nowrap"
+                title="Edit ticket"
+              >
+                ✏️
+              </button>
               <button
                 onClick={handleDelete}
                 className="px-3 py-2 bg-red-600 hover:bg-red-700 text-[#FFEDD8] rounded-md transition-colors font-bold border border-red-500 border-opacity-30 text-xs whitespace-nowrap"

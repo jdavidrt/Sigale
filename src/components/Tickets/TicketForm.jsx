@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTickets } from "../../context/TicketContext";
 import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
@@ -6,9 +7,15 @@ import { QRDisplay } from "./QRDisplay";
 import { formatTo12Hour } from "../../utils/timeFormat";
 
 export const TicketForm = () => {
-  const { addTicket } = useTickets();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { addTicket, updateTicket } = useTickets();
   const { event } = useEvent();
   const { t } = useLanguage();
+
+  // Check if we're editing a ticket
+  const editTicket = location.state?.editTicket;
+  const isEditMode = !!editTicket;
 
   const [formData, setFormData] = useState({
     buyerName: "",
@@ -20,16 +27,36 @@ export const TicketForm = () => {
   const [createdTicket, setCreatedTicket] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (editTicket) {
+      setFormData({
+        buyerName: editTicket.buyerName,
+        buyerId: editTicket.buyerId,
+        buyerPhone: editTicket.buyerPhone,
+        ticketType: editTicket.ticketType,
+      });
+    }
+  }, [editTicket]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const ticket = await addTicket(formData);
-      setCreatedTicket(ticket);
-      setFormData({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "" });
+      if (isEditMode) {
+        // Update existing ticket
+        await updateTicket(editTicket.ticketId, formData);
+        alert(t("ticketUpdated") || "Ticket updated successfully!");
+        navigate("/validate-qr"); // Navigate back to ticket list
+      } else {
+        // Create new ticket
+        const ticket = await addTicket(formData);
+        setCreatedTicket(ticket);
+        setFormData({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "" });
+      }
     } catch (error) {
-      console.error("Error creating ticket:", error);
+      console.error("Error saving ticket:", error);
       alert(t("failedToCreateTicket"));
     } finally {
       setIsSubmitting(false);
@@ -259,7 +286,9 @@ export const TicketForm = () => {
               disabled={isSubmitting}
               className="w-full mt-8 px-6 py-3 md:py-4 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed border border-[#BEADFF] border-opacity-30 text-sm md:text-base"
             >
-              {isSubmitting ? t("creatingTicket") : `🎫 ${t("createTicket")}`}
+              {isSubmitting
+                ? (isEditMode ? t("updatingTicket") || "Updating..." : t("creatingTicket"))
+                : (isEditMode ? `✏️ ${t("updateTicket") || "Update Ticket"}` : `🎫 ${t("createTicket")}`)}
             </button>
           </form>
         </div>

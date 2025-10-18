@@ -80,9 +80,13 @@ export const copyPNGToClipboard = async (qrSvgElement, ticket, event) => {
         // Scale factor for high-definition output (4x for high quality)
         const scale = 4;
 
-        // Set canvas size to scaled dimensions (300x500 * 4 = 1200x2000)
-        canvas.width = 300 * scale;
-        canvas.height = 500 * scale;
+        // Get actual SVG dimensions (supports dynamic height)
+        const svgWidth = img.naturalWidth || img.width || 300;
+        const svgHeight = img.naturalHeight || img.height || 500;
+
+        // Set canvas size to scaled dimensions using actual SVG size
+        canvas.width = svgWidth * scale;
+        canvas.height = svgHeight * scale;
 
         // Enable image smoothing for better quality
         ctx.imageSmoothingEnabled = true;
@@ -151,9 +155,13 @@ export const shareQR = async (qrSvgElement, ticket, event) => {
         // Scale factor for high-definition output (4x for high quality)
         const scale = 4;
 
-        // Set canvas size to scaled dimensions (300x500 * 4 = 1200x2000)
-        canvas.width = 300 * scale;
-        canvas.height = 500 * scale;
+        // Get actual SVG dimensions (supports dynamic height)
+        const svgWidth = img.naturalWidth || img.width || 300;
+        const svgHeight = img.naturalHeight || img.height || 500;
+
+        // Set canvas size to scaled dimensions using actual SVG size
+        canvas.width = svgWidth * scale;
+        canvas.height = svgHeight * scale;
 
         // Enable image smoothing for better quality
         ctx.imageSmoothingEnabled = true;
@@ -168,11 +176,50 @@ export const shareQR = async (qrSvgElement, ticket, event) => {
               type: "image/png",
             });
 
+            // Format date and time
+            const formattedDate = new Date(event.date).toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric'
+            });
+            const formattedTime = formatTo12Hour(event.entranceTime);
+
+            // Create a beautiful, detailed share message
+            const shareMessage = `🎉 Thank you for purchasing your ticket! 🎫
+
+✨ ${event.name} ✨
+
+Dear ${ticket.buyerName},
+
+We're thrilled to have you join us for this amazing event! Your ticket is confirmed and ready.
+
+📅 Event Details:
+━━━━━━━━━━━━━━━━━━━━
+📍 Venue: ${event.venue}
+🗺️  Address: ${event.address}
+📆 Date: ${formattedDate}
+🕐 Doors Open: ${formattedTime}
+🎫 Ticket Type: ${ticket.ticketType.toUpperCase()}
+💵 Price: $${event.ticketTypes[ticket.ticketType]?.toLocaleString() || 0}
+
+🔖 Ticket ID: ${ticket.ticketId}
+
+━━━━━━━━━━━━━━━━━━━━
+
+📱 Important: Please save this ticket and present the QR code at the entrance. Screenshot or download this image for easy access!
+
+We can't wait to see you there! 🎊
+
+If you have any questions, feel free to reach out.
+
+See you soon! 💖`;
+
             if (navigator.canShare({ files: [file] })) {
               await navigator.share({
                 files: [file],
-                title: `Ticket - ${event.name}`,
-                text: `${ticket.buyerName} - ${event.name}`,
+                title: `🎫 Your Ticket - ${event.name}`,
+                text: shareMessage,
               });
               resolve(true);
             } else {

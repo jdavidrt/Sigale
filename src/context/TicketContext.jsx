@@ -56,6 +56,20 @@ export const TicketProvider = ({ children }) => {
     setData({ ...data, tickets: updatedTickets });
   };
 
+  const updateTicket = async (ticketId, updatedData) => {
+    const updatedTickets = data.tickets.map((ticket) => {
+      if (ticket.ticketId === ticketId) {
+        const updatedTicket = {
+          ...ticket,
+          ...updatedData,
+        };
+        return updatedTicket;
+      }
+      return ticket;
+    });
+    setData({ ...data, tickets: updatedTickets });
+  };
+
   const deleteTicket = (ticketId) => {
     const updatedTickets = data.tickets.filter((ticket) => ticket.ticketId !== ticketId);
     setData({ ...data, tickets: updatedTickets });
@@ -93,6 +107,7 @@ export const TicketProvider = ({ children }) => {
       value={{
         tickets: data.tickets,
         addTicket,
+        updateTicket,
         searchTickets,
         getTicketById,
         getTicketByHash,
