@@ -64,11 +64,3 @@
 
 read readme, and documentation/claude.md and documentation/readme and add to context
 and think on how we can add the image on base64 from dibujosCharly64.txt to the bottom right of the ticket
-
-remove Copy SVG when ticket is sold, only copy PNG option should be available, and it should be shown as "Copy Ticket"
-
-the message when you share the PNG with the share button, should be on the same language as the current selected language, curretly its just in english, please erase the ticket ID from that message
-
-the date selected on edit event, and the one showing on the event home page and on the tickets themselves are one day before, please make sure that date selected on the edit event form is the same all across the project,
-
-when an event is edited, the whole ticket list gets deleted, please make sure, only event details is edeit and no tickets are gettin erases
