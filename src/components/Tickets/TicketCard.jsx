@@ -6,6 +6,8 @@ import { copyPNGToClipboard, shareQR } from "../../utils/qrCopy";
 import { useEvent } from "../../context/EventContext";
 import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPenToSquare, faTrash, faImage, faShareNodes } from "@fortawesome/free-solid-svg-icons";
 
 export const TicketCard = ({ ticket }) => {
   const navigate = useNavigate();
@@ -81,108 +83,92 @@ export const TicketCard = ({ ticket }) => {
         </div>
       )}
 
-      <div className="p-5">
-        {/* Header - Name and Ticket ID */}
-        <div className="mb-3 pr-10">
-          <h3 className="text-lg font-bold text-[#FFEDD8] mb-1.5">
-            {ticket.buyerName}
-          </h3>
-          <p className="text-xs text-[#758BFD] font-mono">{ticket.ticketId}</p>
-        </div>
+      <div style={{ padding: '8px 12px', display: 'flex', gap: '12px' }}>
+        {/* Left side - Ticket Info */}
+        <div style={{ flex: '1' }}>
+          {/* Header - Name */}
+          <div style={{ marginBottom: '4px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 'bold', lineHeight: '1.1' }} className="text-[#FFEDD8]">
+              {ticket.buyerName}
+            </h3>
+          </div>
 
-        {/* Divider */}
-        <div className="h-px bg-[#758BFD] opacity-30 mb-4"></div>
+          {/* Divider */}
+          <div className="h-px bg-[#758BFD] opacity-30" style={{ marginBottom: '4px' }}></div>
 
-        {/* Details Grid - 2 Columns */}
-        <div className="space-y-4">
-          {/* Row 1: Ticket Type and Price */}
-          <div className="grid grid-cols-2 gap-x-8">
-            <div>
-              <p className="text-xs text-[#BEADFF] opacity-70 mb-1.5">
-                {t("ticketType")}
-              </p>
-              <p className="text-[15px] font-bold text-[#FFEDD8] capitalize">
+          {/* Details Grid - 2 Columns */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            {/* Row 1: Ticket ID and ID Number */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <p style={{ fontSize: '11px', lineHeight: '1', margin: '0' }} className="text-[#758BFD] font-mono">{ticket.ticketId}</p>
+              <p style={{ fontSize: '13px', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">{ticket.buyerId}</p>
+            </div>
+
+            {/* Row 2: Ticket Type and Price */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <p style={{ fontSize: '14px', fontWeight: 'bold', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8] capitalize">
                 {ticket.ticketType}
               </p>
-            </div>
-            <div>
-              <p className="text-xs text-[#BEADFF] opacity-70 mb-1.5">
-                {t("price")}
-              </p>
-              <p className="text-[15px] font-bold text-[#FFEDD8]">
+              <p style={{ fontSize: '14px', fontWeight: 'bold', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">
                 ${event.ticketTypes[ticket.ticketType]?.toLocaleString()}
               </p>
             </div>
-          </div>
 
-          {/* Row 2: ID Number and Phone */}
-          <div className="grid grid-cols-2 gap-x-8">
-            <div>
-              <p className="text-xs text-[#BEADFF] opacity-70 mb-1.5">
-                {t("idNumber")}
-              </p>
-              <p className="text-sm text-[#FFEDD8]">{ticket.buyerId}</p>
-            </div>
-            <div>
-              <p className="text-xs text-[#BEADFF] opacity-70 mb-1.5">
-                {t("phoneNumber")}
-              </p>
-              <p className="text-sm text-[#FFEDD8]">{ticket.buyerPhone}</p>
-            </div>
-          </div>
-
-          {/* Row 3: Purchase Date and Action Buttons */}
-          <div className="grid grid-cols-2 gap-x-8 items-end">
-            <div>
-              <p className="text-xs text-[#BEADFF] opacity-70 mb-1.5">
-                {t("purchaseDate")}
-              </p>
-              <p className="text-sm text-[#FFEDD8]">
+            {/* Row 3: Phone and Purchase Date */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <p style={{ fontSize: '13px', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">{ticket.buyerPhone}</p>
+              <p style={{ fontSize: '13px', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">
                 {formatDate(ticket.purchaseDate)}
               </p>
             </div>
-            <div className="flex justify-end gap-2 flex-wrap">
-              <button
-                onClick={handleEdit}
-                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-[#FFEDD8] rounded-md transition-colors font-bold border border-blue-500 border-opacity-30 text-xs whitespace-nowrap"
-                title="Edit ticket"
-              >
-                ✏️
-              </button>
-              <button
-                onClick={handleDelete}
-                className="px-3 py-2 bg-red-600 hover:bg-red-700 text-[#FFEDD8] rounded-md transition-colors font-bold border border-red-500 border-opacity-30 text-xs whitespace-nowrap"
-                title="Delete ticket"
-              >
-                🗑️
-              </button>
-              <button
-                onClick={copyAsPNG}
-                className="px-3 py-2 bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30 text-xs whitespace-nowrap"
-                title="Copy ticket as PNG"
-              >
-                🖼️
-              </button>
-              <button
-                onClick={handleShare}
-                className="px-3 py-2 bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30 text-xs whitespace-nowrap"
-                title="Share ticket"
-              >
-                📤
-              </button>
-            </div>
           </div>
+        </div>
 
-          {/* Copy Status */}
-          {copyStatus && (
-            <div className="text-center pt-2">
-              <p className="text-xs font-medium text-[#4ade80]">
-                {copyStatus}
-              </p>
-            </div>
-          )}
+        {/* Right side - Action Buttons in 2x2 Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '4px', width: '80px', height: '80px' }}>
+          <button
+            onClick={handleEdit}
+            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            className="bg-blue-600 hover:bg-blue-700 text-[#FFEDD8] rounded-md transition-colors font-bold border border-blue-500 border-opacity-30"
+            title="Edit ticket"
+          >
+            <FontAwesomeIcon icon={faPenToSquare} />
+          </button>
+          <button
+            onClick={handleDelete}
+            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            className="bg-red-600 hover:bg-red-700 text-[#FFEDD8] rounded-md transition-colors font-bold border border-red-500 border-opacity-30"
+            title="Delete ticket"
+          >
+            <FontAwesomeIcon icon={faTrash} />
+          </button>
+          <button
+            onClick={copyAsPNG}
+            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            className="bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30"
+            title="Copy ticket as PNG"
+          >
+            <FontAwesomeIcon icon={faImage} />
+          </button>
+          <button
+            onClick={handleShare}
+            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            className="bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30"
+            title="Share ticket"
+          >
+            <FontAwesomeIcon icon={faShareNodes} />
+          </button>
         </div>
       </div>
+
+      {/* Copy Status */}
+      {copyStatus && (
+        <div className="text-center pt-2">
+          <p className="text-xs font-medium text-[#4ade80]">
+            {copyStatus}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

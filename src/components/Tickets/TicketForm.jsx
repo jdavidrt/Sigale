@@ -5,6 +5,8 @@ import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { QRDisplay } from "./QRDisplay";
 import { formatTo12Hour, parseLocalDate } from "../../utils/timeFormat";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTicketSimple, faCalendar, faClock, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 
 export const TicketForm = () => {
   const location = useLocation();
@@ -81,7 +83,7 @@ export const TicketForm = () => {
             {/* Page Title */}
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">🎫</span>
+                <FontAwesomeIcon icon={faTicketSimple} className="text-2xl" />
                 <h1 className="text-2xl md:text-3xl font-bold text-[#FFEDD8]">
                   {t("sellTicketsTitle")}
                 </h1>
@@ -150,9 +152,10 @@ export const TicketForm = () => {
               <div className="text-center space-y-2 text-sm md:text-base pt-4">
                 <p className="font-bold text-[#FFEDD8]">{event.name}</p>
                 <p className="text-[#BEADFF]">
-                  📅 {parseLocalDate(event.date).toLocaleDateString()} • 🕐 {formatTo12Hour(event.entranceTime)}
+                  <FontAwesomeIcon icon={faCalendar} className="mr-2" />
+                  {parseLocalDate(event.date).toLocaleDateString()} • <FontAwesomeIcon icon={faClock} className="mr-2" />{formatTo12Hour(event.entranceTime)}
                 </p>
-                <p className="text-[#BEADFF]">📍 {event.venue}</p>
+                <p className="text-[#BEADFF]">{event.venue}</p>
                 <p className="text-xs md:text-sm text-[#758BFD] font-mono mt-2">
                   ID: {createdTicket.ticketId}
                 </p>
@@ -184,7 +187,7 @@ export const TicketForm = () => {
           {/* Page Title */}
           <div className="mb-6 md:mb-8">
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-2xl">🎫</span>
+              <FontAwesomeIcon icon={faTicketSimple} className="text-2xl" />
               <h1 className="text-2xl md:text-3xl font-bold text-[#FFEDD8]">
                 {t("sellTicketsTitle")}
               </h1>
@@ -197,7 +200,7 @@ export const TicketForm = () => {
           {/* Section Title */}
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-xl">🎫</span>
+              <FontAwesomeIcon icon={faTicketSimple} className="text-xl" />
               <h2 className="text-lg md:text-xl font-bold text-[#FF8C00]">
                 {t("newTicketSale")}
               </h2>
@@ -288,7 +291,7 @@ export const TicketForm = () => {
             >
               {isSubmitting
                 ? (isEditMode ? t("updatingTicket") || "Updating..." : t("creatingTicket"))
-                : (isEditMode ? `✏️ ${t("updateTicket") || "Update Ticket"}` : `🎫 ${t("createTicket")}`)}
+                : (isEditMode ? <><FontAwesomeIcon icon={faPenToSquare} className="mr-2" />{t("updateTicket") || "Update Ticket"}</> : <><FontAwesomeIcon icon={faTicketSimple} className="mr-2" />{t("createTicket")}</>)}
             </button>
           </form>
         </div>

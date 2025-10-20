@@ -4,6 +4,8 @@ import { generateQRData } from "../../utils/qrGenerator";
 import { copySVGToClipboard, copyPNGToClipboard, shareQR } from "../../utils/qrCopy";
 import { generateTicketSVG } from "../../utils/svgTicketTemplate";
 import { useLanguage } from "../../context/LanguageContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFile, faImage, faShareNodes } from "@fortawesome/free-solid-svg-icons";
 
 export const QRDisplay = ({ ticket, event, showActions = true }) => {
   const qrRef = useRef(null);
@@ -103,19 +105,22 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
               onClick={copyAsSVG}
               className="px-3 md:px-4 py-2 bg-[#4a3d8f] text-[#FFEDD8] rounded-lg hover:bg-[#5a4d9f] transition-colors font-medium border border-[#758BFD] border-opacity-30 text-xs md:text-sm"
             >
-              📄 Copy SVG
+              <FontAwesomeIcon icon={faFile} className="mr-2" />
+              Copy SVG
             </button>
             <button
               onClick={copyAsPNG}
               className="px-3 md:px-4 py-2 bg-[#4a3d8f] text-[#FFEDD8] rounded-lg hover:bg-[#5a4d9f] transition-colors font-medium border border-[#758BFD] border-opacity-30 text-xs md:text-sm"
             >
-              🖼️ Copy PNG
+              <FontAwesomeIcon icon={faImage} className="mr-2" />
+              Copy PNG
             </button>
             <button
               onClick={handleShare}
               className="px-3 md:px-4 py-2 bg-[#4a3d8f] text-[#FFEDD8] rounded-lg hover:bg-[#5a4d9f] transition-colors font-medium border border-[#758BFD] border-opacity-30 text-xs md:text-sm"
             >
-              📤 {t("share")}
+              <FontAwesomeIcon icon={faShareNodes} className="mr-2" />
+              {t("share")}
             </button>
           </div>
 

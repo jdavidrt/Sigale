@@ -65,15 +65,17 @@ export const TicketsPage = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <FontAwesomeIcon icon={faTicketSimple} className="text-2xl md:text-3xl text-[#758BFD]" />
-            <h1 className="text-2xl md:text-3xl font-bold text-[#FFEDD8]">
-              {t("allTickets")}
-            </h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <FontAwesomeIcon icon={faTicketSimple} className="text-2xl md:text-3xl text-[#758BFD]" />
+              <h1 className="text-2xl md:text-3xl font-bold text-[#FFEDD8]">
+                {t("allTickets")}
+              </h1>
+            </div>
+            <p className="text-2xl md:text-3xl font-bold text-[#758BFD]">
+              {filteredTickets.length}
+            </p>
           </div>
-          <p className="text-sm md:text-base text-[#BEADFF] opacity-80">
-            {filteredTickets.length} {t("ticketsFound")}
-          </p>
         </div>
 
         {/* Filters */}
@@ -121,7 +123,7 @@ export const TicketsPage = () => {
             <p className="text-[#BEADFF]">{t("noTicketsDesc")}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTickets.map((ticket) => (
               <TicketCard key={ticket.ticketId} ticket={ticket} />
             ))}
