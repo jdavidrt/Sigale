@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHouse, faTicket, faTicketSimple, faCircleCheck, faClipboard, faChartLine, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
 
@@ -12,11 +14,12 @@ export const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const navLinks = [
-    { path: "/", label: t("home"), icon: "🏠" },
-    { path: "/sell-tickets", label: t("sell"), icon: "🎫" },
-    { path: "/validate-qr", label: t("validate"), icon: "✅" },
-    { path: "/copy-event", label: "Copy", icon: "📋" },
-    { path: "/dashboard", label: t("dashboard"), icon: "📊" },
+    { path: "/", label: t("home"), icon: faHouse },
+    { path: "/sell-tickets", label: t("sell"), icon: faTicket },
+    { path: "/tickets", label: "Tickets", icon: faTicketSimple },
+    { path: "/validate-qr", label: t("validate"), icon: faCircleCheck },
+    { path: "/copy-event", label: "Copy", icon: faClipboard },
+    { path: "/dashboard", label: t("dashboard"), icon: faChartLine },
   ];
 
   const handleLinkClick = () => {
@@ -45,10 +48,11 @@ export const Navbar = () => {
             {/* Language Toggle Button */}
             <button
               onClick={toggleLanguage}
-              className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 text-[#BEADFF] text-xs md:text-sm font-medium hover:bg-[#5a4d9f] transition-all"
+              className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 text-[#BEADFF] text-xs md:text-sm font-medium hover:bg-[#5a4d9f] transition-all flex items-center gap-2"
               aria-label={t("toggleLanguage")}
             >
-              🌐 {language.toUpperCase()}
+              <FontAwesomeIcon icon={faGlobe} />
+              {language.toUpperCase()}
             </button>
 
             {/* Burger Menu Button */}
@@ -85,35 +89,29 @@ export const Navbar = () => {
 
           {/* Menu Panel */}
           <div className="fixed top-0 right-0 h-full w-full md:w-80 bg-gradient-to-b from-[#1a1152] to-[#0a0620] shadow-2xl z-50 animate-slideFromRight border-l border-[#758BFD] border-opacity-20">
-            {/* Menu Header */}
-            <div className="p-6 border-b border-[#758BFD] border-opacity-20">
-              <h2 className="text-xl md:text-2xl font-bold text-[#FFEDD8] mb-1">
-                Menu
-              </h2>
-              {event && (
-                <p className="text-xs md:text-sm text-[#BEADFF] opacity-80">
-                  {event.name}
-                </p>
-              )}
-            </div>
-
             {/* Menu Links */}
-            <nav className="p-10 space-y-8">
+            <nav className="p-8 space-y-4 overflow-y-auto h-full pb-24">
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   onClick={handleLinkClick}
-                  className={`block px-12 py-10 rounded-3xl font-black transition-all duration-300 flex items-center gap-10 text-16xl md:text-32xl ${isActive(link.path)
+                  className={`block rounded-2xl font-bold transition-all duration-300 flex items-center ${isActive(link.path)
                     ? "bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] shadow-2xl"
                     : "text-[#BEADFF] hover:bg-[#4a3d8f] hover:bg-opacity-50 hover:scale-105"
                     }`}
+                  style={{
+                    padding: '20px 30px',
+                    gap: '20px',
+                    fontSize: '24px',
+                    minHeight: '70px'
+                  }}
                 >
-                  {/* HUGE Icon */}
-                  <span className="text-7xl md:text-9xl flex-shrink-0">{link.icon}</span>
+                  {/* Icon */}
+                  <FontAwesomeIcon icon={link.icon} style={{ fontSize: '36px' }} className="flex-shrink-0" />
 
-                  {/* HUGE Label */}
-                  <span className="h1">{link.label}</span>
+                  {/* Label */}
+                  <span className="leading-none">{link.label}</span>
                 </Link>
               ))}
             </nav>

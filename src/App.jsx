@@ -8,6 +8,7 @@ import { Home } from "./pages/Home";
 import { CreateEventPage } from "./pages/CreateEventPage";
 import { EditEventPage } from "./pages/EditEventPage";
 import { SellTicketsPage } from "./pages/SellTicketsPage";
+import { TicketsPage } from "./pages/TicketsPage";
 import { ValidateQRPage } from "./pages/ValidateQRPage";
 import { CopyEventPage } from "./pages/CopyEventPage";
 import { loadCharlyIllustration } from "./utils/svgTicketTemplate";
@@ -30,6 +31,7 @@ function App() {
                 <Route path="/create-event" element={<CreateEventPage />} />
                 <Route path="/edit-event" element={<EditEventPage />} />
                 <Route path="/sell-tickets" element={<SellTicketsPage />} />
+                <Route path="/tickets" element={<TicketsPage />} />
                 <Route path="/validate-qr" element={<ValidateQRPage />} />
                 <Route path="/copy-event" element={<CopyEventPage />} />
               </Routes>
