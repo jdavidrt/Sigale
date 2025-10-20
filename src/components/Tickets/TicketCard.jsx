@@ -11,7 +11,7 @@ export const TicketCard = ({ ticket }) => {
   const navigate = useNavigate();
   const { event } = useEvent();
   const { deleteTicket } = useTickets();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const qrRef = useRef(null);
   const [copyStatus, setCopyStatus] = useState("");
   const qrData = generateQRData(ticket, event);
@@ -59,13 +59,13 @@ export const TicketCard = ({ ticket }) => {
   const handleShare = useCallback(async () => {
     if (qrRef.current) {
       const svg = qrRef.current.querySelector("svg");
-      const success = await shareQR(svg, ticket, event);
+      const success = await shareQR(svg, ticket, event, language);
       if (!success) {
         setCopyStatus("Share not supported");
         setTimeout(() => setCopyStatus(""), 2000);
       }
     }
-  }, [ticket, event]);
+  }, [ticket, event, language]);
 
   return (
     <div className={`bg-[#2a2a2a] rounded-xl border-2 ${ticket.checkedIn ? 'border-[#4ade80] border-opacity-50' : 'border-[#758BFD] border-opacity-20'} overflow-hidden transition-all relative`}>

@@ -4,7 +4,7 @@ import { useTickets } from "../../context/TicketContext";
 import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { QRDisplay } from "./QRDisplay";
-import { formatTo12Hour } from "../../utils/timeFormat";
+import { formatTo12Hour, parseLocalDate } from "../../utils/timeFormat";
 
 export const TicketForm = () => {
   const location = useLocation();
@@ -150,7 +150,7 @@ export const TicketForm = () => {
               <div className="text-center space-y-2 text-sm md:text-base pt-4">
                 <p className="font-bold text-[#FFEDD8]">{event.name}</p>
                 <p className="text-[#BEADFF]">
-                  📅 {new Date(event.date).toLocaleDateString()} • 🕐 {formatTo12Hour(event.entranceTime)}
+                  📅 {parseLocalDate(event.date).toLocaleDateString()} • 🕐 {formatTo12Hour(event.entranceTime)}
                 </p>
                 <p className="text-[#BEADFF]">📍 {event.venue}</p>
                 <p className="text-xs md:text-sm text-[#758BFD] font-mono mt-2">

@@ -1,4 +1,4 @@
-import { formatTo12Hour } from './timeFormat';
+import { formatTo12Hour, parseLocalDate } from './timeFormat';
 import { cleanBase64 } from './base64Cleaner';
 
 // Charly's illustration base64 - imported at build time
@@ -73,8 +73,8 @@ export const generateTicketSVG = (ticket, event, qrDataURL) => {
   // Get ticket price from event.ticketTypes
   const ticketPrice = event.ticketTypes[ticket.ticketType] || 0;
 
-  // Format date and time
-  const formattedDate = new Date(event.date).toLocaleDateString('en-US', {
+  // Format date and time with proper timezone handling
+  const formattedDate = parseLocalDate(event.date).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -245,35 +245,37 @@ const generateLeftColumn = (eventNameLines, eventNameFontSize, venueLines, venue
 };
 
 /**
- * Generate right column content (Ticket Type, Price, Buyer Name, Ticket ID)
+ * Generate right column content (Buyer Name, Ticket Type, Price)
  */
 const generateRightColumn = (ticket, ticketPrice, buyerNameLines, buyerNameFontSize, startY) => {
   let currentY = startY;
   let content = '';
 
-  // Ticket Type - Consolas monospace
-  content += `<text text-anchor="start" font-family="Consolas, Consolas" font-size="10" fill="#000">
-    <tspan x="230" y="${currentY}">${escapeXml(ticket.ticketType.toUpperCase())}</tspan>
-  </text>`;
-  currentY += 12;
-
-  // Price - Only show if price > 0
-  if (ticketPrice > 0) {
-    content += `<text text-anchor="start" font-family="Consolas, Consolas" font-size="12" fill="#000">
-      <tspan x="230" y="${currentY}">$${ticketPrice.toLocaleString()}</tspan>
-    </text>`;
-    currentY += 18;
-  } else {
-    currentY += 5; // Small spacing when no price
-  }
-
-  // Buyer Name - Consolas monospace
+  // Buyer Name - Consolas monospace (now at the top)
   buyerNameLines.forEach((line) => {
     content += `<text text-anchor="start" font-family="Consolas, Consolas" font-size="${buyerNameFontSize}" fill="#000">
       <tspan x="230" y="${currentY}">${escapeXml(line)}</tspan>
     </text>`;
     currentY += buyerNameFontSize + 3;
   });
+
+  currentY += 5; // Space between buyer name and ticket type
+
+  // Ticket Type - Consolas monospace, bold (11pt)
+  content += `<text text-anchor="start" font-family="Consolas, Consolas" font-weight="700" font-size="11" fill="#000">
+    <tspan x="230" y="${currentY}">${escapeXml(ticket.ticketType.toUpperCase())}</tspan>
+  </text>`;
+  currentY += 12;
+
+  // Price - Only show if price > 0 (10pt)
+  if (ticketPrice > 0) {
+    content += `<text text-anchor="start" font-family="Consolas, Consolas" font-size="10" fill="#000">
+      <tspan x="230" y="${currentY}">$${ticketPrice.toLocaleString()}</tspan>
+    </text>`;
+    currentY += 13;
+  } else {
+    currentY += 5; // Small spacing when no price
+  }
 
   // Ticket ID removed from right column - now in bottom left corner
 

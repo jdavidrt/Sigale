@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useEvent } from "../context/EventContext";
 import { useLanguage } from "../context/LanguageContext";
-import { formatTo12Hour } from "../utils/timeFormat";
+import { formatTo12Hour, parseLocalDate } from "../utils/timeFormat";
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ export const Home = () => {
           <div className="flex items-center gap-3">
             <span className="text-xl md:text-2xl">📅</span>
             <p className="text-sm md:text-base text-[#FFEDD8]">
-              {new Date(event.date).toLocaleDateString('en-US', {
+              {parseLocalDate(event.date).toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',

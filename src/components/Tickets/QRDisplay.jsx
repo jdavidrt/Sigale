@@ -10,7 +10,7 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
   const ticketPreviewRef = useRef(null);
   const [copyStatus, setCopyStatus] = useState("");
   const [ticketSVG, setTicketSVG] = useState("");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const qrData = generateQRData(ticket, event);
 
   // Generate ticket preview SVG
@@ -71,13 +71,13 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
   const handleShare = useCallback(async () => {
     if (qrRef.current) {
       const svg = qrRef.current.querySelector("svg");
-      const success = await shareQR(svg, ticket, event);
+      const success = await shareQR(svg, ticket, event, language);
       if (!success) {
         setCopyStatus("Share not supported");
         setTimeout(() => setCopyStatus(""), 2000);
       }
     }
-  }, [ticket, event]);
+  }, [ticket, event, language]);
 
   return (
     <div className="space-y-4">

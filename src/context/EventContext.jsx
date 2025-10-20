@@ -24,8 +24,8 @@ export const EventProvider = ({ children }) => {
 
   const updateEvent = (eventData) => {
     setData({
-      ...data,
       event: { ...data.event, ...eventData },
+      tickets: data.tickets || [], // Preserve existing tickets
     });
   };
 
