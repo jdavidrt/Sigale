@@ -1,3 +1,6 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleCheck, faCircleXmark, faTriangleExclamation, faCheck } from "@fortawesome/free-solid-svg-icons";
+
 export const ValidationResult = ({ result, onClose }) => {
   const { success, message, type, ticket, qrData } = result;
 
@@ -16,7 +19,8 @@ export const ValidationResult = ({ result, onClose }) => {
         return {
           container: "bg-[#2a2a2a] border-[#4ade80]",
           icon: "text-6xl mb-4",
-          iconEmoji: "✅",
+          iconComponent: faCircleCheck,
+          iconColor: "text-[#4ade80]",
           title: "text-[#4ade80]",
           message: "text-[#BEADFF]",
           button: "bg-gradient-to-r from-[#758BFD] to-[#BEADFF] hover:opacity-90",
@@ -25,7 +29,8 @@ export const ValidationResult = ({ result, onClose }) => {
         return {
           container: "bg-[#2a2a2a] border-red-500",
           icon: "text-6xl mb-4",
-          iconEmoji: "⚠️",
+          iconComponent: faTriangleExclamation,
+          iconColor: "text-red-400",
           title: "text-red-400",
           message: "text-[#BEADFF]",
           button: "bg-red-600 hover:bg-red-700",
@@ -34,7 +39,8 @@ export const ValidationResult = ({ result, onClose }) => {
         return {
           container: "bg-[#2a2a2a] border-orange-500",
           icon: "text-6xl mb-4",
-          iconEmoji: "❌",
+          iconComponent: faCircleXmark,
+          iconColor: "text-orange-400",
           title: "text-orange-400",
           message: "text-[#BEADFF]",
           button: "bg-orange-600 hover:bg-orange-700",
@@ -44,7 +50,8 @@ export const ValidationResult = ({ result, onClose }) => {
         return {
           container: "bg-[#2a2a2a] border-[#758BFD]",
           icon: "text-6xl mb-4",
-          iconEmoji: "❌",
+          iconComponent: faCircleXmark,
+          iconColor: "text-[#FFEDD8]",
           title: "text-[#FFEDD8]",
           message: "text-[#BEADFF]",
           button: "bg-[#4a3d8f] hover:bg-[#5a4d9f]",
@@ -57,7 +64,9 @@ export const ValidationResult = ({ result, onClose }) => {
   return (
     <div className={`rounded-xl shadow-lg border-2 p-8 ${styles.container}`}>
       <div className="text-center">
-        <div className={styles.icon}>{styles.iconEmoji}</div>
+        <div className={styles.icon}>
+          <FontAwesomeIcon icon={styles.iconComponent} className={styles.iconColor} />
+        </div>
 
         <h3 className={`text-2xl font-bold mb-3 ${styles.title}`}>
           {success ? "Check-In Successful!" : "Check-In Failed"}
@@ -130,7 +139,7 @@ export const ValidationResult = ({ result, onClose }) => {
           onClick={onClose}
           className={`w-full px-6 py-3 text-[#FFEDD8] rounded-lg transition-all font-bold border border-[#BEADFF] border-opacity-30 ${styles.button}`}
         >
-          {success ? "✓ Continue" : "Try Again"}
+          {success ? <><FontAwesomeIcon icon={faCheck} className="mr-2" />Continue</> : "Try Again"}
         </button>
       </div>
     </div>

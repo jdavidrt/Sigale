@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useEvent } from "../../context/EventContext";
 import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWandMagicSparkles, faLocationDot, faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 
 export const CreateEvent = ({ isEditing = false }) => {
   const navigate = useNavigate();
@@ -229,9 +231,9 @@ export const CreateEvent = ({ isEditing = false }) => {
           <div>
             <div className="flex items-center gap-3 mb-3">
               <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-[#758BFD] bg-opacity-30 flex items-center justify-center">
-                <span className="text-xl">✨</span>
+                <FontAwesomeIcon icon={faWandMagicSparkles} className="text-xl" />
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-[#FFEDD8]">
+              <h1 className="text-2xl md:text-3xl font-bold text-[#FFEDD8]" style={{ margin: '0' }}>
                 {isEditing ? t("editEventTitle") : t("createNewEvent")}
               </h1>
             </div>
@@ -300,7 +302,7 @@ export const CreateEvent = ({ isEditing = false }) => {
               {/* Venue Name */}
               <div>
                 <label className="block mb-2 text-xs md:text-sm text-[#FFEDD8] flex items-center gap-2">
-                  <span>📍</span>
+                  <FontAwesomeIcon icon={faLocationDot} />
                   {t("venueName")}
                 </label>
                 <input
@@ -493,7 +495,7 @@ export const CreateEvent = ({ isEditing = false }) => {
             type="submit"
             className="w-full mt-6 px-6 py-3 md:py-4 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] rounded-xl font-bold hover:opacity-90 transition-opacity border border-[#BEADFF] border-opacity-30 text-sm md:text-base"
           >
-            {isEditing ? `💾 ${t("updateEvent")}` : `✨ ${t("createEvent")}`}
+            {isEditing ? <><FontAwesomeIcon icon={faFloppyDisk} className="mr-2" />{t("updateEvent")}</> : <><FontAwesomeIcon icon={faWandMagicSparkles} className="mr-2" />{t("createEvent")}</>}
           </button>
 
           {/* Decorative dots */}

@@ -32,47 +32,21 @@ export const Navbar = () => {
       <nav className="bg-[#030312] bg-opacity-95 shadow-xl sticky top-0 z-50">
         <div className="px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
           {/* Logo Section */}
-          <Link to="/" className="flex flex-col hover:opacity-80 transition-opacity">
-            <span className="text-base md:text-lg font-bold text-[#BEADFF] tracking-tight">
+          <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <span className="text-2xl md:text-3xl font-bold text-[#BEADFF] tracking-tight">
               Sígale
             </span>
-            {event && (
-              <span className="text-xs md:text-sm text-[#BEADFF] opacity-90 truncate max-w-[150px] md:max-w-[200px]">
-                {event.name}
-              </span>
-            )}
           </Link>
 
-          {/* Right Side: Language Toggle + Burger Menu */}
+          {/* Right Side: Burger Menu */}
           <div className="flex items-center gap-3 md:gap-4">
-            {/* Language Toggle Button */}
-            <button
-              onClick={toggleLanguage}
-              className="px-3 py-1.5 md:px-4 md:py-2 rounded-lg bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 text-[#BEADFF] text-xs md:text-sm font-medium hover:bg-[#5a4d9f] transition-all flex items-center gap-2"
-              aria-label={t("toggleLanguage")}
-            >
-              <FontAwesomeIcon icon={faGlobe} />
-              {language.toUpperCase()}
-            </button>
-
-            {/* Burger Menu Button */}
+            {/* Burger Menu Button with Ticket Icon */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="flex flex-col gap-1.5 w-6 h-6 md:w-7 md:h-7 justify-center items-center hover:opacity-70 transition-opacity"
+              className="p-2 md:p-2.5 hover:bg-[#4a3d8f] hover:bg-opacity-50 rounded-lg transition-all"
               aria-label="Toggle menu"
             >
-              <span
-                className={`w-6 h-0.5 bg-[#BEADFF] rounded-full transition-all duration-300 ${isMenuOpen ? "rotate-45 translate-y-2" : ""
-                  }`}
-              ></span>
-              <span
-                className={`w-6 h-0.5 bg-[#BEADFF] rounded-full transition-all duration-300 ${isMenuOpen ? "opacity-0" : ""
-                  }`}
-              ></span>
-              <span
-                className={`w-6 h-0.5 bg-[#BEADFF] rounded-full transition-all duration-300 ${isMenuOpen ? "-rotate-45 -translate-y-2" : ""
-                  }`}
-              ></span>
+              <FontAwesomeIcon icon={faTicketSimple} className="text-[#BEADFF] text-xl md:text-2xl" />
             </button>
           </div>
         </div>
@@ -114,6 +88,25 @@ export const Navbar = () => {
                   <span className="leading-none">{link.label}</span>
                 </Link>
               ))}
+
+              {/* Language Toggle Button - Last Item */}
+              <button
+                onClick={toggleLanguage}
+                className="w-full block rounded-2xl font-bold transition-all duration-300 flex items-center text-[#BEADFF] hover:bg-[#4a3d8f] hover:bg-opacity-50 hover:scale-105"
+                style={{
+                  padding: '20px 30px',
+                  gap: '20px',
+                  fontSize: '24px',
+                  minHeight: '70px'
+                }}
+                aria-label={t("toggleLanguage")}
+              >
+                {/* Icon */}
+                <FontAwesomeIcon icon={faGlobe} style={{ fontSize: '36px' }} className="flex-shrink-0" />
+
+                {/* Label */}
+                <span className="leading-none">{language === 'en' ? 'English' : 'Español'}</span>
+              </button>
             </nav>
 
             {/* Menu Footer */}

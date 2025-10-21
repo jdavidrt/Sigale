@@ -202,7 +202,7 @@ const generateLeftColumn = (eventNameLines, eventNameFontSize, venueLines, venue
 
   // Event Name - Modern stylish font (Helvetica/Arial)
   eventNameLines.forEach((line) => {
-    content += `<text text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="${eventNameFontSize}" fill="#000">
+    content += `<text text-anchor="start" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="${eventNameFontSize}" fill="#000">
       <tspan x="30" y="${currentY}">${escapeXml(line)}</tspan>
     </text>`;
     currentY += eventNameFontSize + 3;
@@ -210,9 +210,9 @@ const generateLeftColumn = (eventNameLines, eventNameFontSize, venueLines, venue
 
   currentY += 5; // Space between event name and venue
 
-  // Venue - Consolas monospace font
+  // Venue - Monaco monospace font
   venueLines.forEach((line) => {
-    content += `<text text-anchor="start" font-family="Consolas, Consolas" font-size="${venueFontSize}" fill="#000">
+    content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="${venueFontSize}" fill="#000">
       <tspan x="30" y="${currentY}">${escapeXml(line)}</tspan>
     </text>`;
     currentY += venueFontSize + 2;
@@ -220,9 +220,9 @@ const generateLeftColumn = (eventNameLines, eventNameFontSize, venueLines, venue
 
   currentY += 2; // Space between venue and address
 
-  // Address - Consolas monospace font
+  // Address - Monaco monospace font
   addressLines.forEach((line) => {
-    content += `<text text-anchor="start" font-family="Consolas, Consolas" font-size="${addressFontSize}" fill="#000">
+    content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="${addressFontSize}" fill="#000">
       <tspan x="30" y="${currentY}">${escapeXml(line)}</tspan>
     </text>`;
     currentY += addressFontSize + 2;
@@ -230,14 +230,14 @@ const generateLeftColumn = (eventNameLines, eventNameFontSize, venueLines, venue
 
   currentY += 5; // Space before date/time
 
-  // Date and Time - Consolas monospace font (+1pt, was 10)
-  content += `<text text-anchor="start" font-family="Consolas, Consolas" font-size="11" fill="#000">
+  // Date and Time - Monaco monospace font (+1pt, was 10)
+  content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="11" fill="#000">
     <tspan x="30" y="${currentY}">${formattedDate}, ${formattedTime}</tspan>
   </text>`;
   currentY += 15; // Space before ticket ID
 
-  // Ticket ID - Consolas monospace font (close to date/time) - Dark grey
-  content += `<text text-anchor="start" font-family="Consolas, Consolas" font-size="8" fill="#666">
+  // Ticket ID - Monaco monospace font (close to date/time) - Dark grey
+  content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="8" fill="#666">
     <tspan x="30" y="${currentY}">${ticketId}</tspan>
   </text>`;
 
@@ -251,9 +251,9 @@ const generateRightColumn = (ticket, ticketPrice, buyerNameLines, buyerNameFontS
   let currentY = startY;
   let content = '';
 
-  // Buyer Name - Consolas monospace (now at the top)
+  // Buyer Name - Monaco monospace (now at the top)
   buyerNameLines.forEach((line) => {
-    content += `<text text-anchor="start" font-family="Consolas, Consolas" font-size="${buyerNameFontSize}" fill="#000">
+    content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="${buyerNameFontSize}" fill="#000">
       <tspan x="230" y="${currentY}">${escapeXml(line)}</tspan>
     </text>`;
     currentY += buyerNameFontSize + 3;
@@ -261,15 +261,15 @@ const generateRightColumn = (ticket, ticketPrice, buyerNameLines, buyerNameFontS
 
   currentY += 5; // Space between buyer name and ticket type
 
-  // Ticket Type - Consolas monospace, bold (11pt)
-  content += `<text text-anchor="start" font-family="Consolas, Consolas" font-weight="700" font-size="11" fill="#000">
+  // Ticket Type - Monaco monospace, bold (11pt)
+  content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-weight="700" font-size="11" fill="#000">
     <tspan x="230" y="${currentY}">${escapeXml(ticket.ticketType.toUpperCase())}</tspan>
   </text>`;
   currentY += 12;
 
   // Price - Only show if price > 0 (10pt)
   if (ticketPrice > 0) {
-    content += `<text text-anchor="start" font-family="Consolas, Consolas" font-size="10" fill="#000">
+    content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="10" fill="#000">
       <tspan x="230" y="${currentY}">$${ticketPrice.toLocaleString()}</tspan>
     </text>`;
     currentY += 13;

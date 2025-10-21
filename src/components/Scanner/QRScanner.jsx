@@ -4,11 +4,32 @@ import { useTickets } from "../../context/TicketContext";
 import { parseQRData } from "../../utils/qrGenerator";
 import { ValidationResult } from "./ValidationResult";
 
-export const QRScanner = () => {
+export const QRScanner = ({ autoStart = false }) => {
   const { tickets, checkInTicket } = useTickets();
   const [scanResult, setScanResult] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState(false);
   const scannerRef = useRef(null);
+  const permissionCheckedRef = useRef(false);
+
+  // Request camera permission once on mount if autoStart is true
+  useEffect(() => {
+    if (autoStart && !permissionCheckedRef.current) {
+      permissionCheckedRef.current = true;
+
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then((stream) => {
+          // Permission granted - stop the stream and mark as granted
+          stream.getTracks().forEach(track => track.stop());
+          setPermissionGranted(true);
+          setIsScanning(true);
+        })
+        .catch((error) => {
+          console.error("Camera permission denied:", error);
+          setPermissionGranted(false);
+        });
+    }
+  }, [autoStart]);
 
   useEffect(() => {
     if (isScanning && !scannerRef.current) {
@@ -119,24 +140,26 @@ export const QRScanner = () => {
 
   return (
     <div className="space-y-6">
-      {/* Control Buttons */}
-      <div className="flex gap-4 justify-center">
-        {!isScanning ? (
-          <button
-            onClick={handleStartScanning}
-            className="px-6 py-3 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] hover:opacity-90 text-[#FFEDD8] rounded-lg transition-opacity font-bold border border-[#BEADFF] border-opacity-30"
-          >
-            📷 Start Scanning
-          </button>
-        ) : (
-          <button
-            onClick={handleStopScanning}
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-[#FFEDD8] rounded-lg transition-colors font-bold"
-          >
-            ⏹️ Stop Scanning
-          </button>
-        )}
-      </div>
+      {/* Control Buttons - Hidden when autoStart is true */}
+      {!autoStart && (
+        <div className="flex gap-4 justify-center">
+          {!isScanning ? (
+            <button
+              onClick={handleStartScanning}
+              className="px-6 py-3 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] hover:opacity-90 text-[#FFEDD8] rounded-lg transition-opacity font-bold border border-[#BEADFF] border-opacity-30"
+            >
+              📷 Start Scanning
+            </button>
+          ) : (
+            <button
+              onClick={handleStopScanning}
+              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-[#FFEDD8] rounded-lg transition-colors font-bold"
+            >
+              ⏹️ Stop Scanning
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Scanner Container */}
       {isScanning && (

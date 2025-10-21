@@ -2,6 +2,8 @@ import { useState, useMemo } from "react";
 import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { TicketCard } from "./TicketCard";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 
 export const TicketList = () => {
   const { tickets, searchTickets } = useTickets();
@@ -22,13 +24,14 @@ export const TicketList = () => {
   return (
     <div className="space-y-5">
       {/* Search Bar */}
-      <div>
+      <div className="relative">
+        <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#BEADFF] opacity-50" />
         <input
           type="text"
-          placeholder={`🔍 ${t("searchTickets")}...`}
+          placeholder={`${t("searchTickets")}...`}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] placeholder-[#BEADFF] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50 text-sm"
+          className="w-full pl-10 pr-4 py-3 bg-[#2a2a2a] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] placeholder-[#BEADFF] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50 text-sm"
         />
       </div>
 

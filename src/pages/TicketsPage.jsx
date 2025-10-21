@@ -64,11 +64,11 @@ export const TicketsPage = () => {
 
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
+        <div style={{ marginBottom: '6px' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <FontAwesomeIcon icon={faTicketSimple} className="text-2xl md:text-3xl text-[#758BFD]" />
-              <h1 className="text-2xl md:text-3xl font-bold text-[#FFEDD8]">
+              <h1 className="text-2xl md:text-3xl font-bold text-[#FFEDD8]" style={{ margin: '0' }}>
                 {t("allTickets")}
               </h1>
             </div>
@@ -79,7 +79,7 @@ export const TicketsPage = () => {
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ marginBottom: '32px' }}>
           {/* Search Bar */}
           <div>
             <input
@@ -123,7 +123,7 @@ export const TicketsPage = () => {
             <p className="text-[#BEADFF]">{t("noTicketsDesc")}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '12px' }}>
             {filteredTickets.map((ticket) => (
               <TicketCard key={ticket.ticketId} ticket={ticket} />
             ))}

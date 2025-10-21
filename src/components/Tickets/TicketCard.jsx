@@ -7,7 +7,7 @@ import { useEvent } from "../../context/EventContext";
 import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPenToSquare, faTrash, faImage, faShareNodes } from "@fortawesome/free-solid-svg-icons";
+import { faPenToSquare, faTrash, faImage, faShareNodes, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 
 export const TicketCard = ({ ticket }) => {
   const navigate = useNavigate();
@@ -70,27 +70,23 @@ export const TicketCard = ({ ticket }) => {
   }, [ticket, event, language]);
 
   return (
-    <div className={`bg-[#2a2a2a] rounded-xl border-2 ${ticket.checkedIn ? 'border-[#4ade80] border-opacity-50' : 'border-[#758BFD] border-opacity-20'} overflow-hidden transition-all relative`}>
+    <div className={`bg-[#2a2a2a] rounded-xl border-2 ${ticket.checkedIn ? 'border-[#4ade80] border-opacity-50' : 'border-[#758BFD] border-opacity-20'} overflow-hidden transition-all`}>
       {/* Hidden QR Code for processing */}
       <div ref={qrRef} className="hidden">
         <QRCodeSVG value={qrData} size={200} level="L" marginSize={2} />
       </div>
 
-      {/* Checkmark Badge - Top Right */}
-      {ticket.checkedIn && (
-        <div className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 rounded-full bg-[#4ade80] z-10">
-          <span className="text-lg font-bold text-black">✓</span>
-        </div>
-      )}
-
       <div style={{ padding: '8px 12px', display: 'flex', gap: '12px' }}>
         {/* Left side - Ticket Info */}
         <div style={{ flex: '1' }}>
-          {/* Header - Name */}
-          <div style={{ marginBottom: '4px' }}>
+          {/* Header - Name with Check Icon */}
+          <div style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 'bold', lineHeight: '1.1' }} className="text-[#FFEDD8]">
               {ticket.buyerName}
             </h3>
+            {ticket.checkedIn && (
+              <FontAwesomeIcon icon={faCircleCheck} className="text-[#4ade80]" style={{ fontSize: '18px' }} />
+            )}
           </div>
 
           {/* Divider */}
@@ -128,32 +124,32 @@ export const TicketCard = ({ ticket }) => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '4px', width: '80px', height: '80px' }}>
           <button
             onClick={handleEdit}
-            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            className="bg-blue-600 hover:bg-blue-700 text-[#FFEDD8] rounded-md transition-colors font-bold border border-blue-500 border-opacity-30"
+            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a4a4a' }}
+            className="bg-blue-600 hover:bg-blue-700 rounded-md transition-colors font-bold border border-blue-500 border-opacity-30"
             title="Edit ticket"
           >
             <FontAwesomeIcon icon={faPenToSquare} />
           </button>
           <button
             onClick={handleDelete}
-            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            className="bg-red-600 hover:bg-red-700 text-[#FFEDD8] rounded-md transition-colors font-bold border border-red-500 border-opacity-30"
+            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a4a4a' }}
+            className="bg-red-600 hover:bg-red-700 rounded-md transition-colors font-bold border border-red-500 border-opacity-30"
             title="Delete ticket"
           >
             <FontAwesomeIcon icon={faTrash} />
           </button>
           <button
             onClick={copyAsPNG}
-            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            className="bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30"
+            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}
+            className="bg-[#4a3d8f] hover:bg-[#5a4d9f] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30"
             title="Copy ticket as PNG"
           >
             <FontAwesomeIcon icon={faImage} />
           </button>
           <button
             onClick={handleShare}
-            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            className="bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30"
+            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}
+            className="bg-[#4a3d8f] hover:bg-[#5a4d9f] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30"
             title="Share ticket"
           >
             <FontAwesomeIcon icon={faShareNodes} />
