@@ -32,10 +32,8 @@ export const Navbar = () => {
       <nav className="bg-[#030312] bg-opacity-95 shadow-xl sticky top-0 z-50">
         <div className="px-4 md:px-6 py-3 md:py-4 flex justify-between items-center">
           {/* Logo Section */}
-          <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-            <span className="text-2xl md:text-3xl font-bold text-[#BEADFF] tracking-tight">
-              Sígale
-            </span>
+          <Link to="/" className="flex items-center hover:opacity-80 transition-opacity p-2 md:p-2.5" style={{ paddingLeft: '6px' }}>
+            <FontAwesomeIcon icon={faHouse} className="text-[#BEADFF] text-xl md:text-2xl" />
           </Link>
 
           {/* Right Side: Burger Menu */}

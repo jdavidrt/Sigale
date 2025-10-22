@@ -26,51 +26,102 @@ export const Home = () => {
 
   return (
     <>
-      <h2 className="text-lg md:text-xl font-bold text-[#FFEDD8]">
+      <style>{`
+        .home-welcome {
+          font-size: 0.875rem;
+          font-weight: bold;
+          color: #FFEDD8;
+        }
+        @media (min-width: 768px) {
+          .home-welcome {
+            font-size: 0.75rem;
+          }
+        }
+        .home-event-details {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 4px;
+        }
+        .home-event-title {
+          grid-column: 1 / -1;
+          margin-top: 4px;
+          margin-bottom: 4px;
+        }
+        .home-event-details *, .home-ticket-section * {
+          padding-left: 2px;
+          padding-right: 2px;
+        }
+        .home-edit-icon {
+          color: #758BFD;
+          font-size: 2rem;
+        }
+        @media (min-width: 768px) {
+          .home-edit-icon {
+            font-size: 2.5rem;
+          }
+        }
+        .home-edit-link {
+          font-size: 1.5rem;
+          color: #758BFD;
+          text-decoration: underline;
+          transition: color 0.3s;
+        }
+        .home-edit-link:hover {
+          color: #BEADFF;
+        }
+        @media (min-width: 768px) {
+          .home-edit-link {
+            font-size: 1.75rem;
+          }
+        }
+      `}</style>
+      <h2 className="home-welcome">
         {t("welcome")} Sígale
       </h2>
       <div className="min-h-screen pb-6 px-4 md:px-6">
         {/* Event Details Section */}
-        <div className="max-w-2xl mx-auto pt-4 md:pt-6 space-y-3">
-          {/* Event Title */}
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#FFEDD8]">
-            {event.name}
-          </h1>
+        <div className="max-w-2xl mx-auto pt-4 md:pt-6">
+          <div className="home-event-details">
+            {/* Event Title */}
+            <h1 className="home-event-title text-3xl md:text-4xl lg:text-5xl font-bold text-[#FFEDD8]">
+              {event.name}
+            </h1>
 
-          {/* Venue */}
-          <div className="flex items-start gap-2">
-            <FontAwesomeIcon icon={faLocationDot} className="text-[#758BFD] text-lg md:text-xl mt-1" />
+            {/* Venue */}
             <div>
-              <p className="text-base md:text-lg font-medium text-[#FFEDD8]">
-                {event.venue}
-              </p>
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon icon={faLocationDot} className="text-[#758BFD] text-lg md:text-xl" />
+                <p className="text-base md:text-lg font-medium text-[#FFEDD8]">
+                  {event.venue}
+                </p>
+              </div>
               {event.address && (
                 <p className="text-sm md:text-base text-[#BEADFF] mt-0.5">
                   {event.address}
                 </p>
               )}
             </div>
-          </div>
 
-          {/* Date */}
-          <div className="flex items-center gap-2">
-            <FontAwesomeIcon icon={faCalendarDays} className="text-[#758BFD] text-lg md:text-xl" />
-            <p className="text-sm md:text-base text-[#FFEDD8]">
-              {parseLocalDate(event.date).toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </p>
-          </div>
-
-          {/* Time */}
-          <div className="flex items-center gap-2">
-            <FontAwesomeIcon icon={faClock} className="text-[#758BFD] text-lg md:text-xl" />
-            <p className="text-sm md:text-base text-[#FFEDD8]">
-              {formatTo12Hour(event.entranceTime)}
-            </p>
+            {/* Date and Time */}
+            <div>
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon icon={faCalendarDays} className="text-[#758BFD] text-lg md:text-xl" />
+                <p className="text-sm md:text-base text-[#FFEDD8]">
+                  {parseLocalDate(event.date).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon icon={faClock} className="text-[#758BFD] text-lg md:text-xl" />
+                <p className="text-sm md:text-base text-[#FFEDD8]">
+                  {formatTo12Hour(event.entranceTime)}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -78,7 +129,7 @@ export const Home = () => {
         {event.ticketTypes && Object.keys(event.ticketTypes).length > 0 && (
           <div className="max-w-2xl mx-auto mt-8 md:mt-10">
             {/* Section with dark card background */}
-            <div className="bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] rounded-t-2xl p-6 md:p-8 border-b-2 border-[#8B4757]">
+            <div className="home-ticket-section bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] rounded-t-2xl p-6 md:p-8 border-b-2 border-[#8B4757]">
               <div className="flex items-center gap-3 mb-6">
                 <FontAwesomeIcon icon={faTicket} className="text-[#758BFD] text-xl md:text-2xl" />
                 <h2 className="text-xl md:text-2xl font-bold text-[#FFEDD8]">
@@ -106,7 +157,8 @@ export const Home = () => {
                         </div>
                         <button
                           onClick={() => navigate(`/tickets?type=${type}`)}
-                          className="px-2 py-1 bg-[#758BFD] hover:bg-[#8B9BFD] text-white rounded text-xs md:text-sm font-bold transition-colors flex-shrink-0 min-w-[32px] text-center"
+                          className="px-2 py-1 bg-[#758BFD] hover:bg-[#8B9BFD] rounded text-base md:text-lg font-bold transition-colors flex-shrink-0 min-w-[32px] text-center"
+                          style={{ color: 'white' }}
                         >
                           {ticketCount}
                         </button>
@@ -116,10 +168,10 @@ export const Home = () => {
                 })}
                 {/* Edit Link */}
                 <div className="flex items-center gap-3">
-                  <FontAwesomeIcon icon={faPenToSquare} className="text-[#758BFD] text-base" />
+                  <FontAwesomeIcon icon={faPenToSquare} className="home-edit-icon" />
                   <Link
                     to="/edit-event"
-                    className="text-sm md:text-base text-[#758BFD] underline hover:text-[#BEADFF] transition-colors"
+                    className="home-edit-link"
                   >
                     {t("editEvent")}
                   </Link>

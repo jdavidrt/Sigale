@@ -76,16 +76,16 @@ export const TicketCard = ({ ticket }) => {
         <QRCodeSVG value={qrData} size={200} level="L" marginSize={2} />
       </div>
 
-      <div style={{ padding: '8px 12px', display: 'flex', gap: '12px' }}>
+      <div style={{ padding: '8px 12px 12px 12px', display: 'flex', gap: '12px' }}>
         {/* Left side - Ticket Info */}
         <div style={{ flex: '1' }}>
           {/* Header - Name with Check Icon */}
           <div style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 'bold', lineHeight: '1.1' }} className="text-[#FFEDD8]">
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', lineHeight: '1.1', margin: '2px' }} className="text-[#FFEDD8]">
               {ticket.buyerName}
             </h3>
             {ticket.checkedIn && (
-              <FontAwesomeIcon icon={faCircleCheck} className="text-[#4ade80]" style={{ fontSize: '18px' }} />
+              <FontAwesomeIcon icon={faCircleCheck} className="text-[#4ade80]" style={{ fontSize: '20px' }} />
             )}
           </div>
 
@@ -96,24 +96,24 @@ export const TicketCard = ({ ticket }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             {/* Row 1: Ticket ID and ID Number */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <p style={{ fontSize: '11px', lineHeight: '1', margin: '0' }} className="text-[#758BFD] font-mono">{ticket.ticketId}</p>
-              <p style={{ fontSize: '13px', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">{ticket.buyerId}</p>
+              <p style={{ fontSize: '12px', lineHeight: '1', margin: '0' }} className="text-[#758BFD] font-mono">{ticket.ticketId}</p>
+              <p style={{ fontSize: '14px', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">{ticket.buyerId}</p>
             </div>
 
             {/* Row 2: Ticket Type and Price */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <p style={{ fontSize: '14px', fontWeight: 'bold', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8] capitalize">
+              <p style={{ fontSize: '15px', fontWeight: 'bold', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8] capitalize">
                 {ticket.ticketType}
               </p>
-              <p style={{ fontSize: '14px', fontWeight: 'bold', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">
-                ${event.ticketTypes[ticket.ticketType]?.toLocaleString()}
+              <p style={{ fontSize: '15px', fontWeight: 'bold', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">
+                {event.ticketTypes[ticket.ticketType] === 0 ? '—' : `$${event.ticketTypes[ticket.ticketType]?.toLocaleString()}`}
               </p>
             </div>
 
             {/* Row 3: Phone and Purchase Date */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <p style={{ fontSize: '13px', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">{ticket.buyerPhone}</p>
-              <p style={{ fontSize: '13px', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">
+              <p style={{ fontSize: '14px', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">{ticket.buyerPhone}</p>
+              <p style={{ fontSize: '14px', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">
                 {formatDate(ticket.purchaseDate)}
               </p>
             </div>

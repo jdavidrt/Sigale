@@ -58,11 +58,20 @@ export const TicketsPage = () => {
 
   return (
     <div className="min-h-screen px-4 md:px-6 py-6">
+      <style>{`
+        .tickets-page-container * {
+          padding-left: 2px;
+          padding-right: 2px;
+        }
+        .tickets-page-container h1 {
+          margin: 2px;
+        }
+      `}</style>
       {/* Decorative circles */}
       <div className="fixed top-[600px] left-[50px] w-[160px] h-[160px] rounded-full bg-[#758BFD] opacity-[0.03] pointer-events-none" />
       <div className="fixed top-[200px] right-[-50px] w-[200px] h-[200px] rounded-full bg-[#BEADFF] opacity-[0.04] pointer-events-none" />
 
-      <div className="max-w-6xl mx-auto">
+      <div className="tickets-page-container max-w-6xl mx-auto">
         {/* Header */}
         <div style={{ marginBottom: '6px' }}>
           <div className="flex items-center justify-between">
