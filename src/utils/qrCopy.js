@@ -206,8 +206,8 @@ Tu boleta está confirmada y lista.
 🗺️ Dirección: ${event.address}
 📆 Fecha: ${formattedDate}
 🕐 Apertura de puertas: ${formattedTime}
-🎫 Tipo de boleta: ${ticket.ticketType.toUpperCase()}
-💵 Precio: $${event.ticketTypes[ticket.ticketType]?.toLocaleString() || 0}
+🎫 Tipo de boleta: ${ticket.ticketType.toUpperCase()}${event.ticketTypes[ticket.ticketType] ? `
+💵 Precio: $${event.ticketTypes[ticket.ticketType].toLocaleString()}` : ''}
 
 ━━━
 
@@ -231,8 +231,8 @@ We're thrilled to have you join us for this amazing event! Your ticket is confir
 🗺️  Address: ${event.address}
 📆 Date: ${formattedDate}
 🕐 Doors Open: ${formattedTime}
-🎫 Ticket Type: ${ticket.ticketType.toUpperCase()}
-💵 Price: $${event.ticketTypes[ticket.ticketType]?.toLocaleString() || 0}
+🎫 Ticket Type: ${ticket.ticketType.toUpperCase()}${event.ticketTypes[ticket.ticketType] ? `
+💵 Price: $${event.ticketTypes[ticket.ticketType].toLocaleString()}` : ''}
 
 ━━━━━━━━━━━━━━━━━━━━
 
