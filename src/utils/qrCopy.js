@@ -196,28 +196,27 @@ export const shareQR = async (qrSvgElement, ticket, event, language = 'en') => {
 
 ✨ ${event.name} ✨
 
-Estimado/a ${ticket.buyerName},
+Hola ${ticket.buyerName},
 
-¡Estamos emocionados de tenerte con nosotros en este increíble evento! Tu boleta está confirmada y lista.
+Tu boleta está confirmada y lista.
 
 📅 Detalles del Evento:
-━━━━━━━━━━━━━━━━━━━━
+━━━
 📍 Lugar: ${event.venue}
-🗺️  Dirección: ${event.address}
+🗺️ Dirección: ${event.address}
 📆 Fecha: ${formattedDate}
 🕐 Apertura de puertas: ${formattedTime}
 🎫 Tipo de boleta: ${ticket.ticketType.toUpperCase()}
 💵 Precio: $${event.ticketTypes[ticket.ticketType]?.toLocaleString() || 0}
 
-━━━━━━━━━━━━━━━━━━━━
+━━━
 
-📱 Importante: Guarda esta boleta y presenta el código QR en la entrada. ¡Haz una captura de pantalla o descarga esta imagen para tener fácil acceso!
+📱 Guarda esta boleta y presenta el código QR en la entrada. 
 
-¡No podemos esperar a verte allí! 🎊
 
 Si tienes alguna pregunta, no dudes en contactarnos.
 
-¡Nos vemos pronto! 💖`
+¡Nos vemos pronto! 🎊💖🎊`
               : `🎉 Thank you for purchasing your ticket! 🎫
 
 ✨ ${event.name} ✨
