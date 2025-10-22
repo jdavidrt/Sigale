@@ -191,13 +191,11 @@ export const shareQR = async (qrSvgElement, ticket, event, language = 'en') => {
             const formattedTime = formatTo12Hour(event.entranceTime);
 
             // Create bilingual share message based on current language
+            const ticketPrice = event.ticketTypes[ticket.ticketType] || 0;
             const shareMessage = language === 'es'
-              ? `🎉 ¡Gracias por comprar tu boleta! 🎫
-
-✨ ${event.name} ✨
+              ? `${ticketPrice > 0 ? '🎉 ¡Gracias por comprar tu boleta! 🎫' : ''}${ticketPrice > 0 ? '\n' : ''}✨ ${event.name} ✨
 
 Hola ${ticket.buyerName},
-
 Tu boleta está confirmada y lista.
 
 📅 Detalles del Evento:
@@ -206,20 +204,14 @@ Tu boleta está confirmada y lista.
 🗺️ Dirección: ${event.address}
 📆 Fecha: ${formattedDate}
 🕐 Apertura de puertas: ${formattedTime}
-🎫 Tipo de boleta: ${ticket.ticketType.toUpperCase()}${event.ticketTypes[ticket.ticketType] ? `
-💵 Precio: $${event.ticketTypes[ticket.ticketType].toLocaleString()}` : ''}
-
+🎫 Tipo de boleta: ${ticket.ticketType.toUpperCase()}${ticketPrice > 0 ? `
+💵 Precio: $${ticketPrice.toLocaleString()}` : ''}
 ━━━
 
-📱 Guarda esta boleta y presenta el código QR en la entrada. 
-
-
+📱 Guarda esta boleta y presenta el código QR en la entrada.
 Si tienes alguna pregunta, no dudes en contactarnos.
-
 ¡Nos vemos pronto! 🎊💖🎊`
-              : `🎉 Thank you for purchasing your ticket! 🎫
-
-✨ ${event.name} ✨
+              : `${ticketPrice > 0 ? '🎉 Thank you for purchasing your ticket! 🎫' : ''}${ticketPrice > 0 ? '\n\n' : ''}✨ ${event.name} ✨
 
 Dear ${ticket.buyerName},
 
@@ -231,8 +223,8 @@ We're thrilled to have you join us for this amazing event! Your ticket is confir
 🗺️  Address: ${event.address}
 📆 Date: ${formattedDate}
 🕐 Doors Open: ${formattedTime}
-🎫 Ticket Type: ${ticket.ticketType.toUpperCase()}${event.ticketTypes[ticket.ticketType] ? `
-💵 Price: $${event.ticketTypes[ticket.ticketType].toLocaleString()}` : ''}
+🎫 Ticket Type: ${ticket.ticketType.toUpperCase()}${ticketPrice > 0 ? `
+💵 Price: $${ticketPrice.toLocaleString()}` : ''}
 
 ━━━━━━━━━━━━━━━━━━━━
 
