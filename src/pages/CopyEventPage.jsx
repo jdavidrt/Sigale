@@ -8,6 +8,7 @@ export const CopyEventPage = () => {
   const { tickets } = useTickets();
   const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
+  const [copiedCSV, setCopiedCSV] = useState(false);
   const [showJSON, setShowJSON] = useState(false);
 
   const eventData = {
@@ -34,6 +35,61 @@ export const CopyEventPage = () => {
     const link = document.createElement("a");
     link.href = url;
     link.download = `${event?.name || "event"}-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const generateCSVContent = () => {
+    // CSV Headers
+    const headers = ["Buyer Name", "Buyer ID", "Buyer Phone", "Ticket Type", "Purchase Date", "Ticket Price"];
+
+    // CSV Rows
+    const rows = tickets.map(ticket => {
+      const ticketPrice = event?.ticketTypes?.[ticket.ticketType] || 0;
+      return [
+        ticket.buyerName,
+        ticket.buyerId,
+        ticket.buyerPhone,
+        ticket.ticketType,
+        ticket.purchaseDate,
+        ticketPrice
+      ];
+    });
+
+    // Combine headers and rows
+    return [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+    ].join("\n");
+  };
+
+  const handleCopyCSV = async () => {
+    try {
+      const csvContent = generateCSVContent();
+      await navigator.clipboard.writeText(csvContent);
+      setCopiedCSV(true);
+      setTimeout(() => setCopiedCSV(false), 3000);
+    } catch (error) {
+      console.error("Failed to copy CSV:", error);
+      alert("Failed to copy CSV to clipboard");
+    }
+  };
+
+  const handleDownloadCSV = () => {
+    const csvContent = generateCSVContent();
+
+    // Add UTF-8 BOM for proper character encoding (supports í, á, ñ, etc.)
+    const BOM = "\uFEFF";
+    const csvWithBOM = BOM + csvContent;
+
+    // Create and download file with UTF-8 encoding
+    const blob = new Blob([csvWithBOM], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${event?.name || "event"}-tickets-${new Date().toISOString().split("T")[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -106,13 +162,32 @@ export const CopyEventPage = () => {
                   : "bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] border-[#BEADFF] border-opacity-30 hover:opacity-90"
               }`}
             >
-              {copied ? "✓ Copied to Clipboard!" : "📋 Copy to Clipboard"}
+              {copied ? "✓ Copied to Clipboard!" : "📋 Copy JSON"}
             </button>
             <button
               onClick={handleDownloadJSON}
               className="flex-1 px-6 py-4 bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-xl font-bold transition-colors border border-[#758BFD] border-opacity-30 text-sm md:text-base"
             >
-              💾 Download JSON File
+              💾 Download JSON
+            </button>
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <button
+              onClick={handleCopyCSV}
+              className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all border text-sm md:text-base ${
+                copiedCSV
+                  ? "bg-[#4ade80] text-black border-[#4ade80]"
+                  : "bg-gradient-to-r from-[#2d5f3f] to-[#3d7f5f] text-[#FFEDD8] border-[#3d7f5f] border-opacity-30 hover:opacity-90"
+              }`}
+            >
+              {copiedCSV ? "✓ CSV Copied!" : "📋 Copy CSV"}
+            </button>
+            <button
+              onClick={handleDownloadCSV}
+              className="flex-1 px-6 py-4 bg-[#2d5f3f] hover:bg-[#3d6f4f] text-[#FFEDD8] rounded-xl font-bold transition-colors border border-[#758BFD] border-opacity-30 text-sm md:text-base"
+            >
+              📊 Download CSV
             </button>
           </div>
 
