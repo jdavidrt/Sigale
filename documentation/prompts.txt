@@ -64,3 +64,7 @@
 
 read readme, and documentation/claude.md and documentation/readme and add to context
 and think on how we can add the image on base64 from dibujosCharly64.txt to the bottom right of the ticket
+
+
+when i let the project page open on the chrome browser on my iphone, and I open it again after some time, it says "Not Found" and downloads a .txt called "sell-tickets.txt"
+why are we having this problem, what can we do to correct it so the page have enough persistence to let it open and use other apps and it will remain on the same state as it was left when I go back to the browser?

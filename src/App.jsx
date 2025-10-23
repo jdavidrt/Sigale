@@ -13,12 +13,24 @@ import { ValidateQRPage } from "./pages/ValidateQRPage";
 import { CopyEventPage } from "./pages/CopyEventPage";
 import { loadCharlyIllustration } from "./utils/svgTicketTemplate";
 import { CHARLY_ILLUSTRATION_BASE64 } from "./assets/charlyIllustration";
+import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
+import { usePageVisibility } from "./hooks/usePageVisibility";
 
-function App() {
+function AppContent() {
+  // Monitor page visibility for iOS tab suspension
+  const { isVisible } = usePageVisibility();
+
   // Load assets (Charly illustration) on app initialization
   useEffect(() => {
     loadCharlyIllustration(CHARLY_ILLUSTRATION_BASE64);
   }, []);
+
+  // Log visibility changes in dev mode
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('[App] Page visibility:', isVisible ? 'visible' : 'hidden');
+    }
+  }, [isVisible]);
 
   return (
     <LanguageProvider>
@@ -40,6 +52,14 @@ function App() {
         </TicketProvider>
       </EventProvider>
     </LanguageProvider>
+  );
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
   );
 }
 
