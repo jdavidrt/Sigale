@@ -10,7 +10,7 @@ import { TicketCard } from "../components/Tickets/TicketCard";
 export const TicketsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { event } = useEvent();
-  const { tickets, searchTickets } = useTickets();
+  const { tickets, searchTickets, resetAllCheckIns } = useTickets();
   const { t } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,6 +41,25 @@ export const TicketsPage = () => {
       setSearchParams({});
     } else {
       setSearchParams({ type: newType });
+    }
+  };
+
+  const handleResetAllCheckIns = () => {
+    const password = window.prompt(t("enterPasswordToReset") || "Enter password to reset all check-ins:");
+
+    if (password === null) {
+      // User cancelled
+      return;
+    }
+
+    if (password !== "980827") {
+      alert(t("incorrectPassword") || "Incorrect password. Reset cancelled.");
+      return;
+    }
+
+    if (window.confirm(t("confirmResetCheckIns") || "Are you sure you want to reset all check-ins? This action cannot be undone.")) {
+      resetAllCheckIns();
+      alert(t("checkInsReset") || "All check-ins have been reset successfully.");
     }
   };
 
@@ -132,11 +151,25 @@ export const TicketsPage = () => {
             <p className="text-[#BEADFF]">{t("noTicketsDesc")}</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '12px' }}>
-            {filteredTickets.map((ticket) => (
-              <TicketCard key={ticket.ticketId} ticket={ticket} />
-            ))}
-          </div>
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '12px' }}>
+              {filteredTickets.map((ticket) => (
+                <TicketCard key={ticket.ticketId} ticket={ticket} />
+              ))}
+            </div>
+
+            {/* Reset All Check-Ins Button */}
+            {tickets.length > 0 && (
+              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+                <button
+                  onClick={handleResetAllCheckIns}
+                  className="px-6 py-3 bg-[#ef4444] hover:bg-[#dc2626] text-[#FFEDD8] rounded-lg font-bold transition-colors border border-[#f87171] border-opacity-30 text-sm md:text-base"
+                >
+                  🔄 {t("resetAllCheckIns") || "Reset All Check-Ins"}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

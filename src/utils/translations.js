@@ -109,6 +109,11 @@ export const translations = {
     ticketsFound: "boletas encontradas",
     checkedIn: "Registrado",
     notCheckedIn: "No Registrado",
+    resetAllCheckIns: "Reiniciar Todos los Registros",
+    confirmResetCheckIns: "¿Está seguro de que desea reiniciar todos los registros? Esta acción no se puede deshacer.",
+    enterPasswordToReset: "Ingrese la contraseña para reiniciar todos los registros:",
+    incorrectPassword: "Contraseña incorrecta. Reinicio cancelado.",
+    checkInsReset: "Todos los registros han sido reiniciados exitosamente.",
 
     // Home Page
     welcome: "Bienvenido a",
@@ -129,6 +134,14 @@ export const translations = {
     totalRevenue: "Ingresos Totales",
     totalCheckedIn: "Total Registrados",
     attendanceRate: "Tasa de Asistencia",
+    salesByType: "Ventas por Tipo de Boleta",
+    sold: "vendidas",
+    recentCheckIns: "Registros Recientes",
+    attendees: "Asistentes",
+    ofTickets: "de",
+    remaining: "Restantes",
+    storage: "Almacenamiento",
+    showing: "Mostrando",
 
     // Placeholders
     eventNamePlaceholder: "Festival de Rock de Verano 2025",
@@ -257,6 +270,11 @@ export const translations = {
     ticketsFound: "tickets found",
     checkedIn: "Checked In",
     notCheckedIn: "Not Checked In",
+    resetAllCheckIns: "Reset All Check-Ins",
+    confirmResetCheckIns: "Are you sure you want to reset all check-ins? This action cannot be undone.",
+    enterPasswordToReset: "Enter password to reset all check-ins:",
+    incorrectPassword: "Incorrect password. Reset cancelled.",
+    checkInsReset: "All check-ins have been reset successfully.",
 
     // Home Page
     welcome: "Welcome to",
@@ -277,6 +295,14 @@ export const translations = {
     totalRevenue: "Total Revenue",
     totalCheckedIn: "Total Checked In",
     attendanceRate: "Attendance Rate",
+    salesByType: "Sales by Ticket Type",
+    sold: "sold",
+    recentCheckIns: "Recent Check-Ins",
+    attendees: "Attendees",
+    ofTickets: "of",
+    remaining: "Remaining",
+    storage: "Storage",
+    showing: "Showing",
 
     // Placeholders
     eventNamePlaceholder: "Summer Rock Festival 2025",

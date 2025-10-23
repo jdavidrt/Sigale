@@ -102,6 +102,15 @@ export const TicketProvider = ({ children }) => {
     setData(importedData);
   };
 
+  const resetAllCheckIns = () => {
+    const updatedTickets = data.tickets.map((ticket) => ({
+      ...ticket,
+      checkedIn: false,
+      checkInTime: null,
+    }));
+    setData({ ...data, tickets: updatedTickets });
+  };
+
   return (
     <TicketContext.Provider
       value={{
@@ -115,6 +124,7 @@ export const TicketProvider = ({ children }) => {
         deleteTicket,
         getStats,
         importData,
+        resetAllCheckIns,
       }}
     >
       {children}
