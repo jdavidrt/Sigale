@@ -4,13 +4,16 @@ import { useEvent } from "../../context/EventContext";
 import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faWandMagicSparkles, faLocationDot, faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
+import { faWandMagicSparkles, faLocationDot, faFloppyDisk, faTriangleExclamation, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 export const CreateEvent = ({ isEditing = false }) => {
   const navigate = useNavigate();
   const { createEvent, updateEvent, event } = useEvent();
   const { importData } = useTickets();
   const { t } = useLanguage();
+
+  const [showDangerZone, setShowDangerZone] = useState(false);
+  const [deleteConfirmChecked, setDeleteConfirmChecked] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -204,6 +207,28 @@ export const CreateEvent = ({ isEditing = false }) => {
         alert(`❌ Error importing event: ${error.message}`);
       }
     }
+  };
+
+  const handleDeleteEvent = () => {
+    console.log("=== handleDeleteEvent called ===");
+
+    if (!deleteConfirmChecked) {
+      console.log("Checkbox not checked, aborting");
+      return;
+    }
+
+    console.log("Current localStorage before delete:", localStorage.getItem("sigale-event-data"));
+
+    // Clear the event data from localStorage directly
+    localStorage.removeItem("sigale-event-data");
+    console.log("localStorage.removeItem called");
+    console.log("localStorage after delete:", localStorage.getItem("sigale-event-data"));
+
+    // Show success message
+    alert(t("eventDeleted"));
+
+    // Force full page reload
+    window.location.href = "/";
   };
 
   return (
@@ -505,6 +530,83 @@ export const CreateEvent = ({ isEditing = false }) => {
             <div className="w-1.5 h-1.5 rounded-full bg-[#FF8C00] opacity-50"></div>
           </div>
         </div>
+
+        {/* Delete Event Button - Only visible when editing */}
+        {isEditing && !showDangerZone && (
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={() => setShowDangerZone(true)}
+              className="w-full px-6 py-3 md:py-4 bg-red-600 bg-opacity-20 hover:bg-opacity-30 text-red-500 rounded-xl font-bold transition-all border border-red-600 border-opacity-40 text-sm md:text-base flex items-center justify-center gap-2"
+            >
+              <FontAwesomeIcon icon={faTrash} />
+              {t("deleteEvent")}
+            </button>
+          </div>
+        )}
+
+        {/* Danger Zone - Shows after clicking Delete Event button */}
+        {isEditing && showDangerZone && (
+          <div className="mt-6 bg-gradient-to-b from-[#2a1515] to-[#1a0a0a] rounded-3xl p-6 md:p-8 border border-red-600 border-opacity-40 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-red-600 bg-opacity-30 flex items-center justify-center">
+                <FontAwesomeIcon icon={faTriangleExclamation} className="text-red-500 text-xl" />
+              </div>
+              <h2 className="text-xl md:text-2xl font-bold text-red-500">
+                {t("dangerZone")}
+              </h2>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-red-300 text-sm md:text-base mb-2 font-medium">
+                {t("deleteEvent")}
+              </p>
+              <p className="text-red-400 text-opacity-70 text-xs md:text-sm">
+                {t("deleteEventWarning")}
+              </p>
+            </div>
+
+            {/* Checkbox confirmation */}
+            <label className="flex items-center gap-3 mb-4 cursor-pointer p-3 bg-red-900 bg-opacity-30 rounded-lg border border-red-600 border-opacity-30">
+              <input
+                type="checkbox"
+                checked={deleteConfirmChecked}
+                onChange={(e) => setDeleteConfirmChecked(e.target.checked)}
+                className="w-5 h-5 rounded border-red-500 text-red-600 focus:ring-red-500 focus:ring-offset-0 bg-transparent cursor-pointer"
+              />
+              <span className="text-red-300 text-sm">
+                {t("confirmDeleteMessage")}
+              </span>
+            </label>
+
+            {/* Delete button - only enabled when checkbox is checked */}
+            <button
+              type="button"
+              onClick={handleDeleteEvent}
+              disabled={!deleteConfirmChecked}
+              className={`w-full px-6 py-3 md:py-4 rounded-xl font-bold transition-all text-sm md:text-base flex items-center justify-center gap-2 ${
+                deleteConfirmChecked
+                  ? "bg-red-600 hover:bg-red-700 text-white"
+                  : "bg-gray-600 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <FontAwesomeIcon icon={faTrash} />
+              {t("confirmDeleteButton")}
+            </button>
+
+            {/* Cancel button */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowDangerZone(false);
+                setDeleteConfirmChecked(false);
+              }}
+              className="w-full mt-4 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-colors text-sm"
+            >
+              {t("cancelDelete")}
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );

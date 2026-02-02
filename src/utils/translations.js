@@ -160,6 +160,17 @@ export const translations = {
     ticketTypeNameExists: "Ya existe un tipo de boleta con este nombre",
     mustHaveOneTicketType: "Debe tener al menos un tipo de boleta",
     failedToCreateTicket: "Error al crear la boleta. Por favor intente de nuevo.",
+
+    // Delete Event
+    dangerZone: "Zona de Peligro",
+    deleteEvent: "Eliminar Evento",
+    deleteEventWarning: "Esta acción es IRREVERSIBLE. Se eliminarán permanentemente todos los datos del evento y todas las boletas vendidas.",
+    slideToDelete: "Desliza para eliminar",
+    confirmDeleteTitle: "¿Eliminar evento permanentemente?",
+    confirmDeleteMessage: "Estás a punto de eliminar el evento y todas sus boletas. Esta acción NO se puede deshacer.",
+    confirmDeleteButton: "Sí, eliminar todo",
+    cancelDelete: "Cancelar",
+    eventDeleted: "Evento eliminado exitosamente",
   },
 
   en: {
@@ -321,6 +332,17 @@ export const translations = {
     ticketTypeNameExists: "A ticket type with this name already exists",
     mustHaveOneTicketType: "You must have at least one ticket type",
     failedToCreateTicket: "Failed to create ticket. Please try again.",
+
+    // Delete Event
+    dangerZone: "Danger Zone",
+    deleteEvent: "Delete Event",
+    deleteEventWarning: "This action is IRREVERSIBLE. All event data and sold tickets will be permanently deleted.",
+    slideToDelete: "Slide to delete",
+    confirmDeleteTitle: "Delete event permanently?",
+    confirmDeleteMessage: "You are about to delete the event and all its tickets. This action CANNOT be undone.",
+    confirmDeleteButton: "Yes, delete everything",
+    cancelDelete: "Cancel",
+    eventDeleted: "Event deleted successfully",
   }
 };
 
