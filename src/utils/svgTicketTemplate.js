@@ -83,8 +83,8 @@ export const generateTicketSVG = (ticket, event, qrDataURL) => {
 
   // Two-column layout: Left column max ~20 chars, Right column max ~18 chars
   // LEFT COLUMN: Event Name, Venue, Address, Date/Time
-  const eventNameLines = splitTextIntoLines(event.name.toUpperCase(), 20);
-  const eventNameFontSize = calculateFontSize(event.name, 18, 11, 20);
+  const eventNameLines = splitTextIntoLines(event.name.toUpperCase(), 24);
+  const eventNameFontSize = calculateFontSize(event.name, 14, 9, 20);
 
   const venueLines = splitTextIntoLines(event.venue || '', 22);
   const venueFontSize = calculateFontSize(event.venue || '', 12, 9, 22); // +2pt (was 10, 7)
@@ -124,8 +124,8 @@ export const generateTicketSVG = (ticket, event, qrDataURL) => {
   const columnStartY = dottedLineY + dottedLineToTextSpacing;
 
   // Charly illustration dimensions and position (aligned with right column)
-  const illustrationWidth = 112; // 20% smaller (was 140)
-  const illustrationHeight = 67.2; // Maintain aspect ratio (0.6 ratio), 20% smaller (was 84)
+  const illustrationWidth = 22.4; // 20% of previous size (was 112)
+  const illustrationHeight = 13.44; // Maintain aspect ratio (0.6 ratio), 20% of previous (was 67.2)
   const illustrationX = 230; // Align with right column left margin (x=230)
   const illustrationY = totalHeight - illustrationHeight - 15; // 15px from bottom
 
