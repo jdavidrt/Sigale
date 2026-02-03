@@ -124,8 +124,8 @@ export const generateTicketSVG = (ticket, event, qrDataURL) => {
   const columnStartY = dottedLineY + dottedLineToTextSpacing;
 
   // Charly illustration dimensions and position (aligned with right column)
-  const illustrationWidth = 22.4; // 20% of previous size (was 112)
-  const illustrationHeight = 13.44; // Maintain aspect ratio (0.6 ratio), 20% of previous (was 67.2)
+  const illustrationWidth = 44.8; // 100% more than 22.4 (doubled)
+  const illustrationHeight = 26.88; // Maintain aspect ratio (0.6 ratio), doubled from 13.44
   const illustrationX = 230; // Align with right column left margin (x=230)
   const illustrationY = totalHeight - illustrationHeight - 15; // 15px from bottom
 
