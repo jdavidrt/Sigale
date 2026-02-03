@@ -193,9 +193,8 @@ export const CreateEvent = ({ isEditing = false }) => {
       // Show success message
       alert(`✅ Event imported successfully!\n\nEvent: ${eventData.name}\nTickets: ${tickets.length}`);
 
-      // Redirect to home
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      navigate("/");
+      // Force full page reload to sync all contexts from localStorage
+      window.location.href = "/";
 
     } catch (error) {
       console.error("Error pasting from clipboard:", error);
