@@ -19,7 +19,9 @@
       "WebFetch(domain:claude-plugins.dev)",
       "WebFetch(domain:github.com)",
       "Bash(ls:*)",
-      "WebFetch(domain:localhost)"
+      "WebFetch(domain:localhost)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)"
     ],
     "deny": [],
     "ask": []
