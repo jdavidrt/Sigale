@@ -111,6 +111,36 @@ export const TicketProvider = ({ children }) => {
     setData({ ...data, tickets: updatedTickets });
   };
 
+  const addTicketsFromCSV = async (ticketDataArray) => {
+    const results = { added: 0, errors: [] };
+    const newTickets = [];
+
+    for (const ticketData of ticketDataArray) {
+      try {
+        const ticketId = generateTicketId();
+        const ticket = {
+          ticketId,
+          buyerName: ticketData.buyerName,
+          buyerId: ticketData.buyerId,
+          buyerPhone: ticketData.buyerPhone,
+          ticketType: ticketData.ticketType,
+          purchaseDate: ticketData.purchaseDate,
+          checkedIn: false,
+          checkInTime: null,
+        };
+
+        ticket.validationHash = await generateValidationHash(ticket);
+        newTickets.push(ticket);
+        results.added++;
+      } catch (err) {
+        results.errors.push(`${ticketData.buyerName}: ${err.message}`);
+      }
+    }
+
+    setData({ ...data, tickets: [...data.tickets, ...newTickets] });
+    return results;
+  };
+
   return (
     <TicketContext.Provider
       value={{
@@ -125,6 +155,7 @@ export const TicketProvider = ({ children }) => {
         getStats,
         importData,
         resetAllCheckIns,
+        addTicketsFromCSV,
       }}
     >
       {children}

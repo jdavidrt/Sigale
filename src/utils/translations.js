@@ -171,6 +171,17 @@ export const translations = {
     confirmDeleteButton: "Sí, eliminar todo",
     cancelDelete: "Cancelar",
     eventDeleted: "Evento eliminado exitosamente",
+
+    // CSV Import/Export
+    csvExport: "Exportar CSV",
+    csvImport: "Importar CSV",
+    csvImportNewTickets: "Importar Nuevas Boletas",
+    csvCopied: "CSV copiado al portapapeles",
+    csvPasteHere: "Pegar CSV aquí...",
+    csvImportButton: "Importar",
+    csvImportSuccess: "Importación exitosa",
+    csvTicketsAdded: "boletas agregadas",
+    csvImportErrors: "Errores de importación",
   },
 
   en: {
@@ -343,6 +354,17 @@ export const translations = {
     confirmDeleteButton: "Yes, delete everything",
     cancelDelete: "Cancel",
     eventDeleted: "Event deleted successfully",
+
+    // CSV Import/Export
+    csvExport: "Export CSV",
+    csvImport: "Import CSV",
+    csvImportNewTickets: "Import New Tickets",
+    csvCopied: "CSV copied to clipboard",
+    csvPasteHere: "Paste CSV here...",
+    csvImportButton: "Import",
+    csvImportSuccess: "Import successful",
+    csvTicketsAdded: "tickets added",
+    csvImportErrors: "Import errors",
   }
 };
 

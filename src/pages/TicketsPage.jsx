@@ -6,6 +6,7 @@ import { useEvent } from "../context/EventContext";
 import { useTickets } from "../context/TicketContext";
 import { useLanguage } from "../context/LanguageContext";
 import { TicketCard } from "../components/Tickets/TicketCard";
+import { CSVPanel } from "../components/Tickets/CSVPanel";
 
 export const TicketsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -248,6 +249,9 @@ export const TicketsPage = () => {
             )}
           </>
         )}
+
+        {/* CSV Import/Export Panel - Always at bottom */}
+        <CSVPanel filteredTickets={filteredTickets} />
       </div>
     </div>
   );
