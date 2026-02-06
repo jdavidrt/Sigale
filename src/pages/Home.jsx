@@ -24,101 +24,191 @@ export const Home = () => {
     return tickets.filter(ticket => ticket.ticketType === type).length;
   };
 
+  // Calculate stats for Hero Card
+  const totalTicketsSold = tickets.length;
+  const totalRevenue = tickets.reduce((acc, ticket) => {
+    const price = event.ticketTypes[ticket.ticketType] || 0;
+    return acc + price;
+  }, 0);
+
   return (
     <>
       <style>{`
-        .home-welcome {
-          font-size: 0.875rem;
-          font-weight: bold;
-          color: #FFEDD8;
+        /* Glass Effects */
+        .glass-clean {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        @media (min-width: 768px) {
-          .home-welcome {
-            font-size: 0.75rem;
-          }
+        .glass-elevated {
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(255, 255, 255, 0.12);
         }
-        .home-event-details {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 4px;
+
+        /* Shadows */
+        .shadow-soft {
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
         }
-        .home-event-title {
-          grid-column: 1 / -1;
-          margin-top: 4px;
-          margin-bottom: 4px;
+        .shadow-elevated {
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
         }
-        .home-event-details *, .home-ticket-section * {
-          padding-left: 2px;
-          padding-right: 2px;
+        .shadow-floating {
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.10);
         }
-        .home-edit-icon {
-          color: #758BFD;
-          font-size: 2rem;
+
+        /* Hover Effects */
+        .hover-scale {
+          transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
         }
-        @media (min-width: 768px) {
-          .home-edit-icon {
-            font-size: 2.5rem;
-          }
+        .hover-scale:hover {
+          transform: scale(1.02);
         }
-        .home-edit-link {
-          font-size: 1.5rem;
-          color: #758BFD;
-          text-decoration: underline;
-          transition: color 0.3s;
+        .hover-lift {
+          transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .home-edit-link:hover {
+        .hover-lift:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(117, 139, 253, 0.25);
+        }
+
+        /* Typography */
+        .text-display {
+          font-size: 56px;
+          font-weight: 700;
+          line-height: 1.1;
+          color: #E2D1B9;
+        }
+        .text-title {
+          font-size: 38px;
+          font-weight: 700;
+          line-height: 1.1;
+          color: #E2D1B9;
+        }
+        .text-heading {
+          font-size: 28px;
+          font-weight: 600;
+          line-height: 1.1;
+          color: #E2D1B9;
+        }
+        .text-body {
+          font-size: 18px;
+          font-weight: 400;
+          line-height: 1.1;
           color: #BEADFF;
         }
-        @media (min-width: 768px) {
-          .home-edit-link {
-            font-size: 1.75rem;
-          }
+        .text-caption {
+          font-size: 16px;
+          font-weight: 400;
+          line-height: 1.1;
+          color: #BEADFF;
+          opacity: 0.7;
+        }
+        .text-label {
+          font-size: 14px;
+          font-weight: 600;
+          line-height: 1.1;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: #BEADFF;
+          opacity: 0.8;
+        }
+
+        /* Accent Colors */
+        .color-primary { color: #758BFD; }
+        .color-success { color: #4ade80; }
+        .color-warning { color: #FF8C00; }
+
+        /* Card Utils */
+        .card-clean {
+          border-radius: 24px;
+          padding: 6px;
+          margin-bottom: 6px;
+        }
+        .card-section {
+          border-radius: 20px;
+          padding: 8px 12px;
         }
       `}</style>
-      <h2 className="home-welcome">
-        {t("welcome")} Sígale
-      </h2>
-      <div className="min-h-screen pb-6 px-4 md:px-6">
-        {/* Event Details Section */}
-        <div className="max-w-2xl mx-auto pt-4 md:pt-6">
-          <div className="home-event-details">
-            {/* Event Title */}
-            <h1 className="home-event-title text-3xl md:text-4xl lg:text-5xl font-bold text-[#FFEDD8]">
-              {event.name}
-            </h1>
 
-            {/* Venue */}
+      <div style={{ padding: '24px 16px', maxWidth: '800px', margin: '0 auto' }}>
+        {/* Welcome Badge */}
+        <div style={{ marginBottom: '8px' }}>
+          <span style={{
+            background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
+            color: 'rgba(0, 0, 0, 0.7)',
+            padding: '6px 12px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: '600'
+          }}>
+            {t("welcome")} Sígale
+          </span>
+        </div>
+
+        {/* Event Hero Card - StylePreview Style */}
+        <div className="glass-elevated shadow-floating card-clean hover-lift">
+          {/* Event Title */}
+          <h1 className="text-title" style={{ margin: '8px', fontSize: '36px' }}>
+            {event.name}
+          </h1>
+
+          {/* Event Details Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+            {/* Location */}
             <div>
-              <div className="flex items-center gap-2">
-                <FontAwesomeIcon icon={faLocationDot} className="text-[#758BFD] text-lg md:text-xl" />
-                <p className="text-base md:text-lg font-medium text-[#FFEDD8]">
-                  {event.venue}
-                </p>
+              <p className="text-label" style={{ margin: '8px', fontSize: '14px' }}>Ubicación</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FontAwesomeIcon icon={faLocationDot} className="color-primary" style={{ fontSize: '18px' }} />
+                <div>
+                  <p className="text-heading" style={{ margin: '8px', fontSize: '18px', lineHeight: '1.2' }}>
+                    {event.venue}
+                  </p>
+                  <p className="text-body" style={{ margin: '8px', fontSize: '13px', opacity: '0.8', lineHeight: '1.2' }}>
+                    {event.address || "Sin dirección"}
+                  </p>
+                </div>
               </div>
-              {event.address && (
-                <p className="text-sm md:text-base text-[#BEADFF] mt-0.5">
-                  {event.address}
-                </p>
-              )}
             </div>
 
-            {/* Date and Time */}
+            {/* Date & Time */}
             <div>
-              <div className="flex items-center gap-2">
-                <FontAwesomeIcon icon={faCalendarDays} className="text-[#758BFD] text-lg md:text-xl" />
-                <p className="text-sm md:text-base text-[#FFEDD8]">
+              <p className="text-label" style={{ margin: '8px', fontSize: '14px' }}>Fecha y Hora</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <FontAwesomeIcon icon={faCalendarDays} className="color-primary" style={{ fontSize: '18px' }} />
+                <p className="text-heading" style={{ margin: '8px', fontSize: '18px', lineHeight: '1.2' }}>
                   {parseLocalDate(event.date).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
                   })}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <FontAwesomeIcon icon={faClock} className="text-[#758BFD] text-lg md:text-xl" />
-                <p className="text-sm md:text-base text-[#FFEDD8]">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FontAwesomeIcon icon={faClock} className="color-primary" style={{ fontSize: '18px' }} />
+                <p className="text-heading" style={{ margin: '8px', fontSize: '18px', lineHeight: '1.2' }}>
                   {formatTo12Hour(event.entranceTime)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats Section */}
+          <div className="glass-clean card-section" style={{ background: 'rgba(117, 139, 253, 0.08)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', textAlign: 'center' }}>
+              <div>
+                <p className="text-label" style={{ margin: '8px', fontSize: '14px' }}>Vendidas</p>
+                <p className="text-title color-primary" style={{ margin: '8px', fontSize: '24px', lineHeight: '1.2' }}>
+                  {totalTicketsSold}
+                </p>
+              </div>
+              <div>
+                <p className="text-label" style={{ margin: '8px', fontSize: '14px' }}>Ingresos</p>
+                <p className="text-title color-primary" style={{ margin: '8px', fontSize: '24px', lineHeight: '1.2' }}>
+                  ${totalRevenue.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -127,60 +217,104 @@ export const Home = () => {
 
         {/* Ticket Types Section */}
         {event.ticketTypes && Object.keys(event.ticketTypes).length > 0 && (
-          <div className="max-w-2xl mx-auto mt-8 md:mt-10">
-            {/* Section with dark card background */}
-            <div className="home-ticket-section bg-gradient-to-b from-[#2a2a2a] to-[#1a1a1a] rounded-t-2xl p-6 md:p-8 border-b-2 border-[#8B4757]">
-              <div className="flex items-center gap-3 mb-6">
-                <FontAwesomeIcon icon={faTicket} className="text-[#758BFD] text-xl md:text-2xl" />
-                <h2 className="text-xl md:text-2xl font-bold text-[#FFEDD8]">
-                  {t("ticketTypes")}
-                </h2>
+          <div
+            className="glass-elevated shadow-elevated"
+            style={{
+              borderRadius: '20px',
+              padding: '6px',
+              marginTop: '6px',
+              marginBottom: '6px'
+            }}
+          >
+            {/* Section Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <FontAwesomeIcon icon={faTicket} style={{ color: 'white', fontSize: '14px' }} />
               </div>
+              <h2 className="text-heading" style={{ color: '#758BFD', fontSize: '24px', margin: 0 }}>
+                {t("ticketTypes")}
+              </h2>
+            </div>
 
-              {/* Ticket Type Cards */}
-              <div className="space-y-1.5">
-                {Object.entries(event.ticketTypes).map(([type, price]) => {
-                  const ticketCount = getTicketCountByType(type);
-                  return (
-                    <div
-                      key={type}
-                      className="bg-[#2a2a2a] rounded p-1.5 md:p-2 border border-[#8B4757] hover:border-[#758BFD] transition-colors"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-baseline gap-2 flex-1 min-w-0">
-                          <p className="text-xs font-bold text-[#FFEDD8] uppercase truncate">
-                            {type}
-                          </p>
-                          <p className="text-xs md:text-sm font-bold text-[#758BFD]">
-                            ${price.toLocaleString()}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => navigate(`/tickets?type=${type}`)}
-                          className="px-2 py-1 bg-[#758BFD] hover:bg-[#8B9BFD] rounded text-base md:text-lg font-bold transition-colors flex-shrink-0 min-w-[32px] text-center"
-                          style={{ color: 'white' }}
-                        >
-                          {ticketCount}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-                {/* Edit Link */}
-                <div className="flex items-center gap-3">
-                  <FontAwesomeIcon icon={faPenToSquare} className="home-edit-icon" />
-                  <Link
-                    to="/edit-event"
-                    className="home-edit-link"
+            {/* Ticket Type Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {Object.entries(event.ticketTypes).map(([type, price]) => {
+                const ticketCount = getTicketCountByType(type);
+                return (
+                  <div
+                    key={type}
+                    className="glass-clean hover-lift"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '4px 6px',
+                      borderRadius: '14px',
+                      cursor: 'pointer',
+                      border: '1px solid rgba(117, 139, 253, 0.15)'
+                    }}
+                    onClick={() => navigate(`/tickets?type=${type}`)}
                   >
-                    {t("editEvent")}
-                  </Link>
-                </div>
-              </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
+                      <p className="text-label" style={{ opacity: 1, margin: 0 }}>
+                        {type}
+                      </p>
+                      <p className="text-heading" style={{ fontSize: '18px', color: '#758BFD', margin: 0 }}>
+                        ${price.toLocaleString()}
+                      </p>
+                    </div>
+                    <div style={{
+                      minWidth: '32px',
+                      height: '24px',
+                      borderRadius: '6px',
+                      background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      color: 'white'
+                    }}>
+                      {ticketCount}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Divider */}
+              <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.1)', margin: '4px 0' }} />
+
+              {/* Edit Link */}
+              <Link
+                to="/edit-event"
+                className="hover-scale"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  color: '#758BFD',
+                  textDecoration: 'none',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  padding: '2px 0',
+                  margin: 0
+                }}
+              >
+                <FontAwesomeIcon icon={faPenToSquare} style={{ fontSize: '20px' }} />
+                <span>{t("editEvent")}</span>
+              </Link>
             </div>
           </div>
-
         )}
-      </div></>
+      </div>
+    </>
   );
 };

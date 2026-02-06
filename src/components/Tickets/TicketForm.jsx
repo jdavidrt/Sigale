@@ -6,7 +6,7 @@ import { useLanguage } from "../../context/LanguageContext";
 import { QRDisplay } from "./QRDisplay";
 import { formatTo12Hour, parseLocalDate } from "../../utils/timeFormat";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTicketSimple, faCalendar, faClock, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+import { faTicketSimple, faCalendar, faClock, faPenToSquare, faUser, faIdCard, faPhone, faChevronDown, faPlusCircle, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 
 export const TicketForm = () => {
   const location = useLocation();
@@ -15,298 +15,258 @@ export const TicketForm = () => {
   const { event } = useEvent();
   const { t } = useLanguage();
 
-  // Check if we're editing a ticket
   const editTicket = location.state?.editTicket;
   const isEditMode = !!editTicket;
 
-  const [formData, setFormData] = useState({
-    buyerName: "",
-    buyerId: "",
-    buyerPhone: "",
-    ticketType: "",
-  });
-
+  const [formData, setFormData] = useState({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "" });
   const [createdTicket, setCreatedTicket] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Pre-fill form when editing
   useEffect(() => {
     if (editTicket) {
-      setFormData({
-        buyerName: editTicket.buyerName,
-        buyerId: editTicket.buyerId,
-        buyerPhone: editTicket.buyerPhone,
-        ticketType: editTicket.ticketType,
-      });
+      setFormData({ buyerName: editTicket.buyerName, buyerId: editTicket.buyerId, buyerPhone: editTicket.buyerPhone, ticketType: editTicket.ticketType });
     }
   }, [editTicket]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
       if (isEditMode) {
-        // Update existing ticket
         await updateTicket(editTicket.ticketId, formData);
         alert(t("ticketUpdated") || "Ticket updated successfully!");
-        navigate("/validate-qr"); // Navigate back to ticket list
+        navigate("/validate-qr");
       } else {
-        // Create new ticket
         const ticket = await addTicket(formData);
         setCreatedTicket(ticket);
         setFormData({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "" });
-        // Scroll to top when ticket is created
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (error) {
-      console.error("Error saving ticket:", error);
+      console.error("Save error:", error);
       alert(t("failedToCreateTicket"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleNewTicket = () => {
-    setCreatedTicket(null);
-  };
+  const handleNewTicket = () => setCreatedTicket(null);
 
-  // Success View - Ticket Created
-  if (createdTicket) {
-    return (
-      <div className="min-h-screen px-4 md:px-6 py-6">
-        {/* Decorative circles */}
-        <div className="fixed top-[700px] left-[50px] w-[160px] h-[160px] rounded-full bg-[#758BFD] opacity-[0.03] pointer-events-none" />
-        <div className="fixed top-[150px] right-[-50px] w-[200px] h-[200px] rounded-full bg-[#BEADFF] opacity-[0.04] pointer-events-none" />
-
-        {/* Main Card */}
-        <div className="max-w-2xl mx-auto">
-          <style>{`
-            .ticket-created-view * {
-              margin: 3px;
-            }
-          `}</style>
-          <div className="ticket-created-view bg-gradient-to-b from-[#1a1152] to-[#0a0620] rounded-3xl p-6 md:p-8 border border-[#758BFD] border-opacity-20 shadow-2xl">
-            {/* Page Title */}
-            <div className="mb-6">
-              <div className="flex items-center gap-3 mb-3">
-                <FontAwesomeIcon icon={faTicketSimple} className="text-2xl" />
-                <h1 className="text-2xl md:text-3xl font-bold text-[#FFEDD8]" style={{ margin: '0' }}>
-                  {t("sellTicketsTitle")}
-                </h1>
-              </div>
-              <p className="text-sm md:text-base text-[#BEADFF] opacity-80">
-                {t("manageTicketSales")}
-              </p>
-            </div>
-
-            {/* Success Section */}
-            <div className="bg-[#2a2a2a] rounded-xl p-6 md:p-8 border-2 border-[#4ade80] border-opacity-50 space-y-6">
-              {/* Checkmark Icon */}
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-[#4ade80] bg-opacity-20 rounded-full mb-4">
-                  <span className="text-3xl md:text-4xl">✓</span>
-                </div>
-                <h3 className="text-xl md:text-2xl font-bold text-[#FFEDD8] mb-2">
-                  {t("ticketCreated")}
-                </h3>
-                <p className="text-sm md:text-base text-[#BEADFF]">
-                  {t("ticketFor")} {createdTicket.buyerName}
-                </p>
-              </div>
-
-              {/* Ticket Details Grid */}
-              <div className="grid grid-cols-2 gap-4 text-sm md:text-base">
-                <div>
-                  <p className="text-[#BEADFF] opacity-70 text-xs md:text-sm mb-1">
-                    {t("ticketType")}
-                  </p>
-                  <p className="font-bold text-[#FFEDD8]">{createdTicket.ticketType}</p>
-                </div>
-                <div>
-                  <p className="text-[#BEADFF] opacity-70 text-xs md:text-sm mb-1">
-                    {t("price")}
-                  </p>
-                  <p className="font-bold text-[#FFEDD8]">
-                    ${event.ticketTypes[createdTicket.ticketType]?.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-
-              <div className="h-px bg-[#758BFD] opacity-30"></div>
-
-              <div className="grid grid-cols-2 gap-4 text-sm md:text-base">
-                <div>
-                  <p className="text-[#BEADFF] opacity-70 text-xs md:text-sm mb-1">
-                    {t("idNumber")}
-                  </p>
-                  <p className="text-[#FFEDD8]">{createdTicket.buyerId}</p>
-                </div>
-                <div>
-                  <p className="text-[#BEADFF] opacity-70 text-xs md:text-sm mb-1">
-                    {t("phoneNumber")}
-                  </p>
-                  <p className="text-[#FFEDD8]">{createdTicket.buyerPhone}</p>
-                </div>
-              </div>
-
-              {/* QR Code */}
-              <div className="pt-4">
-                <QRDisplay ticket={createdTicket} event={event} />
-              </div>
-
-              {/* Event Details */}
-              <div className="text-center space-y-2 text-sm md:text-base pt-4">
-                <p className="font-bold text-[#FFEDD8]">{event.name}</p>
-                <p className="text-[#BEADFF]">
-                  <FontAwesomeIcon icon={faCalendar} className="mr-2" />
-                  {parseLocalDate(event.date).toLocaleDateString()} • <FontAwesomeIcon icon={faClock} className="mr-2" />{formatTo12Hour(event.entranceTime)}
-                </p>
-                <p className="text-[#BEADFF]">{event.venue}</p>
-                <p className="text-xs md:text-sm text-[#758BFD] font-mono mt-2">
-                  ID: {createdTicket.ticketId}
-                </p>
-              </div>
-
-              {/* Create Another Button */}
-              <button
-                onClick={handleNewTicket}
-                className="w-full mt-6 px-6 py-3 md:py-4 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] rounded-xl font-bold hover:opacity-90 transition-opacity border border-[#BEADFF] border-opacity-30 text-sm md:text-base"
-              >
-                ✨ {t("createAnother")}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Form View - Create New Ticket
   return (
-    <div className="min-h-screen px-4 md:px-6 py-6">
-      {/* Decorative circle */}
-      <div className="fixed top-[150px] right-[-50px] w-[200px] h-[200px] rounded-full bg-[#758BFD] opacity-[0.04] pointer-events-none" />
+    <div className="min-h-screen px-2 py-4 md:px-6">
+      <style>{`
+        .glass-clean {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-elevated {
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .text-heading {
+          font-size: 28px;
+          font-weight: 600;
+          line-height: 1.1;
+          color: #E2D1B9;
+          margin: 0;
+        }
+        .text-body {
+          font-size: 18px;
+          font-weight: 400;
+          line-height: 1.1;
+          color: #BEADFF;
+          margin: 0;
+        }
+        .text-label {
+          font-size: 14px;
+          font-weight: 600;
+          line-height: 1.1;
+          text-transform: uppercase;
+          color: #BEADFF;
+          opacity: 1;
+          margin: 0;
+        }
+        .shadow-floating {
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.10);
+        }
+        input, select {
+          background: rgba(255,255,255,0.05) !important;
+          border: 1px solid rgba(117,139,253,0.15) !important;
+          color: #E2D1B9 !important;
+          line-height: 1.1 !important;
+        }
+        input:focus {
+          border-color: rgba(117,139,253,0.5) !important;
+          outline: none !important;
+        }
+        .label-icon {
+          font-size: 14px;
+          color: #758BFD;
+          opacity: 0.8;
+        }
+      `}</style>
 
-      {/* Main Card */}
-      <div className="max-w-2xl mx-auto">
-        <style>{`
-          .ticket-form-container * {
-            padding-left: 2px;
-            padding-right: 2px;
-          }
-          .ticket-form-container h1,
-          .ticket-form-container label,
-          .ticket-form-container input,
-          .ticket-form-container select {
-            padding-top: 3px;
-            padding-right: 3px;
-          }
-          .ticket-form-container button[type="submit"] {
-            padding-top: 6px;
-            padding-right: 6px;
-            margin-top: 8px;
-          }
-        `}</style>
-        <div className="ticket-form-container bg-gradient-to-b from-[#1a1152] to-[#0a0620] rounded-3xl p-6 md:p-8 border border-[#758BFD] border-opacity-20 shadow-2xl">
-          {/* Page Title */}
-          <div className="mb-6 md:mb-8">
-            <div className="flex items-center gap-3 mb-3">
-              <FontAwesomeIcon icon={faTicketSimple} className="text-3xl md:text-4xl" />
-              <h1 className="text-[2rem] md:text-[2.5rem] font-bold text-[#FFEDD8]" style={{ margin: '0' }}>
-                {t("sellTicketsTitle")}
+      <div className="max-w-2xl mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+
+        {/* Main Form/Success Card */}
+        <div className="glass-elevated shadow-floating" style={{ borderRadius: '24px', padding: '6px' }}>
+
+          {/* Header */}
+          <div style={{ padding: '12px 16px', background: 'rgba(117, 139, 253, 0.08)', borderRadius: '20px', marginBottom: '6px' }}>
+            <div className="flex items-center gap-3 mb-2">
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FontAwesomeIcon icon={faTicketSimple} style={{ color: 'white', fontSize: '14px' }} />
+              </div>
+              <h1 className="text-heading" style={{ fontSize: '24px' }}>
+                {createdTicket ? t("ticketCreated") : (isEditMode ? "Update Ticket" : t("sellTicketsTitle"))}
               </h1>
             </div>
-            <p className="text-[1.125rem] md:text-[1.25rem] text-[#BEADFF] opacity-80">
-              {t("manageTicketSales")}
+            <p className="text-body" style={{ fontSize: '14px', opacity: 0.7 }}>
+              {createdTicket ? `${t("ticketFor")} ${createdTicket.buyerName}` : t("manageTicketSales")}
             </p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
-            {/* Buyer Name */}
-            <div>
-              <label className="block mb-2 text-[1.125rem] md:text-[1.25rem] text-[#FFEDD8]">
-                {t("buyerName")} <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.buyerName}
-                onChange={(e) => setFormData({ ...formData, buyerName: e.target.value })}
-                className="w-full px-4 py-3 bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] placeholder-[#BEADFF] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50 text-[1.125rem] md:text-[1.25rem]"
-                placeholder={t("enterFullName")}
-              />
-            </div>
+          <div style={{ padding: '0 6px 6px 6px' }}>
+            {createdTicket ? (
+              /* Success View - High Density */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="glass-clean" style={{ borderRadius: '18px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px auto' }}>
+                    <FontAwesomeIcon icon={faCheckCircle} size="2x" />
+                  </div>
+                  <p className="text-heading" style={{ fontSize: '20px', color: '#4ade80', marginBottom: '4px' }}>Ready to Go!</p>
+                  <p className="text-body" style={{ fontSize: '14px', opacity: 0.8 }}>Ticket has been generated.</p>
+                </div>
 
-            {/* ID Number */}
-            <div>
-              <label className="block mb-2 text-[1.125rem] md:text-[1.25rem] text-[#FFEDD8]">
-                {t("idNumber")} <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="tel"
-                required
-                value={formData.buyerId}
-                onChange={(e) => setFormData({ ...formData, buyerId: e.target.value })}
-                className="w-full px-4 py-3 bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] placeholder-[#BEADFF] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50 text-[1.125rem] md:text-[1.25rem]"
-                placeholder={t("enterIdNumber")}
-              />
-            </div>
+                {/* Ticket Details Summary */}
+                <div className="glass-clean" style={{ borderRadius: '18px', padding: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <p className="text-label" style={{ fontSize: '10px', opacity: 0.6, marginBottom: '2px' }}>TYPE</p>
+                      <p className="text-heading" style={{ fontSize: '18px', color: '#758BFD' }}>{createdTicket.ticketType}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-label" style={{ fontSize: '10px', opacity: 0.6, marginBottom: '2px' }}>PRICE</p>
+                      <p className="text-heading" style={{ fontSize: '18px', color: '#E2D1B9' }}>${event.ticketTypes[createdTicket.ticketType]?.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px 0' }}></div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <p className="text-label" style={{ fontSize: '10px', opacity: 0.6, marginBottom: '2px' }}>ID</p>
+                      <p className="text-body" style={{ fontSize: '14px' }}>{createdTicket.buyerId}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-label" style={{ fontSize: '10px', opacity: 0.6, marginBottom: '2px' }}>PHONE</p>
+                      <p className="text-body" style={{ fontSize: '14px' }}>{createdTicket.buyerPhone}</p>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Phone Number */}
-            <div>
-              <label className="block mb-2 text-[1.125rem] md:text-[1.25rem] text-[#FFEDD8]">
-                {t("phoneNumber")} <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="tel"
-                required
-                value={formData.buyerPhone}
-                onChange={(e) => setFormData({ ...formData, buyerPhone: e.target.value })}
-                className="w-full px-4 py-3 bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] placeholder-[#BEADFF] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50 text-[1.125rem] md:text-[1.25rem]"
-                placeholder={t("phoneNumberPlaceholder")}
-              />
-            </div>
+                {/* QR Section */}
+                <div className="glass-clean" style={{ borderRadius: '18px', padding: '12px' }}>
+                  <QRDisplay ticket={createdTicket} event={event} />
+                  <div style={{ marginTop: '12px', textAlign: 'center' }}>
+                    <p className="text-label" style={{ fontSize: '12px', color: '#E2D1B9' }}>{event.name}</p>
+                    <p style={{ fontSize: '10px', color: '#BEADFF', opacity: 0.6, marginTop: '2px' }}>
+                      ID: {createdTicket.ticketId}
+                    </p>
+                  </div>
+                </div>
 
-            {/* Ticket Type */}
-            <div>
-              <label className="block mb-2 text-[1.125rem] md:text-[1.25rem] text-[#FFEDD8]">
-                {t("ticketType")} <span className="text-red-400">*</span>
-              </label>
-              <select
-                required
-                value={formData.ticketType}
-                onChange={(e) => setFormData({ ...formData, ticketType: e.target.value })}
-                className="w-full px-4 py-3 bg-[#4a3d8f] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] placeholder-[#BEADFF] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50 appearance-none cursor-pointer text-[1.125rem] md:text-[1.25rem]"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23758BFD' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                  backgroundSize: '20px',
-                }}
-              >
-                <option value="">{t("selectTicketType")}</option>
-                {Object.entries(event.ticketTypes).map(([type, price]) => (
-                  <option key={type} value={type}>
-                    {type} - ${price.toLocaleString()}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <button onClick={handleNewTicket} className="w-full py-4 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-white rounded-2xl font-bold shadow-xl flex items-center justify-center gap-2">
+                  <FontAwesomeIcon icon={faPlusCircle} />
+                  <span>{t("createAnother")}</span>
+                </button>
+              </div>
+            ) : (
+              /* Form View - High Density */
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="glass-clean" style={{ borderRadius: '18px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full mt-8 px-6 py-3 md:py-4 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed border border-[#BEADFF] border-opacity-30 text-[1.125rem] md:text-[1.25rem]"
-            >
-              {isSubmitting
-                ? (isEditMode ? t("updatingTicket") || "Updating..." : t("creatingTicket"))
-                : (isEditMode ? <><FontAwesomeIcon icon={faPenToSquare} className="mr-2" />{t("updateTicket") || "Update Ticket"}</> : <><FontAwesomeIcon icon={faTicketSimple} className="mr-2" />{t("createTicket")}</>)}
-            </button>
-          </form>
+                  {/* Buyer Name */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <FontAwesomeIcon icon={faUser} className="label-icon" />
+                      <label className="text-label" style={{ fontSize: '12px' }}>{t("buyerName")}</label>
+                    </div>
+                    <input
+                      type="text" required value={formData.buyerName}
+                      onChange={(e) => setFormData({ ...formData, buyerName: e.target.value })}
+                      className="w-full px-3 py-2.5 rounded-lg text-base"
+                      placeholder={t("enterFullName")}
+                    />
+                  </div>
+
+                  {/* Two Column IDs */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <FontAwesomeIcon icon={faIdCard} className="label-icon" />
+                        <label className="text-label" style={{ fontSize: '12px' }}>{t("idNumber")}</label>
+                      </div>
+                      <input
+                        type="tel" required value={formData.buyerId}
+                        onChange={(e) => setFormData({ ...formData, buyerId: e.target.value })}
+                        className="w-full px-3 py-2.5 rounded-lg text-base font-mono"
+                        placeholder="ID..."
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <FontAwesomeIcon icon={faPhone} className="label-icon" />
+                        <label className="text-label" style={{ fontSize: '12px' }}>{t("phoneNumber")}</label>
+                      </div>
+                      <input
+                        type="tel" required value={formData.buyerPhone}
+                        onChange={(e) => setFormData({ ...formData, buyerPhone: e.target.value })}
+                        className="w-full px-3 py-2.5 rounded-lg text-base font-mono"
+                        placeholder="Phone..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Ticket Type Selector */}
+                  <div className="relative">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FontAwesomeIcon icon={faTicketSimple} className="label-icon" />
+                      <label className="text-label" style={{ fontSize: '12px' }}>{t("ticketType")}</label>
+                    </div>
+                    <select
+                      required value={formData.ticketType}
+                      onChange={(e) => setFormData({ ...formData, ticketType: e.target.value })}
+                      className="w-full px-3 py-2.5 rounded-lg text-base appearance-none cursor-pointer"
+                    >
+                      <option value="" style={{ background: '#1a1152' }}>{t("selectTicketType")}</option>
+                      {Object.entries(event.ticketTypes).map(([type, price]) => (
+                        <option key={type} value={type} style={{ background: '#1a1152' }}>
+                          {type.toUpperCase()} - ${price.toLocaleString()}
+                        </option>
+                      ))}
+                    </select>
+                    <FontAwesomeIcon icon={faChevronDown} style={{ position: 'absolute', right: '12px', bottom: '13px', fontSize: '12px', opacity: 0.5, pointerEvents: 'none' }} />
+                  </div>
+                </div>
+
+                <button
+                  type="submit" disabled={isSubmitting}
+                  className="w-full py-4 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-white rounded-2xl font-bold shadow-xl hover:opacity-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <FontAwesomeIcon icon={isEditMode ? faPenToSquare : faPlusCircle} />
+                  <span>{isSubmitting ? "..." : (isEditMode ? "Update Ticket" : t("createTicket"))}</span>
+                </button>
+              </form>
+            )}
+          </div>
         </div>
+
+        {/* Floating background blobs */}
+        <div className="fixed top-[60%] left-[-10%] w-[100px] h-[100px] bg-[#758BFD]/10 blur-3xl pointer-events-none rounded-full" />
+        <div className="fixed top-[20%] right-[-10%] w-[150px] h-[150px] bg-[#BEADFF]/10 blur-3xl pointer-events-none rounded-full" />
       </div>
     </div>
   );

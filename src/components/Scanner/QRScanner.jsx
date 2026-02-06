@@ -3,6 +3,8 @@ import { Html5QrcodeScanner } from "html5-qrcode";
 import { useTickets } from "../../context/TicketContext";
 import { parseQRData } from "../../utils/qrGenerator";
 import { ValidationResult } from "./ValidationResult";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCamera, faStop, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 
 export const QRScanner = ({ autoStart = false }) => {
   const { tickets, checkInTicket } = useTickets();
@@ -12,14 +14,11 @@ export const QRScanner = ({ autoStart = false }) => {
   const scannerRef = useRef(null);
   const permissionCheckedRef = useRef(false);
 
-  // Request camera permission once on mount if autoStart is true
   useEffect(() => {
     if (autoStart && !permissionCheckedRef.current) {
       permissionCheckedRef.current = true;
-
       navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
         .then((stream) => {
-          // Permission granted - stop the stream and mark as granted
           stream.getTracks().forEach(track => track.stop());
           setPermissionGranted(true);
           setIsScanning(true);
@@ -42,27 +41,18 @@ export const QRScanner = ({ autoStart = false }) => {
         },
         false
       );
-
       scanner.render(onScanSuccess, onScanError);
       scannerRef.current = scanner;
     }
 
     return () => {
       if (scannerRef.current) {
-        scannerRef.current
-          .clear()
-          .then(() => {
-            scannerRef.current = null;
-          })
-          .catch((error) => {
-            console.error("Error clearing scanner:", error);
-          });
+        scannerRef.current.clear().then(() => { scannerRef.current = null; }).catch(console.error);
       }
     };
   }, [isScanning]);
 
   const onScanSuccess = (decodedText) => {
-    // Stop scanning after successful scan
     if (scannerRef.current) {
       scannerRef.current.clear().catch(console.error);
       scannerRef.current = null;
@@ -70,142 +60,98 @@ export const QRScanner = ({ autoStart = false }) => {
     }
 
     const qrData = parseQRData(decodedText);
-
     if (!qrData || !qrData.hash) {
-      setScanResult({
-        success: false,
-        message: "Invalid QR code format",
-        type: "invalid",
-      });
+      setScanResult({ success: false, message: "Invalid QR code format", type: "invalid" });
       return;
     }
 
     const ticket = tickets.find((t) => t.validationHash === qrData.hash);
-
     if (!ticket) {
-      setScanResult({
-        success: false,
-        message: "Ticket not found in database",
-        type: "not_found",
-        qrData,
-      });
+      setScanResult({ success: false, message: "Ticket not found in database", type: "not_found", qrData });
       return;
     }
 
     if (ticket.checkedIn) {
-      setScanResult({
-        success: false,
-        isDuplicate: true,
-        message: "This ticket has already been checked in",
-        type: "duplicate",
-        ticket,
-      });
+      setScanResult({ success: false, isDuplicate: true, message: "This ticket has already been checked in", type: "duplicate", ticket });
       return;
     }
 
-    // Valid ticket - check in
     checkInTicket(ticket.ticketId);
-    setScanResult({
-      success: true,
-      message: "Check-in successful!",
-      type: "success",
-      ticket,
-    });
+    setScanResult({ success: true, message: "Check-in successful!", type: "success", ticket });
   };
 
   const onScanError = (error) => {
-    // Ignore scan errors (happens frequently during scanning)
-    // Only log actual errors, not "No QR code found"
-    if (!error.includes("NotFoundException")) {
-      console.warn("Scan error:", error);
-    }
+    if (!error.includes("NotFoundException")) console.warn("Scan error:", error);
   };
 
-  const handleStartScanning = () => {
-    setScanResult(null);
-    setIsScanning(true);
-  };
-
+  const handleStartScanning = () => { setScanResult(null); setIsScanning(true); };
   const handleStopScanning = () => {
     setIsScanning(false);
-    if (scannerRef.current) {
-      scannerRef.current
-        .clear()
-        .then(() => {
-          scannerRef.current = null;
-        })
-        .catch(console.error);
-    }
+    if (scannerRef.current) scannerRef.current.clear().then(() => { scannerRef.current = null; }).catch(console.error);
   };
 
   return (
-    <div className="space-y-6">
-      {/* Control Buttons - Hidden when autoStart is true */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      {/* Control Buttons */}
       {!autoStart && (
-        <div className="flex gap-4 justify-center">
+        <div className="flex gap-2 justify-center">
           {!isScanning ? (
             <button
               onClick={handleStartScanning}
-              className="px-6 py-3 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] hover:opacity-90 text-[#FFEDD8] rounded-lg transition-opacity font-bold border border-[#BEADFF] border-opacity-30"
+              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-white rounded-xl font-bold shadow-lg"
             >
-              📷 Start Scanning
+              <FontAwesomeIcon icon={faCamera} />
+              <span>Start Scanning</span>
             </button>
           ) : (
             <button
               onClick={handleStopScanning}
-              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-[#FFEDD8] rounded-lg transition-colors font-bold"
+              className="flex items-center gap-2 px-6 py-2.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl font-bold"
             >
-              ⏹️ Stop Scanning
+              <FontAwesomeIcon icon={faStop} />
+              <span>Stop Scanning</span>
             </button>
           )}
         </div>
       )}
 
-      {/* Scanner Container */}
+      {/* Scanner Container - Super Clean */}
       {isScanning && (
-        <div className="bg-[#2a2a2a] rounded-xl p-6 border border-[#758BFD] border-opacity-30">
-          <div id="qr-reader" className="overflow-hidden rounded-lg"></div>
-          <p className="text-center text-sm text-[#BEADFF] mt-4">
-            Position the QR code within the frame
-          </p>
+        <div className="glass-clean" style={{ borderRadius: '20px', padding: '6px', overflow: 'hidden' }}>
+          <div id="qr-reader" style={{ borderRadius: '16px', overflow: 'hidden', border: 'none' }}></div>
+          <div style={{ padding: '8px', textAlign: 'center' }}>
+            <p className="text-label" style={{ fontSize: '12px', opacity: 0.6, margin: 0 }}>
+              Position the QR code within the frame
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Validation Result */}
+      {/* Validation Result - In Modal or Overlay Pattern */}
       {scanResult && <ValidationResult result={scanResult} onClose={() => setScanResult(null)} />}
 
-      {/* Instructions */}
+      {/* High-Density Instructions Overlay-style */}
       {!isScanning && !scanResult && (
-        <div className="bg-[#2a2a2a] rounded-xl p-8 border border-[#758BFD] border-opacity-30">
-          <h3 className="text-xl font-bold text-[#FFEDD8] mb-4">📱 How to Use</h3>
-          <ol className="space-y-3 text-[#BEADFF]">
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-[#758BFD] bg-opacity-30 text-[#758BFD] rounded-full flex items-center justify-center text-sm font-bold">
-                1
-              </span>
-              <span>Click "Start Scanning" to activate the camera</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-[#758BFD] bg-opacity-30 text-[#758BFD] rounded-full flex items-center justify-center text-sm font-bold">
-                2
-              </span>
-              <span>Position the ticket QR code within the scanning frame</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-[#758BFD] bg-opacity-30 text-[#758BFD] rounded-full flex items-center justify-center text-sm font-bold">
-                3
-              </span>
-              <span>
-                The system will automatically validate and check in the ticket
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-[#758BFD] bg-opacity-30 text-[#758BFD] rounded-full flex items-center justify-center text-sm font-bold">
-                4
-              </span>
-              <span>Duplicate scans will be detected and rejected</span>
-            </li>
-          </ol>
+        <div className="glass-clean" style={{ borderRadius: '20px', padding: '12px' }}>
+          <div className="flex items-center gap-2 mb-3">
+            <FontAwesomeIcon icon={faInfoCircle} className="color-primary" style={{ fontSize: '14px' }} />
+            <h3 className="text-label" style={{ opacity: 1, margin: 0, fontSize: '14px' }}>📱 How to Use</h3>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {[
+              "Click 'Start Scanning' to activate camera",
+              "Position the ticket QR code in frame",
+              "System validates and checks in automatically",
+              "Duplicates are detected and rejected"
+            ].map((text, i) => (
+              <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ width: '18px', height: '18px', borderRadius: '5px', background: 'rgba(117,139,253,0.1)', color: '#758BFD', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', flexShrink: 0 }}>
+                  {i + 1}
+                </div>
+                <p className="text-body" style={{ fontSize: '13px', margin: 0, opacity: 0.8 }}>{text}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

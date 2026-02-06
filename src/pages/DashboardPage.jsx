@@ -16,44 +16,83 @@ export const DashboardPage = () => {
   ];
 
   return (
-    <div className="min-h-screen px-4 md:px-6 py-6">
-      {/* Decorative circles */}
-      <div className="fixed top-[700px] left-[50px] w-[160px] h-[160px] rounded-full bg-[#758BFD] opacity-[0.03] pointer-events-none" />
-      <div className="fixed top-[200px] right-[-50px] w-[200px] h-[200px] rounded-full bg-[#BEADFF] opacity-[0.04] pointer-events-none" />
+    <div className="min-h-screen px-2 py-4 md:px-6">
+      <style>{`
+        /* Glass & Density System */
+        .glass-clean {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-elevated {
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        /* Typography */
+        .text-heading {
+          font-size: 28px;
+          font-weight: 600;
+          line-height: 1.1;
+          color: #E2D1B9;
+          margin: 0;
+        }
+        .text-body {
+          font-size: 18px;
+          font-weight: 400;
+          line-height: 1.1;
+          color: #BEADFF;
+          margin: 0;
+        }
+
+        .color-primary { color: #758BFD; }
+        
+        .shadow-floating {
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.10);
+        }
+      `}</style>
+
+      {/* Decorative background elements */}
+      <div className="fixed top-[700px] left-[50px] w-[160px] h-[160px] rounded-full bg-[#758BFD] opacity-[0.02] pointer-events-none" />
+      <div className="fixed top-[200px] right-[-50px] w-[200px] h-[200px] rounded-full bg-[#BEADFF] opacity-[0.03] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto">
-        {/* Page Header */}
+        {/* Page Header - Super Compact */}
         <div style={{ marginBottom: '6px' }}>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between glass-elevated" style={{ padding: '6px 12px', borderRadius: '16px' }}>
             <div className="flex items-center gap-3">
-              <FontAwesomeIcon icon={faChartLine} className="text-2xl md:text-3xl text-[#758BFD]" />
-              <h1 className="text-2xl md:text-3xl font-bold text-[#FFEDD8]" style={{ margin: '0' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FontAwesomeIcon icon={faChartLine} style={{ color: 'white', fontSize: '14px' }} />
+              </div>
+              <h1 className="text-heading" style={{ fontSize: '24px' }}>
                 {t("dashboard")}
               </h1>
             </div>
-            <div className="flex items-center gap-2 bg-[#2a2a2a] px-3 py-1.5 rounded-lg border border-[#758BFD] border-opacity-20">
-              <FontAwesomeIcon icon={faDatabase} className="text-[#758BFD] text-sm" />
-              <div className="text-xs">
-                <span className="text-[#BEADFF] opacity-70">{t("storage")}:</span>
-                <span className="text-[#FFEDD8] ml-1 font-semibold">{getStorageSizeInMB()} MB</span>
+            <div className="flex items-center gap-2 glass-clean" style={{ padding: '4px 10px', borderRadius: '10px' }}>
+              <FontAwesomeIcon icon={faDatabase} className="color-primary" style={{ fontSize: '12px' }} />
+              <div style={{ fontSize: '12px', lineHeight: '1' }}>
+                <span style={{ color: '#BEADFF', opacity: 0.7 }}>{t("storage")}:</span>
+                <span style={{ color: '#E2D1B9', marginLeft: '4px', fontWeight: 'bold' }}>{getStorageSizeInMB()} MB</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="bg-gradient-to-b from-[#1a1152] to-[#0a0620] rounded-lg border border-[#758BFD] border-opacity-20 overflow-hidden" style={{ marginBottom: '3px' }}>
-          <div className="flex border-b border-[#758BFD] border-opacity-20">
+        {/* Tab Navigation - Glass Pill */}
+        <div className="glass-elevated" style={{ borderRadius: '12px', padding: '3px', marginBottom: '6px' }}>
+          <div className="flex gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 font-bold text-sm transition-all ${
-                  activeTab === tab.id
-                    ? "bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] border-b-2 border-[#BEADFF]"
-                    : "text-[#BEADFF] hover:bg-[#4a3d8f] hover:bg-opacity-30"
-                }`}
-                style={{ padding: '8px 12px' }}
+                className={`flex-1 font-bold text-sm transition-all rounded-lg ${activeTab === tab.id
+                    ? "bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-white shadow-lg"
+                    : "text-[#BEADFF] hover:bg-white/5"
+                  }`}
+                style={{ padding: '10px 12px', position: 'relative' }}
               >
                 {tab.label}
               </button>

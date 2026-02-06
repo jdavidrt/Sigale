@@ -21,6 +21,9 @@
 }
 
 body {
+  /* Reset browser defaults */
+  margin: 0;
+  padding: 0;
   /* New color scheme from mockups */
   background: linear-gradient(180deg, #27187E 0%, #030312 100%);
   background-attachment: fixed;

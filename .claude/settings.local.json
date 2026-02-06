@@ -13,7 +13,12 @@
       "Bash(cmd.exe /c \"rd /s /q \"\"C:\\Users\\jdk_l\\OneDrive\\Documents\\Sígale\\sigale-ticket-system\"\"\")",
       "Bash(powershell:*)",
       "Bash(npm run build:*)",
-      "Bash(start \"\" \"c:\\Users\\jdk_l\\OneDrive\\Documents\\Sígale\\test-ticket.svg\")"
+      "Bash(start \"\" \"c:\\Users\\jdk_l\\OneDrive\\Documents\\Sígale\\test-ticket.svg\")",
+      "Bash(claude:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:claude-plugins.dev)",
+      "WebFetch(domain:github.com)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

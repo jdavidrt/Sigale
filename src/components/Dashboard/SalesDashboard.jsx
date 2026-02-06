@@ -13,114 +13,105 @@ export const SalesDashboard = () => {
   if (!event) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="bg-[#2a2a2a] rounded-xl p-8 border border-[#758BFD] border-opacity-30 text-center max-w-md">
+        <div className="glass-elevated shadow-floating rounded-xl p-8 text-center max-w-md">
           <div className="text-6xl mb-4">📊</div>
-          <h2 className="text-xl font-bold text-[#FFEDD8] mb-2">{t("noEvent")}</h2>
-          <p className="text-[#BEADFF]">{t("noEventDesc")}</p>
+          <h2 className="text-heading" style={{ marginBottom: '8px' }}>{t("noEvent")}</h2>
+          <p className="text-body">{t("noEventDesc")}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="sales-dashboard-container" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-      <style>{`
-        .sales-dashboard-container * {
-          margin: 3px;
-          padding: 3px;
-        }
-        .sales-dashboard-container h3,
-        .sales-dashboard-container p {
-          margin: 0;
-          padding: 0;
-        }
-      `}</style>
-      {/* Summary Card - Single Container with 3 rows */}
-      <div className="bg-gradient-to-b from-[#1a1152] to-[#0a0620] rounded-lg border border-[#758BFD] border-opacity-20" style={{ padding: '6px', margin: '0' }}>
-        {/* Total Tickets Sold */}
-        <div className="flex items-center justify-between" style={{ padding: '3px', borderBottom: '1px solid rgba(117, 139, 253, 0.1)', margin: '0' }}>
-          <div className="flex items-center" style={{ gap: '4px', margin: '0' }}>
-            <div className="w-6 h-6 bg-[#758BFD] bg-opacity-20 rounded flex items-center justify-center" style={{ margin: '0' }}>
-              <FontAwesomeIcon icon={faTicket} className="text-[#758BFD] text-xs" />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      {/* Summary Container - High Performance Overlay Style */}
+      <div className="glass-elevated shadow-floating" style={{ borderRadius: '24px', padding: '6px' }}>
+        <div style={{ background: 'rgba(117, 139, 253, 0.08)', borderRadius: '20px', padding: '2px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px' }}>
+            {/* Total Sold */}
+            <div style={{ padding: '8px 4px', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '2px' }}>
+                <FontAwesomeIcon icon={faTicket} style={{ color: '#758BFD', fontSize: '12px' }} />
+                <p className="text-label" style={{ fontSize: '11px', opacity: 0.6, margin: 0 }}>{t("totalSold")}</p>
+              </div>
+              <p className="text-heading" style={{ fontSize: '24px', color: '#758BFD', margin: 0 }}>{stats.totalSold}</p>
             </div>
-            <h3 className="text-[#BEADFF] text-xs font-medium" style={{ margin: '0' }}>{t("totalSold")}</h3>
-          </div>
-          <p className="text-xl font-bold text-[#FFEDD8]" style={{ margin: '0' }}>{stats.totalSold}</p>
-        </div>
 
-        {/* Total Revenue */}
-        <div className="flex items-center justify-between" style={{ padding: '3px', borderBottom: '1px solid rgba(117, 139, 253, 0.1)', margin: '0' }}>
-          <div className="flex items-center" style={{ gap: '4px', margin: '0' }}>
-            <div className="w-6 h-6 bg-[#4ade80] bg-opacity-20 rounded flex items-center justify-center" style={{ margin: '0' }}>
-              <FontAwesomeIcon icon={faDollarSign} className="text-[#4ade80] text-xs" />
+            {/* Total Revenue */}
+            <div style={{ padding: '8px 4px', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '2px' }}>
+                <FontAwesomeIcon icon={faDollarSign} style={{ color: '#4ade80', fontSize: '12px' }} />
+                <p className="text-label" style={{ fontSize: '11px', opacity: 0.6, margin: 0 }}>{t("totalRevenue")}</p>
+              </div>
+              <p className="text-heading" style={{ fontSize: '24px', color: '#4ade80', margin: 0 }}>${stats.revenue.total.toLocaleString()}</p>
             </div>
-            <h3 className="text-[#BEADFF] text-xs font-medium" style={{ margin: '0' }}>{t("totalRevenue")}</h3>
-          </div>
-          <p className="text-xl font-bold text-[#FFEDD8]" style={{ margin: '0' }}>${stats.revenue.total.toLocaleString()}</p>
-        </div>
 
-        {/* Total Checked In */}
-        <div className="flex items-center justify-between" style={{ padding: '3px', margin: '0' }}>
-          <div className="flex items-center" style={{ gap: '4px', margin: '0' }}>
-            <div className="w-6 h-6 bg-[#BEADFF] bg-opacity-20 rounded flex items-center justify-center" style={{ margin: '0' }}>
-              <FontAwesomeIcon icon={faCircleCheck} className="text-[#BEADFF] text-xs" />
+            {/* Total Checked In */}
+            <div style={{ padding: '8px 4px', textAlign: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '2px' }}>
+                <FontAwesomeIcon icon={faCircleCheck} style={{ color: '#BEADFF', fontSize: '12px' }} />
+                <p className="text-label" style={{ fontSize: '11px', opacity: 0.6, margin: 0 }}>{t("totalCheckedIn")}</p>
+              </div>
+              <p className="text-heading" style={{ fontSize: '24px', color: '#BEADFF', margin: 0 }}>{stats.totalCheckedIn}</p>
             </div>
-            <h3 className="text-[#BEADFF] text-xs font-medium" style={{ margin: '0' }}>{t("totalCheckedIn")}</h3>
           </div>
-          <p className="text-xl font-bold text-[#FFEDD8]" style={{ margin: '0' }}>{stats.totalCheckedIn}</p>
         </div>
       </div>
 
-      {/* Sales by Type */}
-      <div className="bg-gradient-to-b from-[#1a1152] to-[#0a0620] rounded-lg border border-[#758BFD] border-opacity-20" style={{ padding: '6px', margin: '0' }}>
-        <h3 className="text-sm font-bold text-[#FFEDD8]" style={{ margin: '0', marginBottom: '3px', padding: '3px' }}>{t("salesByType")}</h3>
+      {/* Sales by Type Section */}
+      <div className="glass-elevated" style={{ borderRadius: '24px', padding: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px 2px 12px' }}>
+          <div style={{ width: '4px', height: '16px', borderRadius: '2px', background: '#758BFD' }}></div>
+          <h3 className="text-label" style={{ opacity: 1, margin: 0 }}>{t("salesByType")}</h3>
+        </div>
 
         {Object.keys(stats.byType).length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', margin: '0' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '6px' }}>
             {Object.entries(stats.byType)
               .sort((a, b) => event.ticketTypes[b[0]] - event.ticketTypes[a[0]])
               .map(([type, data]) => (
-              <div key={type} className="bg-[#2a2a2a] rounded border border-[#758BFD] border-opacity-20" style={{ padding: '6px', margin: '0' }}>
-                {/* Two column layout */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', margin: '0' }}>
-                  {/* Left Column */}
-                  <div style={{ margin: '0' }}>
-                    <p className="font-bold text-xs text-[#FFEDD8] capitalize" style={{ margin: '0', marginBottom: '2px' }}>{type}</p>
-                    <p className="text-xs text-[#BEADFF]" style={{ margin: '0' }}>
-                      {data.sold} {t("sold")} • {data.checkedIn} {t("checkedIn").toLowerCase()}
-                    </p>
-                    <p className="text-xs text-[#BEADFF]" style={{ margin: '0', marginTop: '2px' }}>
-                      ${event.ticketTypes[type]?.toLocaleString()} {t("price").toLowerCase()}
+                <div key={type} className="glass-clean hover-lift" style={{ padding: '10px 12px', borderRadius: '18px', border: '1px solid rgba(117,139,253,0.1)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <div>
+                      <p className="text-label" style={{ opacity: 1, margin: 0, fontSize: '14px', color: '#E2D1B9' }}>{type}</p>
+                      <p className="text-body" style={{ fontSize: '12px', opacity: 0.6, margin: 0 }}>
+                        {data.sold} {t("sold")} • {data.checkedIn} {t("checkedIn").toLowerCase()}
+                      </p>
+                    </div>
+                    <p className="text-heading" style={{ fontSize: '20px', color: '#4ade80', margin: 0 }}>
+                      ${stats.revenue.byType[type]?.toLocaleString()}
                     </p>
                   </div>
 
-                  {/* Right Column */}
-                  <div style={{ margin: '0' }}>
-                    <p className="font-bold text-sm text-[#4ade80]" style={{ margin: '0', marginBottom: '2px' }}>
-                      ${stats.revenue.byType[type]?.toLocaleString()}
-                    </p>
-                    {/* Progress bar with percentage */}
-                    <div style={{ margin: '0', marginTop: '4px' }}>
-                      <p className="text-xs text-[#BEADFF]" style={{ margin: '0', marginBottom: '2px' }}>
+                  {/* Progress Bar Area - High Density */}
+                  <div style={{ marginTop: '0px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
+                      <p style={{ fontSize: '10px', color: '#BEADFF', margin: 0, opacity: 0.8 }}>
+                        ${event.ticketTypes[type]?.toLocaleString()} {t("price").toLowerCase()}
+                      </p>
+                      <p style={{ fontSize: '10px', color: '#4ade80', fontWeight: 'bold', margin: 0 }}>
                         {t("checkedIn")} {data.sold > 0 ? ((data.checkedIn / data.sold) * 100).toFixed(0) : 0}%
                       </p>
-                      <div className="w-full bg-[#1a1152] rounded-full h-2" style={{ margin: '0' }}>
-                        <div
-                          className="bg-gradient-to-r from-[#758BFD] to-[#BEADFF] h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${data.sold > 0 ? (data.checkedIn / data.sold) * 100 : 0}%`, margin: '0' }}
-                        />
-                      </div>
+                    </div>
+                    <div style={{ width: '100%', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', height: '4px', overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          width: `${data.sold > 0 ? (data.checkedIn / data.sold) * 100 : 0}%`,
+                          background: 'linear-gradient(90deg, #758BFD, #BEADFF)',
+                          height: '100%',
+                          borderRadius: '10px',
+                          transition: 'width 0.5s ease-out'
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📊</div>
-            <p className="text-[#BEADFF]">{t("noTickets")}</p>
-            <p className="text-sm text-[#758BFD] mt-2">{t("noTicketsDesc")}</p>
+          <div className="text-center py-10 opacity-30">
+            <div className="text-4xl mb-4">📊</div>
+            <p className="text-body">{t("noTickets")}</p>
           </div>
         )}
       </div>

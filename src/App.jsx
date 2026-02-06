@@ -12,6 +12,8 @@ import { TicketsPage } from "./pages/TicketsPage";
 import { ValidateQRPage } from "./pages/ValidateQRPage";
 import { CopyEventPage } from "./pages/CopyEventPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { StylePreview } from "./pages/StylePreview";
+import { StylePreviewNew } from "./pages/StylePreviewNew";
 import { loadCharlyIllustration } from "./utils/svgTicketTemplate";
 import { CHARLY_ILLUSTRATION_BASE64 } from "./assets/charlyIllustration";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
@@ -48,6 +50,8 @@ function AppContent() {
                 <Route path="/validate-qr" element={<ValidateQRPage />} />
                 <Route path="/copy-event" element={<CopyEventPage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/style-preview" element={<StylePreview />} />
+                <Route path="/style-new" element={<StylePreviewNew />} />
               </Routes>
             </Layout>
           </BrowserRouter>

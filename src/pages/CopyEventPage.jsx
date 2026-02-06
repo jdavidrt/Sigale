@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useEvent } from "../context/EventContext";
 import { useTickets } from "../context/TicketContext";
 import { useLanguage } from "../context/LanguageContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCopy, faDownload, faFileCode, faFileCsv, faInfoCircle, faChevronDown, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
 export const CopyEventPage = () => {
   const { event } = useEvent();
@@ -11,10 +13,7 @@ export const CopyEventPage = () => {
   const [copiedCSV, setCopiedCSV] = useState(false);
   const [showJSON, setShowJSON] = useState(false);
 
-  const eventData = {
-    event,
-    tickets,
-  };
+  const eventData = { event, tickets };
 
   const handleCopyJSON = async () => {
     try {
@@ -24,7 +23,6 @@ export const CopyEventPage = () => {
       setTimeout(() => setCopied(false), 3000);
     } catch (error) {
       console.error("Failed to copy:", error);
-      alert("Failed to copy to clipboard");
     }
   };
 
@@ -42,27 +40,12 @@ export const CopyEventPage = () => {
   };
 
   const generateCSVContent = () => {
-    // CSV Headers
     const headers = ["Buyer Name", "Buyer ID", "Buyer Phone", "Ticket Type", "Purchase Date", "Ticket Price"];
-
-    // CSV Rows
     const rows = tickets.map(ticket => {
       const ticketPrice = event?.ticketTypes?.[ticket.ticketType] || 0;
-      return [
-        ticket.buyerName,
-        ticket.buyerId,
-        ticket.buyerPhone,
-        ticket.ticketType,
-        ticket.purchaseDate,
-        ticketPrice
-      ];
+      return [ticket.buyerName, ticket.buyerId, ticket.buyerPhone, ticket.ticketType, ticket.purchaseDate, ticketPrice];
     });
-
-    // Combine headers and rows
-    return [
-      headers.join(","),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
-    ].join("\n");
+    return [headers.join(","), ...rows.map(row => row.map(cell => `"${cell}"`).join(","))].join("\n");
   };
 
   const handleCopyCSV = async () => {
@@ -73,18 +56,13 @@ export const CopyEventPage = () => {
       setTimeout(() => setCopiedCSV(false), 3000);
     } catch (error) {
       console.error("Failed to copy CSV:", error);
-      alert("Failed to copy CSV to clipboard");
     }
   };
 
   const handleDownloadCSV = () => {
     const csvContent = generateCSVContent();
-
-    // Add UTF-8 BOM for proper character encoding (supports í, á, ñ, etc.)
     const BOM = "\uFEFF";
     const csvWithBOM = BOM + csvContent;
-
-    // Create and download file with UTF-8 encoding
     const blob = new Blob([csvWithBOM], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -96,133 +74,104 @@ export const CopyEventPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  if (!event) {
-    return (
-      <div className="min-h-screen px-4 md:px-6 py-6 flex items-center justify-center">
-        <div className="bg-[#2a2a2a] rounded-xl p-8 border border-[#758BFD] border-opacity-30 text-center max-w-md">
-          <div className="text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-[#FFEDD8] mb-2">No Event Found</h2>
-          <p className="text-[#BEADFF]">Please create an event first before copying event data.</p>
-        </div>
-      </div>
-    );
-  }
+  if (!event) return null;
 
   return (
-    <div className="min-h-screen px-4 md:px-6 py-6">
-      {/* Decorative circles */}
-      <div className="fixed top-[700px] left-[50px] w-[160px] h-[160px] rounded-full bg-[#758BFD] opacity-[0.03] pointer-events-none" />
-      <div className="fixed top-[200px] right-[-50px] w-[200px] h-[200px] rounded-full bg-[#BEADFF] opacity-[0.04] pointer-events-none" />
+    <div className="min-h-screen px-2 py-4 md:px-6">
+      <style>{`
+        .glass-clean { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-elevated { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.12); }
+        .text-heading { font-size: 28px; font-weight: 600; line-height: 1.1; color: #E2D1B9; margin: 0; }
+        .text-body { font-size: 18px; font-weight: 400; line-height: 1.1; color: #BEADFF; margin: 0; }
+        .text-label { font-size: 14px; font-weight: 600; line-height: 1.1; text-transform: uppercase; color: #BEADFF; opacity: 1; margin: 0; }
+        .shadow-floating { box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.10); }
+      `}</style>
 
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-gradient-to-b from-[#1a1152] to-[#0a0620] rounded-3xl p-6 md:p-8 border border-[#758BFD] border-opacity-20 shadow-2xl">
-          {/* Page Title */}
-          <div className="mb-6 md:mb-8">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-2xl">📋</span>
-              <h1 className="text-2xl md:text-3xl font-bold text-[#FFEDD8]" style={{ margin: '0' }}>
-                Copy Event Data
-              </h1>
+      <div className="max-w-4xl mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+
+        {/* Main Card */}
+        <div className="glass-elevated shadow-floating" style={{ borderRadius: '24px', padding: '6px' }}>
+
+          {/* Header */}
+          <div style={{ padding: '12px 16px', background: 'rgba(117, 139, 253, 0.08)', borderRadius: '20px', marginBottom: '6px' }}>
+            <div className="flex items-center gap-3 mb-2">
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FontAwesomeIcon icon={faCopy} style={{ color: 'white', fontSize: '14px' }} />
+              </div>
+              <h1 className="text-heading" style={{ fontSize: '24px' }}>Copy Event Data</h1>
             </div>
-            <p className="text-sm md:text-base text-[#BEADFF] opacity-80">
-              Copy or download your event and ticket data as JSON
-            </p>
+            <p className="text-body" style={{ fontSize: '14px', opacity: 0.7 }}>Backup or transfer your event and ticket data</p>
           </div>
 
-          {/* Event Info */}
-          <div className="bg-[#2a2a2a] rounded-xl p-5 border border-[#758BFD] border-opacity-30 mb-6">
-            <h2 className="text-lg font-bold text-[#FFEDD8] mb-3">Event Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-[#BEADFF] opacity-70">Event Name:</span>
-                <span className="text-[#FFEDD8] ml-2 font-semibold">{event.name}</span>
-              </div>
-              <div>
-                <span className="text-[#BEADFF] opacity-70">Date:</span>
-                <span className="text-[#FFEDD8] ml-2 font-semibold">{event.date}</span>
-              </div>
-              <div>
-                <span className="text-[#BEADFF] opacity-70">Venue:</span>
-                <span className="text-[#FFEDD8] ml-2 font-semibold">{event.venue}</span>
-              </div>
-              <div>
-                <span className="text-[#BEADFF] opacity-70">Total Tickets:</span>
-                <span className="text-[#FFEDD8] ml-2 font-semibold">{tickets.length}</span>
-              </div>
-            </div>
-          </div>
+          <div style={{ padding: '0 6px 6px 6px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <button
-              onClick={handleCopyJSON}
-              className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all border text-sm md:text-base ${
-                copied
-                  ? "bg-[#4ade80] text-black border-[#4ade80]"
-                  : "bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-[#FFEDD8] border-[#BEADFF] border-opacity-30 hover:opacity-90"
-              }`}
-            >
-              {copied ? "✓ Copied to Clipboard!" : "📋 Copy JSON"}
-            </button>
-            <button
-              onClick={handleDownloadJSON}
-              className="flex-1 px-6 py-4 bg-[#4a3d8f] hover:bg-[#5a4d9f] text-[#FFEDD8] rounded-xl font-bold transition-colors border border-[#758BFD] border-opacity-30 text-sm md:text-base"
-            >
-              💾 Download JSON
-            </button>
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <button
-              onClick={handleCopyCSV}
-              className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all border text-sm md:text-base ${
-                copiedCSV
-                  ? "bg-[#4ade80] text-black border-[#4ade80]"
-                  : "bg-gradient-to-r from-[#2d5f3f] to-[#3d7f5f] text-[#FFEDD8] border-[#3d7f5f] border-opacity-30 hover:opacity-90"
-              }`}
-            >
-              {copiedCSV ? "✓ CSV Copied!" : "📋 Copy CSV"}
-            </button>
-            <button
-              onClick={handleDownloadCSV}
-              className="flex-1 px-6 py-4 bg-[#2d5f3f] hover:bg-[#3d6f4f] text-[#FFEDD8] rounded-xl font-bold transition-colors border border-[#758BFD] border-opacity-30 text-sm md:text-base"
-            >
-              📊 Download CSV
-            </button>
-          </div>
-
-          {/* JSON Preview (Collapsible) */}
-          <div className="bg-[#2a2a2a] rounded-xl border border-[#758BFD] border-opacity-30 mb-6">
-            <button
-              onClick={() => setShowJSON(!showJSON)}
-              className="w-full p-5 flex items-center justify-between hover:bg-[#3a3a3a] transition-colors rounded-xl"
-            >
-              <h2 className="text-lg font-bold text-[#FFEDD8]">JSON Preview</h2>
-              <span className="text-[#BEADFF] text-xl">
-                {showJSON ? "▼" : "▶"}
-              </span>
-            </button>
-            {showJSON && (
-              <div className="px-5 pb-5">
-                <div className="bg-[#1a1a1a] rounded-lg p-4 border border-[#758BFD] border-opacity-20 max-h-96 overflow-auto">
-                  <pre className="text-xs text-[#BEADFF] font-mono whitespace-pre-wrap break-words">
-                    {JSON.stringify(eventData, null, 2)}
-                  </pre>
+            {/* Event Info Summary */}
+            <div className="glass-clean" style={{ borderRadius: '18px', padding: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <p className="text-label" style={{ fontSize: '10px', opacity: 0.6, marginBottom: '2px' }}>EVENT</p>
+                  <p className="text-body" style={{ fontSize: '14px', fontWeight: 'bold' }}>{event.name}</p>
+                </div>
+                <div>
+                  <p className="text-label" style={{ fontSize: '10px', opacity: 0.6, marginBottom: '2px' }}>DATE</p>
+                  <p className="text-body" style={{ fontSize: '14px' }}>{event.date}</p>
+                </div>
+                <div>
+                  <p className="text-label" style={{ fontSize: '10px', opacity: 0.6, marginBottom: '2px' }}>VENUE</p>
+                  <p className="text-body" style={{ fontSize: '14px' }}>{event.venue}</p>
+                </div>
+                <div>
+                  <p className="text-label" style={{ fontSize: '10px', opacity: 0.6, marginBottom: '2px' }}>TOTAL TICKETS</p>
+                  <p className="text-heading" style={{ fontSize: '18px', color: '#758BFD' }}>{tickets.length}</p>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Info Box */}
-          <div className="mt-6 bg-[#2a2a2a] bg-opacity-50 rounded-lg p-4 border border-[#758BFD] border-opacity-20">
-            <div className="flex items-start gap-3">
-              <span className="text-xl">💡</span>
-              <div className="text-sm text-[#BEADFF]">
-                <p className="font-semibold text-[#FFEDD8] mb-1">About Event Data Export</p>
-                <p>
-                  This JSON includes all event details, ticket types, and all tickets with their check-in status.
-                  You can use this to backup your data or transfer it to another device.
-                </p>
+            {/* Actions Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '6px' }}>
+              <button onClick={handleCopyJSON} className={`p-4 rounded-xl font-bold transition-all flex flex-col items-center gap-2 ${copied ? 'bg-[#4ade80] text-black' : 'glass-clean text-[#758BFD] hover:bg-[#758BFD]/10'}`}>
+                <FontAwesomeIcon icon={faFileCode} size="lg" />
+                <span style={{ fontSize: '12px' }}>{copied ? 'COPIED!' : 'COPY JSON'}</span>
+              </button>
+              <button onClick={handleDownloadJSON} className="p-4 rounded-xl glass-clean text-[#E2D1B9] hover:bg-white/5 font-bold transition-all flex flex-col items-center gap-2">
+                <FontAwesomeIcon icon={faDownload} size="lg" />
+                <span style={{ fontSize: '12px' }}>DOWNLOAD JSON</span>
+              </button>
+              <button onClick={handleCopyCSV} className={`p-4 rounded-xl font-bold transition-all flex flex-col items-center gap-2 ${copiedCSV ? 'bg-[#4ade80] text-black' : 'glass-clean text-[#4ade80] hover:bg-[#4ade80]/10'}`}>
+                <FontAwesomeIcon icon={faFileCsv} size="lg" />
+                <span style={{ fontSize: '12px' }}>{copiedCSV ? 'COPIED!' : 'COPY CSV'}</span>
+              </button>
+              <button onClick={handleDownloadCSV} className="p-4 rounded-xl glass-clean text-[#E2D1B9] hover:bg-white/5 font-bold transition-all flex flex-col items-center gap-2">
+                <FontAwesomeIcon icon={faDownload} size="lg" />
+                <span style={{ fontSize: '12px' }}>DOWNLOAD CSV</span>
+              </button>
+            </div>
+
+            {/* Preview Collapsible */}
+            <div className="glass-clean" style={{ borderRadius: '18px', overflow: 'hidden' }}>
+              <button onClick={() => setShowJSON(!showJSON)} className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-all text-label" style={{ opacity: 1, fontSize: '12px' }}>
+                <span>DATA PREVIEW (JSON)</span>
+                <FontAwesomeIcon icon={showJSON ? faChevronDown : faChevronRight} />
+              </button>
+              {showJSON && (
+                <div style={{ padding: '0 12px 12px 12px' }}>
+                  <div className="bg-black/20 rounded-xl p-3 max-h-60 overflow-auto border border-white/5">
+                    <pre style={{ fontSize: '10px', color: '#BEADFF', opacity: 0.7, fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
+                      {JSON.stringify(eventData, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Tips Section */}
+            <div className="glass-clean" style={{ borderRadius: '18px', padding: '12px', background: 'rgba(117,139,253,0.05)' }}>
+              <div className="flex gap-3">
+                <FontAwesomeIcon icon={faInfoCircle} className="color-primary" style={{ marginTop: '3px' }} />
+                <div style={{ fontSize: '12px', lineHeight: '1.2' }}>
+                  <p className="font-bold text-[#E2D1B9] mb-1">Expert Tip</p>
+                  <p className="text-[#BEADFF] opacity-80">Use the JSON export to clone events on other devices. The CSV is perfect for Excel/Google Sheets analysis.</p>
+                </div>
               </div>
             </div>
           </div>

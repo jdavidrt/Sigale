@@ -26,15 +26,6 @@ export const TicketCard = ({ ticket }) => {
     });
   };
 
-  const formatTime = (isoString) => {
-    return new Date(isoString).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const handleEdit = () => {
     navigate("/sell-tickets", { state: { editTicket: ticket } });
   };
@@ -70,99 +61,91 @@ export const TicketCard = ({ ticket }) => {
   }, [ticket, event, language]);
 
   return (
-    <div className={`bg-[#2a2a2a] rounded-xl border-2 ${ticket.checkedIn ? 'border-[#4ade80] border-opacity-50' : 'border-[#758BFD] border-opacity-20'} overflow-hidden transition-all`}>
+    <div className={`glass-clean rounded-xl border-1 ${ticket.checkedIn ? 'border-[#4ade80]/50' : 'border-white/10'} overflow-hidden transition-all hover-lift`} style={{ position: 'relative' }}>
       {/* Hidden QR Code for processing */}
       <div ref={qrRef} className="hidden">
         <QRCodeSVG value={qrData} size={200} level="L" marginSize={2} />
       </div>
 
-      <div style={{ padding: '8px 12px 12px 12px', display: 'flex', gap: '12px' }}>
+      <div style={{ padding: '6px 8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
         {/* Left side - Ticket Info */}
-        <div style={{ flex: '1' }}>
+        <div style={{ flex: '1', minWidth: 0 }}>
           {/* Header - Name with Check Icon */}
-          <div style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 'bold', lineHeight: '1.1', margin: '2px' }} className="text-[#FFEDD8]">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', lineHeight: '1.1', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="text-[#E2D1B9]">
               {ticket.buyerName}
             </h3>
             {ticket.checkedIn && (
-              <FontAwesomeIcon icon={faCircleCheck} className="text-[#4ade80]" style={{ fontSize: '20px' }} />
+              <FontAwesomeIcon icon={faCircleCheck} className="text-[#4ade80]" style={{ fontSize: '16px' }} />
             )}
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-[#758BFD] opacity-30" style={{ marginBottom: '4px' }}></div>
-
-          {/* Details Grid - 2 Columns */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            {/* Row 1: Ticket ID and ID Number */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <p style={{ fontSize: '12px', lineHeight: '1', margin: '0' }} className="text-[#758BFD] font-mono">{ticket.ticketId}</p>
-              <p style={{ fontSize: '14px', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">{ticket.buyerId}</p>
+          {/* Details - High Density */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <p style={{ fontSize: '11px', lineHeight: '1', margin: 0, opacity: 0.6 }} className="text-[#758BFD] font-mono">{ticket.ticketId}</p>
+              <p style={{ fontSize: '12px', lineHeight: '1', margin: 0 }} className="text-[#E2D1B9]">{ticket.buyerId}</p>
             </div>
 
-            {/* Row 2: Ticket Type and Price */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <p style={{ fontSize: '15px', fontWeight: 'bold', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8] capitalize">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <p style={{ fontSize: '14px', fontWeight: '700', lineHeight: '1', margin: 0, textTransform: 'uppercase' }} className="text-[#758BFD]">
                 {ticket.ticketType}
               </p>
-              <p style={{ fontSize: '15px', fontWeight: 'bold', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">
-                {event.ticketTypes[ticket.ticketType] === 0 ? '—' : `$${event.ticketTypes[ticket.ticketType]?.toLocaleString()}`}
+              <p style={{ fontSize: '14px', fontWeight: '700', lineHeight: '1', margin: 0 }} className="text-[#E2D1B9]">
+                {event.ticketTypes[ticket.ticketType] === 0 ? 'Cortesía' : `$${event.ticketTypes[ticket.ticketType]?.toLocaleString()}`}
               </p>
             </div>
 
-            {/* Row 3: Phone and Purchase Date */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <p style={{ fontSize: '14px', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">{ticket.buyerPhone}</p>
-              <p style={{ fontSize: '14px', lineHeight: '1', margin: '0' }} className="text-[#FFEDD8]">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <p style={{ fontSize: '12px', lineHeight: '1', margin: 0, opacity: 0.8 }} className="text-[#BEADFF]">{ticket.buyerPhone}</p>
+              <p style={{ fontSize: '12px', lineHeight: '1', margin: 0, opacity: 0.8 }} className="text-[#BEADFF]">
                 {formatDate(ticket.purchaseDate)}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Right side - Action Buttons in 2x2 Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '4px', width: '80px', height: '80px' }}>
+        {/* Action Grid - Compact 2x2 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', width: '64px' }}>
           <button
             onClick={handleEdit}
-            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a4a4a' }}
-            className="bg-blue-600 hover:bg-blue-700 rounded-md transition-colors font-bold border border-blue-500 border-opacity-30"
-            title="Edit ticket"
+            style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(117, 139, 253, 0.1)', border: '1px solid rgba(117, 139, 253, 0.2)', borderRadius: '6px', color: '#758BFD' }}
+            className="hover:bg-[#758BFD]/20 transition-colors"
+            title="Edit"
           >
-            <FontAwesomeIcon icon={faPenToSquare} />
+            <FontAwesomeIcon icon={faPenToSquare} style={{ fontSize: '12px' }} />
           </button>
           <button
             onClick={handleDelete}
-            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4a4a4a' }}
-            className="bg-red-600 hover:bg-red-700 rounded-md transition-colors font-bold border border-red-500 border-opacity-30"
-            title="Delete ticket"
+            style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '6px', color: '#ef4444' }}
+            className="hover:bg-red-500/20 transition-colors"
+            title="Delete"
           >
-            <FontAwesomeIcon icon={faTrash} />
+            <FontAwesomeIcon icon={faTrash} style={{ fontSize: '12px' }} />
           </button>
           <button
             onClick={copyAsPNG}
-            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}
-            className="bg-[#4a3d8f] hover:bg-[#5a4d9f] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30"
-            title="Copy ticket as PNG"
+            style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', borderRadius: '6px', color: 'white' }}
+            className="hover:opacity-90 transition-opacity shadow-sm"
+            title="Copy as PNG"
           >
-            <FontAwesomeIcon icon={faImage} />
+            <FontAwesomeIcon icon={faImage} style={{ fontSize: '12px' }} />
           </button>
           <button
             onClick={handleShare}
-            style={{ padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}
-            className="bg-[#4a3d8f] hover:bg-[#5a4d9f] rounded-md transition-colors font-bold border border-[#758BFD] border-opacity-30"
-            title="Share ticket"
+            style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', borderRadius: '6px', color: 'white' }}
+            className="hover:opacity-90 transition-opacity shadow-sm"
+            title="Share"
           >
-            <FontAwesomeIcon icon={faShareNodes} />
+            <FontAwesomeIcon icon={faShareNodes} style={{ fontSize: '12px' }} />
           </button>
         </div>
       </div>
 
-      {/* Copy Status */}
+      {/* Copy Status Overlay */}
       {copyStatus && (
-        <div className="text-center pt-2">
-          <p className="text-xs font-medium text-[#4ade80]">
-            {copyStatus}
-          </p>
+        <div className="absolute inset-x-0 bottom-0 bg-[#4ade80]/90 text-white text-[10px] font-bold text-center py-0.5">
+          {copyStatus}
         </div>
       )}
     </div>
