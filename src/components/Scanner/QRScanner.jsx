@@ -98,7 +98,24 @@ export const QRScanner = ({ autoStart = false }) => {
           {!isScanning ? (
             <button
               onClick={handleStartScanning}
-              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-white rounded-xl font-bold shadow-lg"
+              className="flex items-center gap-2 font-bold"
+              style={{
+                padding: '16px 24px',
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
+                border: 'none',
+                color: 'rgba(0, 0, 0, 0.75)',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(117, 139, 253, 0.3)',
+                transition: 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.02)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
             >
               <FontAwesomeIcon icon={faCamera} />
               <span>Start Scanning</span>
@@ -106,7 +123,29 @@ export const QRScanner = ({ autoStart = false }) => {
           ) : (
             <button
               onClick={handleStopScanning}
-              className="flex items-center gap-2 px-6 py-2.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl font-bold"
+              className="flex items-center gap-2 font-bold"
+              style={{
+                padding: '16px 24px',
+                borderRadius: '16px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#ef4444',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                e.currentTarget.style.transform = 'scale(1.02)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
             >
               <FontAwesomeIcon icon={faStop} />
               <span>Stop Scanning</span>

@@ -18,7 +18,8 @@
       "Bash(curl:*)",
       "WebFetch(domain:claude-plugins.dev)",
       "WebFetch(domain:github.com)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "WebFetch(domain:localhost)"
     ],
     "deny": [],
     "ask": []

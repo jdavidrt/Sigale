@@ -11,7 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 export const StylePreviewNew = () => {
-  const [hoveredCard, setHoveredCard] = useState(null);
+  const [setHoveredCard] = useState(null);
 
   return (
     <>
@@ -536,7 +536,7 @@ export const StylePreviewNew = () => {
                 borderRadius: '16px',
                 background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
                 border: 'none',
-                color: 'white',
+                color: 'rgba(0, 0, 0, 0.75)',
                 fontSize: '16px',
                 fontWeight: '600',
                 cursor: 'pointer',
@@ -625,10 +625,11 @@ export const StylePreviewNew = () => {
                 borderRadius: '16px',
                 background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
                 border: 'none',
-                color: 'white',
+                color: 'rgba(0, 0, 0, 0.75)',
                 fontSize: '16px',
                 fontWeight: '600',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(117, 139, 253, 0.3)'
               }}>
                 Apply to Project
               </button>

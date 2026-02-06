@@ -88,11 +88,35 @@ export const DashboardPage = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 font-bold text-sm transition-all rounded-lg ${activeTab === tab.id
-                    ? "bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-white shadow-lg"
-                    : "text-[#BEADFF] hover:bg-white/5"
-                  }`}
-                style={{ padding: '10px 12px', position: 'relative' }}
+                className="flex-1 font-bold text-sm rounded-lg"
+                style={{
+                  padding: '10px 12px',
+                  position: 'relative',
+                  background: activeTab === tab.id
+                    ? 'linear-gradient(135deg, #758BFD, #BEADFF)'
+                    : 'transparent',
+                  color: activeTab === tab.id
+                    ? 'rgba(0, 0, 0, 0.75)'
+                    : '#BEADFF',
+                  boxShadow: activeTab === tab.id
+                    ? '0 4px 12px rgba(117, 139, 253, 0.3)'
+                    : 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  }
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== tab.id) {
+                    e.currentTarget.style.background = 'transparent';
+                  }
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
                 {tab.label}
               </button>

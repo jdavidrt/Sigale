@@ -152,7 +152,7 @@ export const TicketsPage = () => {
               <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FontAwesomeIcon icon={faTicketSimple} style={{ color: 'white', fontSize: '14px' }} />
               </div>
-              <h1 className="text-heading" style={{ fontSize: '24px' }}>
+              <h1 className="text-heading" style={{ fontSize: '24px', marginLeft: '4px' }}>
                 {t("allTickets")}
               </h1>
             </div>
@@ -219,12 +219,28 @@ export const TicketsPage = () => {
               ))}
             </div>
 
-            {/* Reset All Check-Ins Button - Discreet */}
+            {/* Reset All Check-Ins Button - Styled like Create Ticket */}
             {tickets.length > 0 && (
-              <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
                 <button
                   onClick={handleResetAllCheckIns}
-                  className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors border border-red-500/20"
+                  style={{
+                    padding: '16px 24px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
+                    border: 'none',
+                    color: 'rgba(0, 0, 0, 0.75)',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(117, 139, 253, 0.3)',
+                    transition: 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.02)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
                 >
                   🔄 {t("resetAllCheckIns") || "Reset All Check-Ins"}
                 </button>

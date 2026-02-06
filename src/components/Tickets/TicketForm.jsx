@@ -18,7 +18,7 @@ export const TicketForm = () => {
   const editTicket = location.state?.editTicket;
   const isEditMode = !!editTicket;
 
-  const [formData, setFormData] = useState({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "" });
+  const [formData, setFormData] = useState({ buyerName: "", buyerId: "", buyerPhone: "000", ticketType: "" });
   const [createdTicket, setCreatedTicket] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -121,7 +121,7 @@ export const TicketForm = () => {
               <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FontAwesomeIcon icon={faTicketSimple} style={{ color: 'white', fontSize: '14px' }} />
               </div>
-              <h1 className="text-heading" style={{ fontSize: '24px' }}>
+              <h1 className="text-heading" style={{ fontSize: '24px', paddingLeft: '8px' }}>
                 {createdTicket ? t("ticketCreated") : (isEditMode ? "Update Ticket" : t("sellTicketsTitle"))}
               </h1>
             </div>
@@ -178,7 +178,24 @@ export const TicketForm = () => {
                   </div>
                 </div>
 
-                <button onClick={handleNewTicket} className="w-full py-4 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-white rounded-2xl font-bold shadow-xl flex items-center justify-center gap-2">
+                <button
+                  onClick={handleNewTicket}
+                  className="w-full flex items-center justify-center gap-2"
+                  style={{
+                    padding: '16px 24px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
+                    border: 'none',
+                    color: 'rgba(0, 0, 0, 0.75)',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(117, 139, 253, 0.3)',
+                    transition: 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.02)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                >
                   <FontAwesomeIcon icon={faPlusCircle} />
                   <span>{t("createAnother")}</span>
                 </button>
@@ -190,9 +207,9 @@ export const TicketForm = () => {
 
                   {/* Buyer Name */}
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2" style={{ marginBottom: '12px' }}>
                       <FontAwesomeIcon icon={faUser} className="label-icon" />
-                      <label className="text-label" style={{ fontSize: '12px' }}>{t("buyerName")}</label>
+                      <label className="text-label" style={{ fontSize: '12px', marginLeft: '2px' }}>{t("buyerName")}</label>
                     </div>
                     <input
                       type="text" required value={formData.buyerName}
@@ -205,9 +222,9 @@ export const TicketForm = () => {
                   {/* Two Column IDs */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2" style={{ marginBottom: '12px' }}>
                         <FontAwesomeIcon icon={faIdCard} className="label-icon" />
-                        <label className="text-label" style={{ fontSize: '12px' }}>{t("idNumber")}</label>
+                        <label className="text-label" style={{ fontSize: '12px', marginLeft: '2px' }}>{t("idNumber")}</label>
                       </div>
                       <input
                         type="tel" required value={formData.buyerId}
@@ -217,13 +234,14 @@ export const TicketForm = () => {
                       />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2" style={{ marginBottom: '12px' }}>
                         <FontAwesomeIcon icon={faPhone} className="label-icon" />
-                        <label className="text-label" style={{ fontSize: '12px' }}>{t("phoneNumber")}</label>
+                        <label className="text-label" style={{ fontSize: '12px', marginLeft: '2px' }}>{t("phoneNumber")}</label>
                       </div>
                       <input
                         type="tel" required value={formData.buyerPhone}
                         onChange={(e) => setFormData({ ...formData, buyerPhone: e.target.value })}
+                        onFocus={(e) => e.target.select()}
                         className="w-full px-3 py-2.5 rounded-lg text-base font-mono"
                         placeholder="Phone..."
                       />
@@ -232,9 +250,9 @@ export const TicketForm = () => {
 
                   {/* Ticket Type Selector */}
                   <div className="relative">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2" style={{ marginBottom: '12px' }}>
                       <FontAwesomeIcon icon={faTicketSimple} className="label-icon" />
-                      <label className="text-label" style={{ fontSize: '12px' }}>{t("ticketType")}</label>
+                      <label className="text-label" style={{ fontSize: '12px', marginLeft: '2px' }}>{t("ticketType")}</label>
                     </div>
                     <select
                       required value={formData.ticketType}
@@ -254,7 +272,22 @@ export const TicketForm = () => {
 
                 <button
                   type="submit" disabled={isSubmitting}
-                  className="w-full py-4 bg-gradient-to-r from-[#758BFD] to-[#BEADFF] text-white rounded-2xl font-bold shadow-xl hover:opacity-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2"
+                  style={{
+                    padding: '16px 24px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
+                    border: 'none',
+                    color: 'rgba(0, 0, 0, 0.75)',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(117, 139, 253, 0.3)',
+                    opacity: isSubmitting ? 0.5 : 1,
+                    transition: 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
+                  onMouseEnter={(e) => !isSubmitting && (e.currentTarget.style.transform = 'scale(1.02)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
                 >
                   <FontAwesomeIcon icon={isEditMode ? faPenToSquare : faPlusCircle} />
                   <span>{isSubmitting ? "..." : (isEditMode ? "Update Ticket" : t("createTicket"))}</span>

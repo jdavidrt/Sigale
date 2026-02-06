@@ -124,9 +124,35 @@ export const ValidationResult = ({ result, onClose }) => {
         {/* Action Button */}
         <button
           onClick={onClose}
-          className={`w-full px-6 py-3 text-white rounded-xl transition-all font-bold shadow-lg ${styles.button}`}
+          className="w-full font-bold"
+          style={{
+            padding: '16px 24px',
+            borderRadius: '16px',
+            background: success
+              ? 'linear-gradient(135deg, #4ade80, #22c55e)'
+              : type === 'duplicate'
+              ? 'rgba(239, 68, 68, 0.8)'
+              : type === 'not_found'
+              ? 'rgba(249, 115, 22, 0.8)'
+              : 'rgba(117, 139, 253, 0.8)',
+            border: 'none',
+            color: success ? 'rgba(0, 0, 0, 0.75)' : 'white',
+            fontSize: '16px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            boxShadow: success
+              ? '0 4px 12px rgba(74, 222, 128, 0.3)'
+              : '0 4px 12px rgba(0, 0, 0, 0.2)',
+            transition: 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.02)')}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
-          {success ? <><FontAwesomeIcon icon={faCheck} className="mr-2" />Continue</> : "Try Again"}
+          {success ? <><FontAwesomeIcon icon={faCheck} />Continue</> : "Try Again"}
         </button>
       </div>
     </div>
