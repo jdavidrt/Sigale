@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "./context/LanguageContext";
 import { EventProvider } from "./context/EventContext";
 import { TicketProvider } from "./context/TicketContext";
@@ -18,6 +18,7 @@ import { loadCharlyIllustration } from "./utils/svgTicketTemplate";
 import { CHARLY_ILLUSTRATION_BASE64 } from "./assets/charlyIllustration";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import { usePageVisibility } from "./hooks/usePageVisibility";
+import { DebugPanel } from "./components/Common/DebugPanel";
 
 function AppContent() {
   // Monitor page visibility for iOS tab suspension
@@ -52,6 +53,8 @@ function AppContent() {
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/style-preview" element={<StylePreview />} />
                 <Route path="/style-new" element={<StylePreviewNew />} />
+                {/* Catch-all route - redirect any unmatched paths to home */}
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Layout>
           </BrowserRouter>
@@ -65,6 +68,7 @@ function App() {
   return (
     <ErrorBoundary>
       <AppContent />
+      <DebugPanel />
     </ErrorBoundary>
   );
 }

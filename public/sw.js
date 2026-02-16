@@ -62,9 +62,77 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Network failed, serve from cache
+          // Network failed, try cache
           console.log('[SW] Navigation request failed, serving from cache');
-          return caches.match('/index.html');
+          return caches.match('/index.html').then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+
+            // Cache also failed (evicted on mobile) - serve inline HTML fallback
+            console.warn('[SW] Cache miss for index.html, serving inline fallback');
+            const fallbackHTML = `
+              <!DOCTYPE html>
+              <html lang="en">
+              <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Sígale - Loading...</title>
+                <style>
+                  body {
+                    margin: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
+                    background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                    color: white;
+                  }
+                  .container {
+                    text-align: center;
+                    padding: 2rem;
+                  }
+                  .spinner {
+                    width: 50px;
+                    height: 50px;
+                    border: 4px solid rgba(255,255,255,0.1);
+                    border-top-color: #FF6B6B;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 1.5rem;
+                  }
+                  @keyframes spin {
+                    to { transform: rotate(360deg); }
+                  }
+                  h1 { margin: 0 0 0.5rem; font-size: 1.5rem; }
+                  p { margin: 0; opacity: 0.7; font-size: 0.9rem; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="spinner"></div>
+                  <h1>Reconnecting...</h1>
+                  <p>Please wait while we restore your session</p>
+                </div>
+                <script>
+                  // Redirect to root to trigger full app reload
+                  setTimeout(() => {
+                    window.location.href = '/';
+                  }, 1500);
+                </script>
+              </body>
+              </html>
+            `;
+
+            return new Response(fallbackHTML, {
+              status: 200,
+              headers: {
+                'Content-Type': 'text/html',
+                'Cache-Control': 'no-cache'
+              }
+            });
+          });
         })
     );
     return;
