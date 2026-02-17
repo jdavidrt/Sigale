@@ -1,15 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { checkCacheHealth } from '../utils/serviceWorkerRegistration';
 
 /**
  * Hook to detect when page becomes visible/hidden
- * Handles both iOS and Android mobile browser suspension
+ * Handles both iOS and Android mobile browser suspension.
  *
- * iOS: Aggressive suspension after ~30 seconds
+ * iOS:     Aggressive suspension after ~30 seconds
  * Android: Moderate suspension after ~5-10 minutes
+ *
+ * On resume after long suspension:
+ *   1. Dispatches custom events for component-level recovery
+ *   2. Triggers a SW cache health check (detects poisoned 404 cache)
+ *   3. Validates the DOM is still alive (not replaced by "Not Found")
  */
 export const usePageVisibility = () => {
   const [isVisible, setIsVisible] = useState(!document.hidden);
-  const [lastVisibleTime, setLastVisibleTime] = useState(Date.now());
+  const lastVisibleTimeRef = useRef(Date.now());
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -18,67 +24,84 @@ export const usePageVisibility = () => {
 
       if (visible) {
         const now = Date.now();
-        const timeSuspended = now - lastVisibleTime;
+        const timeSuspended = now - lastVisibleTimeRef.current;
 
-        // If suspended for more than 5 minutes, trigger a state refresh
-        if (timeSuspended > 5 * 60 * 1000) {
-          console.log('[PageVisibility] Page was suspended for', Math.round(timeSuspended / 1000), 'seconds');
-          // Trigger a custom event that components can listen to
-          window.dispatchEvent(new CustomEvent('page-resumed-after-suspension', {
-            detail: { timeSuspended }
-          }));
+        // If suspended for more than 2 minutes, run recovery checks
+        if (timeSuspended > 2 * 60 * 1000) {
+          console.log(
+            '[PageVisibility] Resumed after',
+            Math.round(timeSuspended / 1000),
+            'seconds'
+          );
+
+          // 1. Let components know they should refresh stale data
+          window.dispatchEvent(
+            new CustomEvent('page-resumed-after-suspension', {
+              detail: { timeSuspended },
+            })
+          );
+
+          // 2. Ask the SW if the navigation cache is healthy
+          //    (if poisoned, serviceWorkerRegistration will auto-reload)
+          checkCacheHealth();
+
+          // 3. Check if the DOM root is still alive
+          //    If the page was replaced by a server 404 or blank body,
+          //    the React root will be missing or empty
+          requestAnimationFrame(() => {
+            const root = document.getElementById('root');
+            if (!root || root.children.length === 0) {
+              console.warn(
+                '[PageVisibility] React root is empty after resume — reloading'
+              );
+              window.location.reload();
+              return;
+            }
+
+            // Also check for visible "Not Found" text injected by server 404
+            const bodyText = document.body.innerText || '';
+            if (
+              bodyText.trim() === 'Not Found' ||
+              bodyText.trim() === 'Cannot GET /'
+            ) {
+              console.warn(
+                '[PageVisibility] "Not Found" detected in body — reloading'
+              );
+              window.location.reload();
+            }
+          });
         }
 
-        setLastVisibleTime(now);
+        lastVisibleTimeRef.current = now;
       }
     };
 
-    // Handle page becoming hidden (user switches apps)
-    const handlePageHide = (event) => {
-      console.log('[PageVisibility] Page hidden/backgrounded');
-      // Save critical state to localStorage before suspension
-      // This helps both iOS and Android recover gracefully
+    // Save state before suspension
+    const handlePageHide = () => {
       try {
         sessionStorage.setItem('sigale-last-active', Date.now().toString());
         sessionStorage.setItem('sigale-last-path', window.location.pathname);
       } catch (e) {
-        console.warn('[PageVisibility] Could not save state:', e);
+        // Ignore — sessionStorage may be unavailable
       }
     };
 
-    // Handle page becoming visible again
+    // Handle bfcache restoration
     const handlePageShow = (event) => {
-      console.log('[PageVisibility] Page shown/foregrounded');
-
-      // Check if page was loaded from cache (bfcache)
       if (event.persisted) {
-        console.log('[PageVisibility] Page restored from bfcache');
-        // Reload critical data if needed
+        console.log('[PageVisibility] Restored from bfcache');
         window.dispatchEvent(new CustomEvent('page-restored-from-cache'));
+        // bfcache pages may have stale SW state — check health
+        checkCacheHealth();
       }
     };
 
-    // Primary event listeners
+    // Attach listeners
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // iOS Safari specific events
     window.addEventListener('focus', handleVisibilityChange);
     window.addEventListener('blur', handleVisibilityChange);
-
-    // Page lifecycle events (works on both iOS and Android Chrome)
     window.addEventListener('pagehide', handlePageHide);
     window.addEventListener('pageshow', handlePageShow);
-
-    // Android Chrome specific: beforeunload for graceful cleanup
-    const handleBeforeUnload = (event) => {
-      // Don't show confirmation dialog, just save state
-      try {
-        sessionStorage.setItem('sigale-last-active', Date.now().toString());
-      } catch (e) {
-        // Ignore errors in cleanup
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -86,9 +109,8 @@ export const usePageVisibility = () => {
       window.removeEventListener('blur', handleVisibilityChange);
       window.removeEventListener('pagehide', handlePageHide);
       window.removeEventListener('pageshow', handlePageShow);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [lastVisibleTime]);
+  }, []); // No dependencies — refs handle mutable state
 
-  return { isVisible, lastVisibleTime };
+  return { isVisible, lastVisibleTime: lastVisibleTimeRef.current };
 };
