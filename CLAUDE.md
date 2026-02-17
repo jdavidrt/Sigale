@@ -142,3 +142,52 @@ npm run build    # Production build
 ## Browser Requirements
 Chrome/Edge 90+, Firefox 88+, Safari 14+
 HTTPS required for camera access
+
+## Documentation Structure
+
+Project documentation is organized in `/docs` with topic-based folders:
+
+```
+docs/
+├── architecture/       # System architecture and project overview
+├── design/            # UI/UX design, style guides, visual specifications
+├── features/          # Feature-specific documentation (CSV export/import)
+├── guides/            # Platform compatibility, mobile testing, development guides
+└── implementation/    # Completed development stages (stage 1-3)
+```
+
+**Key Documentation:**
+- **Architecture**: `docs/architecture/PROJECT_OVERVIEW.md`
+- **Design System**: `docs/design/STYLE_GUIDE.md`
+- **Mobile Testing**: `docs/guides/MOBILE_TESTING.md`
+- **iOS Persistence**: `docs/guides/ios-persistence-guide.md`
+- **CSV Features**: `docs/features/CSV_FEATURE_GUIDE.md`
+- **Development Stages**: `docs/implementation/stage1-foundation.md` (1-3)
+
+Historical assets and mockups are archived in `/archive` for reference.
+
+## Recent Enhancements
+
+- CSV bulk import/export for ticket data management
+- Enhanced mobile persistence for iOS Safari
+- Improved error boundaries and edge case handling
+- Page visibility API integration for background state management
+- PWA manifest and service worker for offline capability
+- Share API integration for ticket distribution
+
+## Performance Metrics
+
+- Initial load: <2s on 4G
+- Ticket generation: <100ms
+- QR scan validation: <500ms
+- Storage capacity: 10,000-15,000 tickets (~400 bytes each)
+- PWA install size: ~500KB (gzipped)
+
+## Development Workflow
+
+1. Read relevant documentation from `/docs` before making changes
+2. Follow mobile-first approach with touch-friendly UI (44x44px minimum)
+3. Test on both iOS Safari and Chrome/Edge
+4. Verify localStorage persistence and quota handling
+5. Test camera permissions and QR scanning in HTTPS environment
+6. Validate bilingual content (Spanish/English)

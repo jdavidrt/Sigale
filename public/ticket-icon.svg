@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Ticket background -->
+  <rect x="10" y="25" width="80" height="50" rx="4" fill="#BEADFF"/>
+
+  <!-- Perforated line (left side) -->
+  <circle cx="62" cy="30" r="1.5" fill="#1A1A2E" opacity="0.3"/>
+  <circle cx="62" cy="36" r="1.5" fill="#1A1A2E" opacity="0.3"/>
+  <circle cx="62" cy="42" r="1.5" fill="#1A1A2E" opacity="0.3"/>
+  <circle cx="62" cy="48" r="1.5" fill="#1A1A2E" opacity="0.3"/>
+  <circle cx="62" cy="54" r="1.5" fill="#1A1A2E" opacity="0.3"/>
+  <circle cx="62" cy="60" r="1.5" fill="#1A1A2E" opacity="0.3"/>
+  <circle cx="62" cy="66" r="1.5" fill="#1A1A2E" opacity="0.3"/>
+  <circle cx="62" cy="72" r="1.5" fill="#1A1A2E" opacity="0.3"/>
+
+  <!-- Ticket stub notches -->
+  <circle cx="62" cy="25" r="4" fill="#1A1A2E"/>
+  <circle cx="62" cy="75" r="4" fill="#1A1A2E"/>
+
+  <!-- Left section decorative lines -->
+  <line x1="20" y1="40" x2="50" y2="40" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <line x1="20" y1="50" x2="45" y2="50" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <line x1="20" y1="60" x2="50" y2="60" stroke="white" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Right section - QR code representation -->
+  <rect x="68" y="35" width="15" height="15" rx="1" fill="white" opacity="0.9"/>
+  <rect x="70" y="37" width="3" height="3" fill="#1A1A2E"/>
+  <rect x="74" y="37" width="3" height="3" fill="#1A1A2E"/>
+  <rect x="78" y="37" width="3" height="3" fill="#1A1A2E"/>
+  <rect x="70" y="41" width="3" height="3" fill="#1A1A2E"/>
+  <rect x="78" y="41" width="3" height="3" fill="#1A1A2E"/>
+  <rect x="70" y="45" width="3" height="3" fill="#1A1A2E"/>
+  <rect x="74" y="45" width="3" height="3" fill="#1A1A2E"/>
+  <rect x="78" y="45" width="3" height="3" fill="#1A1A2E"/>
+
+  <!-- Right section text lines -->
+  <line x1="68" y1="58" x2="82" y2="58" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="68" y1="63" x2="78" y2="63" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
