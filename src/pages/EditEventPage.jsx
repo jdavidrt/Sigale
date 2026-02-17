@@ -66,8 +66,33 @@ export const EditEventPage = () => {
           </div>
         </div>
 
+
         {/* Form Content */}
         <CreateEvent isEditing={true} />
+
+        {/* Debug Mode Toggle */}
+        <div className="mt-8 glass-clean" style={{ padding: '16px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h3 className="text-body" style={{ fontSize: '16px', fontWeight: 600, color: '#E2D1B9' }}>Debug Mode</h3>
+            <p className="text-body" style={{ fontSize: '12px', opacity: 0.7 }}>Show technical details for troubleshooting</p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={localStorage.getItem('debug') === '1'}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  localStorage.setItem('debug', '1');
+                } else {
+                  localStorage.removeItem('debug');
+                }
+                window.location.reload();
+              }}
+            />
+            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#758BFD]"></div>
+          </label>
+        </div>
       </div>
     </div>
   );

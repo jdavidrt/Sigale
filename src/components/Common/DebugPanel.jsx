@@ -10,10 +10,13 @@ export const DebugPanel = () => {
     const [logs, setLogs] = useState([]);
     const [isMinimized, setIsMinimized] = useState(false);
 
-    // Check URL param to enable debug mode
+    // Check URL param or localStorage to enable debug mode
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
-        const debugEnabled = params.get('debug') === '1';
+        const debugFromUrl = params.get('debug') === '1';
+        const debugFromStorage = localStorage.getItem('debug') === '1';
+        const debugEnabled = debugFromUrl || debugFromStorage;
+
         setIsVisible(debugEnabled);
 
         if (debugEnabled) {
