@@ -1,0 +1,233 @@
+/*
+ * ============================================================
+ * SÍGALE — CopyEventPage Module
+ * Export/import of event JSON and CSV data.
+ * ============================================================
+ */
+
+.page {
+  min-height: 100dvh;
+  padding: var(--space-7) var(--space-4);
+}
+
+.container {
+  max-width: 896px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ── Main card ───────────────────────────────────────────── */
+.mainCard {
+  border-radius: var(--radius-4xl);
+  padding: var(--space-2);
+  margin: var(--space-3);
+}
+
+/* ── Card header ─────────────────────────────────────────── */
+.cardHeader {
+  padding: var(--space-6) var(--space-7);
+  background: var(--color-section-tint);
+  border-radius: var(--radius-3xl);
+  margin-bottom: var(--space-3);
+}
+
+.cardHeaderRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.cardTitle {
+  font-size: 24px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-heading);
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.cardSubtitle {
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+  opacity: 0.70;
+  margin: 0;
+}
+
+/* ── Content area ────────────────────────────────────────── */
+.cardContent {
+  padding: 0 var(--space-3) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── Event info summary grid ─────────────────────────────── */
+.summaryGrid {
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+.summaryLabel {
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  opacity: 0.60;
+  margin: 0 0 var(--space-1) 0;
+}
+
+.summaryValue {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.summaryCount {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-primary);
+  margin: 0;
+}
+
+/* ── Actions grid ────────────────────────────────────────── */
+.actionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+}
+
+.actionBtn {
+  padding: var(--space-7);
+  border-radius: var(--radius-lg);
+  font-weight: var(--weight-bold);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  border: none;
+  transition: var(--transition-base);
+  font-size: var(--text-base);
+}
+
+.actionBtn:hover {
+  transform: scale(1.02);
+}
+
+.actionBtnCopy {
+  color: var(--color-primary);
+  background: var(--color-tint-primary);
+  border: 1px solid var(--color-border-primary-md);
+}
+
+.actionBtnCopy.copied {
+  background: var(--gradient-success);
+  color: rgba(0, 0, 0, 0.75);
+  border: none;
+}
+
+.actionBtnDownload {
+  color: var(--color-text-heading);
+}
+
+.actionBtnCSV {
+  color: var(--color-success);
+  background: var(--color-tint-success);
+  border: 1px solid var(--color-border-success);
+}
+
+.actionBtnCSV.copied {
+  background: var(--gradient-success);
+  color: rgba(0, 0, 0, 0.75);
+  border: none;
+}
+
+.actionBtnLabel {
+  font-size: var(--text-base);
+  text-transform: uppercase;
+}
+
+/* ── JSON Preview section ────────────────────────────────── */
+.previewSection {
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+}
+
+.previewToggle {
+  width: 100%;
+  padding: var(--space-7);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.previewToggle:hover {
+  background: var(--color-tint-white-sm);
+}
+
+.previewBody {
+  padding: 0 var(--space-6) var(--space-6);
+}
+
+.previewCode {
+  background: rgba(0, 0, 0, 0.20);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  max-height: 240px;
+  overflow: auto;
+  border: 1px solid var(--color-border-divider);
+}
+
+.previewPre {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  opacity: 0.70;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* ── Tip section ─────────────────────────────────────────── */
+.tipSection {
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  background: var(--color-tint-primary);
+}
+
+.tipRow {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.tipContent {
+  font-size: var(--text-base);
+  line-height: var(--leading-tight);
+}
+
+.tipTitle {
+  font-weight: var(--weight-bold);
+  color: var(--color-text-heading);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.tipText {
+  color: var(--color-text-secondary);
+  opacity: 0.80;
+  margin: 0;
+}

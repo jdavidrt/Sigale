@@ -1,0 +1,140 @@
+/*
+ * ============================================================
+ * SÍGALE — SHARED BUTTON MODULE
+ * Four semantic variants × three sizes.
+ * Import in any component: import s from '../Common/Button.module.css'
+ * Usage: className={`${s.btn} ${s.primary} ${s.lg}`}
+ * ============================================================
+ */
+
+/* ── Base ───────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  font-family: var(--font-base);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  white-space: nowrap;
+  border: none;
+  transition: var(--transition-base);
+}
+
+.btn:disabled {
+  opacity: 0.50;
+  cursor: not-allowed;
+}
+
+
+/* ── Sizes ──────────────────────────────────────────────── */
+
+/* Small — icon actions, compact toolbars */
+.sm {
+  padding: var(--space-4) var(--space-7);
+  font-size: var(--text-md);
+  border-radius: var(--radius-md);
+  min-height: auto;
+}
+
+/* Medium — secondary actions, inline buttons */
+.md {
+  padding: var(--space-5) var(--space-7);
+  font-size: var(--text-body);
+  border-radius: var(--radius-xl);
+}
+
+/* Large — primary actions, full-width CTAs */
+.lg {
+  padding: var(--space-7) var(--space-8);
+  font-size: var(--text-lg);
+  border-radius: var(--radius-xl);
+  min-height: var(--touch-min);
+  width: 100%;
+}
+
+
+/* ── Variants ───────────────────────────────────────────── */
+
+/* Primary — gradient, dark text. Main call-to-action. */
+.primary {
+  background: var(--gradient-primary);
+  color: var(--color-text-on-primary);
+  box-shadow: var(--shadow-btn);
+}
+
+.primary:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-btn-hover);
+}
+
+/* Secondary — tinted, outlined. Non-destructive secondary action. */
+.secondary {
+  background: var(--color-tint-primary);
+  border: 1px solid var(--color-border-primary-xl);
+  color: var(--color-primary);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--color-tint-primary-lg);
+  transform: scale(1.02);
+}
+
+/* Secondary dashed — paste/link variant */
+.secondaryDashed {
+  background: var(--color-tint-primary-md);
+  border: 1px dashed var(--color-border-primary-dashed);
+  color: var(--color-text-secondary);
+}
+
+.secondaryDashed:hover:not(:disabled) {
+  background: var(--color-tint-primary-lg);
+}
+
+/* Success — green tint. Import / positive action. */
+.success {
+  background: var(--color-tint-success);
+  border: 1px solid var(--color-border-success);
+  color: var(--color-success);
+}
+
+.success:hover:not(:disabled) {
+  background: var(--color-tint-success-lg);
+  transform: scale(1.02);
+}
+
+/* Danger — red tint. Destructive action / stop scanning. */
+.danger {
+  background: var(--color-tint-error-sm);
+  border: 1px solid var(--color-border-error);
+  color: var(--color-error);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--color-tint-error-md);
+  transform: scale(1.02);
+}
+
+/* Danger confirm — solid gradient red. Final irreversible action. */
+.dangerConfirm {
+  background: var(--gradient-danger);
+  border: none;
+  color: white;
+  box-shadow: var(--shadow-btn-error);
+}
+
+.dangerConfirm:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+
+/* Ghost — transparent with subtle tint. Cancel / dismiss. */
+.ghost {
+  background: var(--color-tint-white-md);
+  border: 1px solid var(--color-border-primary-xl);
+  color: var(--color-primary);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--color-tint-primary);
+  transform: scale(1.02);
+}

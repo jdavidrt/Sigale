@@ -5,6 +5,8 @@ import { parseQRData } from "../../utils/qrGenerator";
 import { ValidationResult } from "./ValidationResult";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCamera, faStop, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
+import s from "./QRScanner.module.css";
+import btn from "../Common/Button.module.css";
 
 export const QRScanner = ({ autoStart = false }) => {
   const { tickets, checkInTicket } = useTickets();
@@ -19,7 +21,7 @@ export const QRScanner = ({ autoStart = false }) => {
       permissionCheckedRef.current = true;
       navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
         .then((stream) => {
-          stream.getTracks().forEach(track => track.stop());
+          stream.getTracks().forEach((track) => track.stop());
           setPermissionGranted(true);
           setIsScanning(true);
         })
@@ -34,11 +36,7 @@ export const QRScanner = ({ autoStart = false }) => {
     if (isScanning && !scannerRef.current) {
       const scanner = new Html5QrcodeScanner(
         "qr-reader",
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        },
+        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
         false
       );
       scanner.render(onScanSuccess, onScanError);
@@ -90,63 +88,25 @@ export const QRScanner = ({ autoStart = false }) => {
     if (scannerRef.current) scannerRef.current.clear().then(() => { scannerRef.current = null; }).catch(console.error);
   };
 
+  const steps = [
+    "Click 'Start Scanning' to activate camera",
+    "Position the ticket QR code in frame",
+    "System validates and checks in automatically",
+    "Duplicates are detected and rejected",
+  ];
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+    <div className={s.root}>
       {/* Control Buttons */}
       {!autoStart && (
-        <div className="flex gap-2 justify-center">
+        <div className={s.controls}>
           {!isScanning ? (
-            <button
-              onClick={handleStartScanning}
-              className="flex items-center gap-2 font-bold"
-              style={{
-                padding: '16px 24px',
-                borderRadius: '16px',
-                background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
-                border: 'none',
-                color: 'rgba(0, 0, 0, 0.75)',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(117, 139, 253, 0.3)',
-                transition: 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.02)')}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-            >
+            <button onClick={handleStartScanning} className={`${btn.btn} ${btn.primary} ${btn.lg}`}>
               <FontAwesomeIcon icon={faCamera} />
               <span>Start Scanning</span>
             </button>
           ) : (
-            <button
-              onClick={handleStopScanning}
-              className="flex items-center gap-2 font-bold"
-              style={{
-                padding: '16px 24px',
-                borderRadius: '16px',
-                background: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                color: '#ef4444',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
-                e.currentTarget.style.transform = 'scale(1.02)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
+            <button onClick={handleStopScanning} className={`${btn.btn} ${btn.danger} ${btn.lg}`}>
               <FontAwesomeIcon icon={faStop} />
               <span>Stop Scanning</span>
             </button>
@@ -154,40 +114,29 @@ export const QRScanner = ({ autoStart = false }) => {
         </div>
       )}
 
-      {/* Scanner Container - Super Clean */}
+      {/* Scanner Viewport */}
       {isScanning && (
-        <div className="glass-clean" style={{ borderRadius: '20px', padding: '6px', overflow: 'hidden' }}>
-          <div id="qr-reader" style={{ borderRadius: '16px', overflow: 'hidden', border: 'none' }}></div>
-          <div style={{ padding: '8px', textAlign: 'center' }}>
-            <p className="text-label" style={{ fontSize: '12px', opacity: 0.6, margin: 0 }}>
-              Position the QR code within the frame
-            </p>
-          </div>
+        <div className={`glass-clean ${s.scannerContainer}`}>
+          <div id="qr-reader" className={s.scannerViewport} />
+          <p className={s.scannerHint}>Position the QR code within the frame</p>
         </div>
       )}
 
-      {/* Validation Result - In Modal or Overlay Pattern */}
+      {/* Validation Result */}
       {scanResult && <ValidationResult result={scanResult} onClose={() => setScanResult(null)} />}
 
-      {/* High-Density Instructions Overlay-style */}
+      {/* Instructions Panel */}
       {!isScanning && !scanResult && (
-        <div className="glass-clean" style={{ borderRadius: '20px', padding: '12px' }}>
-          <div className="flex items-center gap-2 mb-3">
-            <FontAwesomeIcon icon={faInfoCircle} className="color-primary" style={{ fontSize: '14px' }} />
-            <h3 className="text-label" style={{ opacity: 1, margin: 0, fontSize: '14px' }}>📱 How to Use</h3>
+        <div className={`glass-clean ${s.instructionsPanel}`}>
+          <div className={s.instructionsHeader}>
+            <FontAwesomeIcon icon={faInfoCircle} className="color-primary" />
+            <h3 className={s.instructionsTitle}>How to Use</h3>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {[
-              "Click 'Start Scanning' to activate camera",
-              "Position the ticket QR code in frame",
-              "System validates and checks in automatically",
-              "Duplicates are detected and rejected"
-            ].map((text, i) => (
-              <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <div style={{ width: '18px', height: '18px', borderRadius: '5px', background: 'rgba(117,139,253,0.1)', color: '#758BFD', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', flexShrink: 0 }}>
-                  {i + 1}
-                </div>
-                <p className="text-body" style={{ fontSize: '13px', margin: 0, opacity: 0.8 }}>{text}</p>
+          <div className={s.instructionsList}>
+            {steps.map((text, i) => (
+              <div key={i} className={s.instructionItem}>
+                <div className={s.stepNumber}>{i + 1}</div>
+                <p className={s.stepText}>{text}</p>
               </div>
             ))}
           </div>

@@ -6,6 +6,7 @@ import { generateTicketSVG } from "../../utils/svgTicketTemplate";
 import { useLanguage } from "../../context/LanguageContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faImage, faShareNodes } from "@fortawesome/free-solid-svg-icons";
+import s from "./QRDisplay.module.css";
 
 export const QRDisplay = ({ ticket, event, showActions = true }) => {
   const qrRef = useRef(null);
@@ -15,13 +16,11 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
   const { t, language } = useLanguage();
   const qrData = generateQRData(ticket, event);
 
-  // Generate ticket preview SVG
   useEffect(() => {
     const generatePreview = async () => {
       if (qrRef.current) {
         const svg = qrRef.current.querySelector("svg");
         if (svg) {
-          // Convert QR to data URL
           const canvas = document.createElement("canvas");
           const ctx = canvas.getContext("2d");
           const img = new Image();
@@ -33,18 +32,12 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0);
             const qrDataURL = canvas.toDataURL("image/png");
-
-            // Generate ticket SVG
-            const ticketSvgString = generateTicketSVG(ticket, event, qrDataURL);
-            setTicketSVG(ticketSvgString);
+            setTicketSVG(generateTicketSVG(ticket, event, qrDataURL));
           };
 
           const svgData = new XMLSerializer().serializeToString(svg);
-          const svgBlob = new Blob([svgData], {
-            type: "image/svg+xml;charset=utf-8",
-          });
-          const url = URL.createObjectURL(svgBlob);
-          img.src = url;
+          const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+          img.src = URL.createObjectURL(svgBlob);
         }
       }
     };
@@ -82,9 +75,9 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
   }, [ticket, event, language]);
 
   return (
-    <div className="space-y-4">
-      {/* Hidden QR Code for processing */}
-      <div ref={qrRef} className="hidden">
+    <div className={s.root}>
+      {/* Hidden QR for processing */}
+      <div ref={qrRef} style={{ display: "none" }}>
         <QRCodeSVG value={qrData} size={200} level="L" marginSize={2} />
       </div>
 
@@ -92,43 +85,30 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
       {ticketSVG && (
         <div
           ref={ticketPreviewRef}
-          className="flex justify-center mx-auto max-w-fit"
+          className={s.preview}
           dangerouslySetInnerHTML={{ __html: ticketSVG }}
         />
       )}
 
       {/* Action Buttons */}
       {showActions && (
-        <div className="space-y-3">
-          <div className="flex gap-2 justify-center flex-wrap">
-            <button
-              onClick={copyAsSVG}
-              className="px-3 md:px-4 py-2 bg-[#4a3d8f] text-[#FFEDD8] rounded-lg hover:bg-[#5a4d9f] transition-colors font-medium border border-[#758BFD] border-opacity-30 text-xs md:text-sm"
-            >
-              <FontAwesomeIcon icon={faFile} className="mr-2" />
+        <div>
+          <div className={s.actionsRow}>
+            <button onClick={copyAsSVG} className={s.actionBtn}>
+              <FontAwesomeIcon icon={faFile} />
               Copy SVG
             </button>
-            <button
-              onClick={copyAsPNG}
-              className="px-3 md:px-4 py-2 bg-[#4a3d8f] text-[#FFEDD8] rounded-lg hover:bg-[#5a4d9f] transition-colors font-medium border border-[#758BFD] border-opacity-30 text-xs md:text-sm"
-            >
-              <FontAwesomeIcon icon={faImage} className="mr-2" />
+            <button onClick={copyAsPNG} className={s.actionBtn}>
+              <FontAwesomeIcon icon={faImage} />
               Copy PNG
             </button>
-            <button
-              onClick={handleShare}
-              className="px-3 md:px-4 py-2 bg-[#4a3d8f] text-[#FFEDD8] rounded-lg hover:bg-[#5a4d9f] transition-colors font-medium border border-[#758BFD] border-opacity-30 text-xs md:text-sm"
-            >
-              <FontAwesomeIcon icon={faShareNodes} className="mr-2" />
+            <button onClick={handleShare} className={s.actionBtn}>
+              <FontAwesomeIcon icon={faShareNodes} />
               {t("share")}
             </button>
           </div>
 
-          {copyStatus && (
-            <p className="text-center text-xs md:text-sm font-medium text-[#4ade80]">
-              {copyStatus}
-            </p>
-          )}
+          {copyStatus && <p className={s.copyStatus}>{copyStatus}</p>}
         </div>
       )}
     </div>

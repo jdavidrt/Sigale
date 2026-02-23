@@ -1,0 +1,205 @@
+/*
+ * ============================================================
+ * SÍGALE — ValidationResult Module
+ * Check-in result card with four semantic states:
+ * success | duplicate | not_found | invalid
+ * State-based styling uses data-state attribute selectors.
+ * ============================================================
+ */
+
+/* ── Container ──────────────────────────────────────────── */
+.result {
+  border-radius: var(--radius-3xl);
+  padding: var(--space-7);
+  position: relative;
+  z-index: var(--z-modal);
+  animation: fadeIn var(--duration-slower) var(--ease-out);
+  box-shadow: var(--shadow-floating);
+}
+
+/* State borders applied via data-state on the element */
+.result[data-state="success"]   { border-color: var(--color-border-success); }
+.result[data-state="duplicate"] { border-color: rgba(239, 68, 68, 0.30); }
+.result[data-state="not_found"] { border-color: rgba(249, 115, 22, 0.30); }
+.result[data-state="invalid"]   { border-color: var(--color-border-primary-xl); }
+
+
+/* ── Inner — centered content ───────────────────────────── */
+.body {
+  text-align: center;
+}
+
+
+/* ── Result icon ────────────────────────────────────────── */
+.icon {
+  font-size: var(--text-5xl);
+  margin-bottom: var(--space-4);
+  display: block;
+}
+
+.icon[data-state="success"]   { color: var(--color-success); }
+.icon[data-state="duplicate"] { color: var(--color-error); }
+.icon[data-state="not_found"] { color: var(--color-warning-vivid); }
+.icon[data-state="invalid"]   { color: var(--color-text-heading); }
+
+
+/* ── Title ──────────────────────────────────────────────── */
+.title {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  margin-bottom: var(--space-2);
+}
+
+.title[data-state="success"]   { color: var(--color-success); }
+.title[data-state="duplicate"] { color: var(--color-error); }
+.title[data-state="not_found"] { color: var(--color-warning-vivid); }
+.title[data-state="invalid"]   { color: var(--color-text-heading); }
+
+
+/* ── Message ────────────────────────────────────────────── */
+.message {
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+  opacity: 0.80;
+  line-height: var(--leading-tight);
+  margin-bottom: var(--space-7);
+}
+
+
+/* ── Ticket info box ────────────────────────────────────── */
+.infoBox {
+  padding: var(--space-7);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-divider);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  text-align: left;
+  margin-bottom: var(--space-7);
+}
+
+.infoBox[data-state="success"]   { background: rgba(74, 222, 128, 0.05); }
+.infoBox[data-state="duplicate"] { background: rgba(239, 68, 68, 0.05); }
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.infoKey {
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  opacity: 0.60;
+}
+
+.infoValue {
+  font-size: var(--text-md);
+  color: var(--color-text-heading);
+}
+
+.infoValuePrimary {
+  font-size: var(--text-md);
+  color: var(--color-primary);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+}
+
+.infoValueMono {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-heading);
+  opacity: 0.60;
+}
+
+.infoValueError {
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  color: var(--color-error);
+}
+
+.infoTimestamp {
+  padding-top: var(--space-2);
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--color-border-divider);
+}
+
+
+/* ── QR debug box ───────────────────────────────────────── */
+.debugBox {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-divider);
+  text-align: left;
+  margin-bottom: var(--space-7);
+}
+
+.debugLabel {
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin-bottom: var(--space-2);
+}
+
+.debugData {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-heading);
+  opacity: 0.70;
+  word-break: break-all;
+}
+
+
+/* ── Action button ──────────────────────────────────────── */
+.actionBtn {
+  width: 100%;
+  padding: var(--space-7) var(--space-8);
+  border-radius: var(--radius-xl);
+  border: none;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  transition: var(--transition-base);
+}
+
+/* Success — gradient green */
+.actionBtn[data-state="success"] {
+  background: var(--gradient-success);
+  color: var(--color-text-on-primary);
+  box-shadow: var(--shadow-btn-success);
+}
+
+/* Duplicate — red */
+.actionBtn[data-state="duplicate"] {
+  background: rgba(239, 68, 68, 0.80);
+  color: white;
+  box-shadow: var(--shadow-btn-error);
+}
+
+/* Not found — orange */
+.actionBtn[data-state="not_found"] {
+  background: rgba(249, 115, 22, 0.80);
+  color: white;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Invalid — primary tint */
+.actionBtn[data-state="invalid"] {
+  background: rgba(117, 139, 253, 0.80);
+  color: white;
+  box-shadow: var(--shadow-btn);
+}
+
+.actionBtn:hover {
+  transform: scale(1.02);
+}

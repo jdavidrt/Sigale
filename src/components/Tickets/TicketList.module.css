@@ -1,0 +1,100 @@
+/*
+ * ============================================================
+ * SÍGALE — TicketList Module
+ * Search bar, stat counters, empty state, and card stack.
+ * ============================================================
+ */
+
+/* ── Root stack ─────────────────────────────────────────── */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ── Search wrapper (positions icon inside input) ────────── */
+.searchWrapper {
+  position: relative;
+}
+
+.searchInput {
+  width: 100%;
+  padding: var(--space-4) var(--space-7);
+  padding-left: 40px;          /* Room for the magnifier icon */
+  background: var(--color-dark-card);
+  border: 1px solid var(--color-border-primary-xl);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-base);
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.50;
+}
+
+.searchInput:focus {
+  box-shadow: var(--shadow-focus);
+  border-color: var(--color-border-primary-focus);
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--space-7);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  opacity: 0.50;
+  pointer-events: none;
+}
+
+/* ── Stats bar ──────────────────────────────────────────── */
+.statsBar {
+  display: flex;
+  gap: var(--space-4);
+  font-size: var(--text-base);
+}
+
+.statFound {
+  color: var(--color-success);
+  font-weight: var(--weight-semibold);
+}
+
+.statCheckedIn {
+  color: var(--color-primary);
+  font-weight: var(--weight-semibold);
+}
+
+/* ── Empty state ────────────────────────────────────────── */
+.emptyState {
+  background: var(--color-dark-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-9) var(--space-8);
+  border: 1px solid var(--color-border-primary-lg);
+  text-align: center;
+}
+
+.emptyEmoji {
+  font-size: 60px;
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.emptyTitle {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.emptyDesc {
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+}
+
+/* ── Cards list ─────────────────────────────────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}

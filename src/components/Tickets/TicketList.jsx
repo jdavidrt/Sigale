@@ -4,9 +4,10 @@ import { useLanguage } from "../../context/LanguageContext";
 import { TicketCard } from "./TicketCard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import s from "./TicketList.module.css";
 
 export const TicketList = () => {
-  const { tickets, searchTickets } = useTickets();
+  const { searchTickets } = useTickets();
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -14,50 +15,46 @@ export const TicketList = () => {
     return searchTickets(searchQuery);
   }, [searchQuery, searchTickets]);
 
-  const stats = useMemo(() => {
-    return {
-      total: filteredTickets.length,
-      checkedIn: filteredTickets.filter((t) => t.checkedIn).length,
-    };
-  }, [filteredTickets]);
+  const stats = useMemo(() => ({
+    total: filteredTickets.length,
+    checkedIn: filteredTickets.filter((tk) => tk.checkedIn).length,
+  }), [filteredTickets]);
 
   return (
-    <div className="space-y-5">
+    <div className={s.root}>
       {/* Search Bar */}
-      <div className="relative">
-        <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#BEADFF] opacity-50" />
+      <div className={s.searchWrapper}>
+        <FontAwesomeIcon icon={faMagnifyingGlass} className={s.searchIcon} />
         <input
           type="text"
+          className={s.searchInput}
           placeholder={`${t("searchTickets")}...`}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 bg-[#2a2a2a] border border-[#758BFD] border-opacity-30 rounded-lg text-[#FFEDD8] placeholder-[#BEADFF] placeholder-opacity-50 focus:outline-none focus:ring-2 focus:ring-[#758BFD] focus:ring-opacity-50 text-sm"
         />
       </div>
 
       {/* Stats */}
-      <div className="flex gap-3 text-[13px]">
-        <span className="text-[#4ade80] font-semibold">
-          {stats.total} {stats.total === 1 ? 'ticket found' : 'tickets found'}
+      <div className={s.statsBar}>
+        <span className={s.statFound}>
+          {stats.total} {stats.total === 1 ? "ticket found" : "tickets found"}
         </span>
-        <span className="text-[#758BFD] font-semibold">
+        <span className={s.statCheckedIn}>
           {stats.checkedIn} {t("checkedIn")}
         </span>
       </div>
 
-      {/* Tickets Grid */}
+      {/* Ticket Cards / Empty State */}
       {filteredTickets.length === 0 ? (
-        <div className="bg-[#2a2a2a] rounded-xl p-12 border border-[#758BFD] border-opacity-20 text-center">
-          <div className="text-6xl mb-4">🎫</div>
-          <h3 className="text-xl font-bold text-[#FFEDD8] mb-2">{t("noTickets")}</h3>
-          <p className="text-[#BEADFF]">
-            {searchQuery
-              ? "Try a different search query"
-              : t("noTicketsDesc")}
+        <div className={s.emptyState}>
+          <span className={s.emptyEmoji}>🎫</span>
+          <h3 className={s.emptyTitle}>{t("noTickets")}</h3>
+          <p className={s.emptyDesc}>
+            {searchQuery ? "Try a different search query" : t("noTicketsDesc")}
           </p>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className={s.list}>
           {filteredTickets.map((ticket) => (
             <TicketCard key={ticket.ticketId} ticket={ticket} />
           ))}

@@ -1,0 +1,69 @@
+/*
+ * ============================================================
+ * SÍGALE — QRDisplay Module
+ * Ticket preview image + copy/share action buttons.
+ * ============================================================
+ */
+
+/* ── Root stack ─────────────────────────────────────────── */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ── Ticket preview centering wrapper ───────────────────── */
+.preview {
+  display: flex;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+/* ── Action buttons row ─────────────────────────────────── */
+.actionsRow {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ── Single action button ───────────────────────────────── */
+.actionBtn {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-input-bg-solid);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-sm);
+  font-weight: var(--weight-medium);
+  border: 1px solid var(--color-border-primary-xl);
+  font-size: var(--text-base);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: var(--transition-base);
+}
+
+@media (min-width: 768px) {
+  .actionBtn {
+    padding: var(--space-2) var(--space-7);
+    font-size: var(--text-md);
+  }
+}
+
+.actionBtn:hover {
+  background: var(--color-input-bg-hover);
+}
+
+/* ── Copy status feedback ───────────────────────────────── */
+.copyStatus {
+  font-size: var(--text-base);
+  color: var(--color-success);
+  font-weight: var(--weight-medium);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .copyStatus {
+    font-size: var(--text-md);
+  }
+}

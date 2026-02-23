@@ -1,0 +1,214 @@
+/*
+ * ============================================================
+ * SÍGALE — CheckInDashboard Module
+ * Attendance summary grid + recent check-in log.
+ * ============================================================
+ */
+
+/* ── Root stack ─────────────────────────────────────────── */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+
+/* ── Summary card outer ─────────────────────────────────── */
+.summaryCard {
+  border-radius: var(--radius-4xl);
+  padding: var(--space-3);
+}
+
+/* ── Tinted inner wrapper ───────────────────────────────── */
+.statsWrapper {
+  background: var(--color-section-tint);
+  border-radius: var(--radius-3xl);
+  padding: var(--space-1);
+}
+
+/* ── Stats grid (3 columns) ─────────────────────────────── */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-1);
+}
+
+.statCell {
+  padding: var(--space-4) var(--space-2);
+  text-align: center;
+}
+
+.statCell:not(:last-child) {
+  border-right: 1px solid var(--color-border-divider);
+}
+
+.statIconRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-1);
+}
+
+.statIcon--success   { color: var(--color-success); font-size: var(--icon-sm); }
+.statIcon--secondary { color: var(--color-secondary); font-size: var(--icon-sm); }
+.statIcon--primary   { color: var(--color-primary); font-size: var(--icon-sm); }
+
+.statLabel {
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  opacity: 0.60;
+  margin: 0;
+}
+
+.statValue {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  margin: 0;
+}
+
+.statValue--success   { color: var(--color-success); }
+.statValue--secondary { color: var(--color-secondary); }
+.statValue--primary   { color: var(--color-primary); }
+
+.statSubtext {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  opacity: 0.50;
+  margin: 0;
+}
+
+
+/* ── Recent check-ins card ──────────────────────────────── */
+.recentCard {
+  border-radius: var(--radius-4xl);
+  padding: var(--space-3);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-6) var(--space-1) var(--space-6);
+}
+
+.sectionTitle {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin: 0;
+}
+
+
+/* ── Check-in list ──────────────────────────────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.listRow {
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-border-success-sm);
+}
+
+.listRowInner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Left — name + meta */
+.listLeft {
+  min-width: 0;
+  flex: 1;
+}
+
+.listName {
+  font-size: var(--text-md);
+  color: var(--color-text-heading);
+  font-weight: var(--weight-semibold);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listMeta {
+  display: flex;
+  gap: var(--space-4);
+  align-items: baseline;
+}
+
+.listType {
+  font-size: var(--text-xs);
+  color: var(--color-primary);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.listTicketId {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  opacity: 0.50;
+  margin: 0;
+}
+
+/* Right — status + time */
+.listRight {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.listStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  color: var(--color-success);
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  margin: 0;
+}
+
+.listTime {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  opacity: 0.60;
+  margin: 0;
+}
+
+
+/* ── Overflow indicator ─────────────────────────────────── */
+.moreLabel {
+  font-size: 11px;
+  color: var(--color-primary);
+  opacity: 0.70;
+  text-align: center;
+  padding: var(--space-4);
+  margin: 0;
+}
+
+
+/* ── Empty state ────────────────────────────────────────── */
+.emptyState {
+  text-align: center;
+  padding: var(--space-10) 0;
+  opacity: 0.30;
+}
+
+.emptyEmoji {
+  font-size: 48px;
+  display: block;
+  margin-bottom: var(--space-7);
+}

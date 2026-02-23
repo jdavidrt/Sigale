@@ -1,0 +1,389 @@
+/*
+ * ============================================================
+ * SÍGALE — CreateEvent Module
+ * Event creation & edit form with ticket type management
+ * and a danger zone for deletion.
+ * ============================================================
+ */
+
+/* ── Page wrapper ───────────────────────────────────────── */
+.page {
+  min-height: 100dvh;
+  padding: var(--space-7) var(--space-4);
+}
+
+/* ── Form container ─────────────────────────────────────── */
+.form {
+  max-width: 672px;    /* ~2xl in Tailwind terms */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+
+/* ── Paste button (success variant, full-width) ─────────── */
+.pasteBtn {
+  padding: var(--space-7) var(--space-8);
+  margin: var(--space-3);
+  border-radius: var(--radius-xl);
+  background: var(--color-tint-success);
+  border: 1px solid var(--color-border-success);
+  color: var(--color-success);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  width: 100%;
+  transition: var(--transition-base);
+}
+
+.pasteBtn:hover {
+  background: var(--color-tint-success-lg);
+  transform: scale(1.02);
+}
+
+
+/* ── Main card outer ────────────────────────────────────── */
+.mainCard {
+  border-radius: var(--radius-4xl);
+  padding: var(--space-2);
+  margin: var(--space-3);
+}
+
+
+/* ── Card header (tinted row) ───────────────────────────── */
+.cardHeader {
+  padding: var(--space-6) var(--space-7);
+  background: var(--color-section-tint);
+  border-radius: var(--radius-3xl);
+  margin-bottom: var(--space-3);
+}
+
+.cardHeaderRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.cardTitle {
+  font-size: 24px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-heading);
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.cardSubtitle {
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+  opacity: 0.70;
+  margin: 0;
+}
+
+
+/* ── Card inner content area ────────────────────────────── */
+.cardContent {
+  padding: 0 var(--space-3) var(--space-3) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+
+/* ── Section containers (event info, colors, ticket types) ─ */
+.section {
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: var(--space-2);
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.sectionTitle {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin: 0;
+  margin-left: var(--space-2);
+}
+
+
+/* ── Field wrapper ──────────────────────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fieldLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin-bottom: var(--space-4);
+  margin-left: var(--space-2);
+  display: block;
+}
+
+/* Form field spacing stack */
+.fieldStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Two-column layout for date+time, color pickers */
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+
+/* ── Color picker row ───────────────────────────────────── */
+.colorPickerBox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--color-tint-white-md);
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+}
+
+.colorHex {
+  font-size: var(--text-base);
+  color: var(--color-text-heading);
+  font-family: var(--font-mono);
+}
+
+.colorHexLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  display: block;
+}
+
+
+/* ── Ticket types table ─────────────────────────────────── */
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr 40px;
+  gap: var(--space-4);
+  padding: 0 var(--space-4) var(--space-4) var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+  margin-bottom: var(--space-4);
+  align-items: center;
+}
+
+.tableHeaderCell {
+  font-size: 11px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin: 0;
+}
+
+.tableHeaderCellRight {
+  text-align: right;
+}
+
+.typesList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── Existing type row ──────────────────────────────────── */
+.typeRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 40px;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-primary-md);
+  align-items: center;
+}
+
+.typeNameInput {
+  background: transparent;
+  border: none;
+  color: var(--color-text-heading);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  padding: var(--space-2);
+  margin-left: var(--space-2);
+  width: 100%;
+  outline: none;
+  min-height: auto;
+}
+
+.typePriceWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.typePriceCurrency {
+  color: var(--color-primary);
+  font-size: var(--text-lg);
+  margin-right: var(--space-1);
+}
+
+.typePriceInput {
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  text-align: right;
+  padding: var(--space-2);
+  width: 80px;
+  outline: none;
+  min-height: auto;
+}
+
+/* ── Add new type row (dashed) ──────────────────────────── */
+.newTypeRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 40px;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 2px dashed var(--color-border-primary-lg);
+  align-items: center;
+}
+
+.newTypeNameInput {
+  background: transparent;
+  border: none;
+  color: var(--color-text-heading);
+  font-size: var(--text-base);
+  padding: var(--space-2);
+  margin-left: var(--space-2);
+  width: 100%;
+  outline: none;
+  min-height: auto;
+}
+
+.newTypePriceCurrency {
+  color: var(--color-text-secondary);
+  font-size: var(--text-md);
+  margin-right: var(--space-1);
+  opacity: 0.50;
+}
+
+.newTypePriceInput {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  text-align: right;
+  padding: var(--space-2);
+  width: 80px;
+  outline: none;
+  min-height: auto;
+}
+
+/* ── Small icon action button (30×30) ───────────────────── */
+.iconBtn {
+  width: var(--size-action-btn);
+  height: var(--size-action-btn);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-base);
+  flex-shrink: 0;
+  font-size: var(--icon-sm);
+}
+
+.iconBtnDelete {
+  background: var(--color-tint-error-sm);
+  border: 1px solid var(--color-border-error);
+  color: var(--color-error);
+}
+
+.iconBtnDelete:hover {
+  background: var(--color-tint-error-md);
+  transform: scale(1.05);
+}
+
+.iconBtnAdd {
+  background: var(--gradient-primary);
+  border: none;
+  color: white;
+  box-shadow: var(--shadow-btn-sm);
+}
+
+.iconBtnAdd:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-btn);
+}
+
+
+/* ── Danger zone ────────────────────────────────────────── */
+.dangerZone {
+  background: var(--color-tint-error);
+  border: 1px solid var(--color-border-error);
+  padding: var(--space-7);
+  border-radius: var(--radius-4xl);
+}
+
+.dangerZoneHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-error);
+  margin-bottom: var(--space-6);
+  margin-left: var(--space-2);
+  font-weight: var(--weight-bold);
+}
+
+.dangerZoneText {
+  font-size: var(--text-base);
+  color: var(--color-error-text-light);
+  opacity: 0.90;
+  margin-bottom: var(--space-6);
+  margin-left: var(--space-2);
+}
+
+.dangerCheckboxRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  padding: var(--space-6);
+  background: var(--color-tint-danger-dark);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-danger-sm);
+  margin-bottom: var(--space-6);
+}
+
+.dangerCheckboxText {
+  font-size: var(--text-base);
+  color: var(--color-error-text-light);
+}
+
+.dangerActions {
+  display: flex;
+  gap: var(--space-4);
+}

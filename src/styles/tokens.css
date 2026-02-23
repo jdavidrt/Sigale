@@ -1,0 +1,239 @@
+/*
+ * ============================================================
+ * SÍGALE — DESIGN TOKENS
+ * Single source of truth for every visual value.
+ * No raw hex, px, or timing value should appear anywhere
+ * else in the codebase. Always reference a token here.
+ * ============================================================
+ */
+
+:root {
+
+  /* ── Backgrounds ─────────────────────────────────────── */
+  --color-bg-start:           #27187E;
+  --color-bg-end:             #030312;
+  --color-card-start:         #1a1152;
+  --color-card-end:           #0a0620;
+  --color-input-bg:           rgba(255, 255, 255, 0.05);
+  --color-input-bg-solid:     #4a3d8f;
+  --color-input-bg-hover:     #5a4d9f;
+  --color-section-tint:       rgba(117, 139, 253, 0.08);
+  --color-dark-card:          #2a2a2a;
+  --color-dark-card-darker:   #1a1a1a;
+
+  /* ── Brand Accents ───────────────────────────────────── */
+  --color-primary:            #758BFD;
+  --color-secondary:          #BEADFF;
+  --color-accent-blue:        #60a5fa;
+  --color-accent-orange:      #FF8C00;
+
+  /* ── Semantic Status ─────────────────────────────────── */
+  --color-success:            #4ade80;
+  --color-success-dark:       #22c55e;
+  --color-error:              #ef4444;
+  --color-danger:             #dc2626;
+  --color-danger-dark:        #b91c1c;
+  --color-warning:            #f59e0b;
+  --color-warning-vivid:      #f97316;
+  --color-error-text-light:   #fca5a5;
+
+  /* ── Text ────────────────────────────────────────────── */
+  --color-text-primary:       #FFEDD8;
+  --color-text-heading:       #E2D1B9;
+  --color-text-secondary:     #BEADFF;
+  --color-text-muted:         rgba(190, 173, 255, 0.60);
+  --color-text-on-primary:    rgba(0, 0, 0, 0.75);
+
+  /* ── Borders ─────────────────────────────────────────── */
+  --color-border-subtle:      rgba(255, 255, 255, 0.10);
+  --color-border-medium:      rgba(255, 255, 255, 0.12);
+  --color-border-divider:     rgba(255, 255, 255, 0.05);
+  --color-border-primary:     rgba(117, 139, 253, 0.12);
+  --color-border-primary-sm:  rgba(117, 139, 253, 0.10);
+  --color-border-primary-md:  rgba(117, 139, 253, 0.15);
+  --color-border-primary-lg:  rgba(117, 139, 253, 0.20);
+  --color-border-primary-xl:  rgba(117, 139, 253, 0.30);
+  --color-border-primary-focus: rgba(117, 139, 253, 0.50);
+  --color-border-primary-dashed: rgba(117, 139, 253, 0.35);
+  --color-border-success:     rgba(74, 222, 128, 0.30);
+  --color-border-error:       rgba(239, 68, 68, 0.30);
+  --color-border-danger-sm:   rgba(239, 68, 68, 0.20);
+  --color-border-warning:     rgba(249, 115, 22, 0.30);
+
+  /* ── Glass Fills ─────────────────────────────────────── */
+  --color-glass-clean:        rgba(255, 255, 255, 0.05);
+  --color-glass-elevated:     rgba(255, 255, 255, 0.08);
+  --color-glass-nav:          rgba(3, 3, 18, 0.85);
+  --color-glass-overlay:      rgba(0, 0, 0, 0.60);
+
+  /* ── Color Tints (bg overlays) ───────────────────────── */
+  --color-tint-primary:       rgba(117, 139, 253, 0.10);
+  --color-tint-primary-md:    rgba(117, 139, 253, 0.12);
+  --color-tint-primary-lg:    rgba(117, 139, 253, 0.20);
+  --color-tint-success:       rgba(74, 222, 128, 0.10);
+  --color-tint-success-md:    rgba(74, 222, 128, 0.15);
+  --color-tint-success-lg:    rgba(74, 222, 128, 0.20);
+  --color-tint-error:         rgba(239, 68, 68, 0.05);
+  --color-tint-error-sm:      rgba(239, 68, 68, 0.10);
+  --color-tint-error-md:      rgba(239, 68, 68, 0.20);
+  --color-tint-danger-dark:   rgba(127, 29, 29, 0.20);
+  --color-tint-white:         rgba(255, 255, 255, 0.03);
+  --color-tint-white-md:      rgba(255, 255, 255, 0.05);
+  --color-tint-white-lg:      rgba(255, 255, 255, 0.10);
+  --color-tint-accent-blue:   rgba(96, 165, 250, 0.10);
+
+  /* ── Gradients ───────────────────────────────────────── */
+  --gradient-bg:              linear-gradient(180deg, var(--color-bg-start) 0%, var(--color-bg-end) 100%);
+  --gradient-card:            linear-gradient(180deg, var(--color-card-start) 0%, var(--color-card-end) 100%);
+  --gradient-primary:         linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  --gradient-primary-hover:   linear-gradient(135deg, var(--color-secondary), var(--color-primary));
+  --gradient-success:         linear-gradient(135deg, var(--color-success), var(--color-success-dark));
+  --gradient-danger:          linear-gradient(135deg, var(--color-error), var(--color-danger));
+  --gradient-danger-confirm:  linear-gradient(90deg, var(--color-danger), var(--color-danger-dark));
+  --gradient-progress:        linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  --gradient-menu:            linear-gradient(180deg, rgba(26, 17, 82, 0.98) 0%, rgba(10, 6, 32, 0.99) 100%);
+
+  /* ── Debug Panel (Terminal) ──────────────────────────── */
+  --color-debug-bg:           rgba(0, 0, 0, 0.95);
+  --color-debug-green:        #00ff00;
+  --color-debug-btn-bg:       #1a1a1a;
+
+
+  /* ── Spacing Scale ───────────────────────────────────── */
+  /* Semantic naming: --space-{steps}                       */
+  --space-1:    2px;
+  --space-2:    4px;
+  --space-3:    6px;
+  --space-4:    8px;
+  --space-5:    10px;
+  --space-6:    12px;
+  --space-7:    16px;
+  --space-8:    24px;
+  --space-9:    32px;
+  --space-10:   36px;
+  --space-11:   48px;
+
+  /* Semantic aliases */
+  --space-gap-xs:    var(--space-2);
+  --space-gap-sm:    var(--space-3);
+  --space-gap-md:    var(--space-4);
+  --space-gap-lg:    var(--space-6);
+  --space-pad-card:  var(--space-3);
+  --space-pad-inner: var(--space-6);
+  --space-pad-btn-y: var(--space-7);
+  --space-pad-btn-x: var(--space-8);
+
+  /* ── Touch Target ────────────────────────────────────── */
+  --touch-min: 44px;
+
+
+  /* ── Border Radii ────────────────────────────────────── */
+  --radius-xs:   5px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   14px;
+  --radius-xl:   16px;
+  --radius-2xl:  18px;
+  --radius-3xl:  20px;
+  --radius-4xl:  24px;
+  --radius-full: 9999px;
+
+
+  /* ── Font Families ───────────────────────────────────── */
+  --font-base:  'D-DIN Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:  ui-monospace, 'Courier New', 'Lucida Console', monospace;
+
+  /* ── Font Sizes ──────────────────────────────────────── */
+  --text-xs:    10px;
+  --text-sm:    11px;
+  --text-base:  13px;
+  --text-md:    14px;
+  --text-body:  16px;     /* iOS zoom-safe minimum */
+  --text-lg:    18px;     /* Body default */
+  --text-xl:    20px;
+  --text-2xl:   24px;
+  --text-3xl:   28px;
+  --text-4xl:   38px;
+  --text-5xl:   56px;
+
+  /* ── Font Weights ────────────────────────────────────── */
+  --weight-normal:   400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  /* ── Line Heights ────────────────────────────────────── */
+  --leading-tight:  1.1;
+  --leading-normal: 1.5;
+  --leading-loose:  1.2;  /* For multi-line headings */
+
+  /* ── Letter Spacing ──────────────────────────────────── */
+  --tracking-tight:  -0.02em;
+  --tracking-normal: -0.01em;
+  --tracking-wide:   0.5px;
+  --tracking-wider:  1px;
+
+
+  /* ── Shadows ─────────────────────────────────────────── */
+  --shadow-soft:       0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-elevated:   0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-floating:   0 12px 32px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.10);
+  --shadow-btn:        0 4px 12px rgba(117, 139, 253, 0.30);
+  --shadow-btn-hover:  0 4px 12px rgba(117, 139, 253, 0.40);
+  --shadow-btn-sm:     0 2px 8px rgba(117, 139, 253, 0.30);
+  --shadow-btn-success: 0 4px 12px rgba(74, 222, 128, 0.30);
+  --shadow-btn-error:  0 4px 12px rgba(239, 68, 68, 0.30);
+  --shadow-focus:      0 0 0 3px rgba(117, 139, 253, 0.30);
+  --shadow-hover-card: 0 8px 24px rgba(117, 139, 253, 0.25);
+  --shadow-sell-btn:   0 0 10px rgba(74, 222, 128, 0.15), 0 6px 20px rgba(0, 0, 0, 0.40), 0 2px 6px rgba(0, 0, 0, 0.30);
+  --shadow-debug:      0 4px 20px rgba(0, 0, 0, 0.50);
+
+
+  /* ── Backdrop Blur ───────────────────────────────────── */
+  --blur-sm:   4px;
+  --blur-md:   20px;
+  --blur-lg:   24px;
+  --blur-xl:   32px;
+
+
+  /* ── Transitions ─────────────────────────────────────── */
+  --ease-standard:  cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:       ease-out;
+  --ease-in-out:    ease-in-out;
+
+  --duration-instant: 100ms;
+  --duration-fast:    150ms;
+  --duration-base:    200ms;
+  --duration-slow:    250ms;
+  --duration-slower:  300ms;
+  --duration-data:    500ms;
+
+  --transition-fast:   all var(--duration-fast) var(--ease-in-out);
+  --transition-base:   all var(--duration-slow) var(--ease-standard);
+  --transition-slow:   all var(--duration-slower) var(--ease-standard);
+
+
+  /* ── Z-Index ─────────────────────────────────────────── */
+  --z-sticky:   100;
+  --z-overlay:  150;
+  --z-modal:    200;
+  --z-debug:    999999;
+
+
+  /* ── Icon Sizes ──────────────────────────────────────── */
+  --icon-xs:   10px;
+  --icon-sm:   12px;
+  --icon-md:   14px;
+  --icon-lg:   16px;
+  --icon-xl:   18px;
+
+  /* ── Component-specific sizes ────────────────────────── */
+  --size-action-btn:     30px;  /* Small icon action buttons in TicketCard */
+  --size-icon-box:       32px;  /* Icon container box */
+  --size-icon-box-lg:    36px;  /* Larger icon container box (Navbar) */
+  --size-nav-thumb:      48px;  /* Slide-to-confirm thumb width */
+  --size-sell-btn:       52px;  /* Home sell button */
+  --size-success-circle: 48px;  /* Success checkmark circle */
+  --size-accent-bar-w:    4px;  /* Section accent bar width */
+  --size-accent-bar-h:   16px;  /* Section accent bar height */
+}

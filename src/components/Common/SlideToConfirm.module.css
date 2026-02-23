@@ -1,0 +1,85 @@
+/*
+ * ============================================================
+ * SÍGALE — SlideToConfirm Module
+ * Drag-to-confirm destructive action widget.
+ * ============================================================
+ */
+
+/* ── Track container ────────────────────────────────────── */
+.track {
+  position: relative;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  user-select: none;
+  /* Background color is set dynamically via inline style (progress-based) */
+}
+
+.track.disabled {
+  opacity: 0.50;
+  cursor: not-allowed;
+}
+
+
+/* ── Background label row ───────────────────────────────── */
+.labelRow {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  color: rgba(255, 255, 255, 0.60);
+  pointer-events: none;
+}
+
+.chevron {
+  font-size: var(--text-md);
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+
+.labelText {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+
+
+/* ── Draggable thumb ────────────────────────────────────── */
+.thumb {
+  position: absolute;
+  top: var(--space-2);
+  bottom: var(--space-2);
+  left: var(--space-2);
+  width: 48px;
+  border-radius: var(--radius-md);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  font-size: var(--text-lg);
+  color: var(--color-error);
+  /* transform is driven by JS; transition is toggled off while dragging */
+  transition: box-shadow var(--duration-fast) var(--ease-standard);
+  box-shadow: var(--shadow-soft);
+}
+
+.thumb:active {
+  cursor: grabbing;
+  box-shadow: var(--shadow-elevated);
+}
+
+
+/* ── Confirmed state full overlay ───────────────────────── */
+.confirmedOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-error);
+  color: white;
+  font-weight: var(--weight-bold);
+  gap: var(--space-2);
+}

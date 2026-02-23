@@ -5,6 +5,8 @@ import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWandMagicSparkles, faFloppyDisk, faTriangleExclamation, faTrash, faPaste, faPalette, faCalendarDay, faTicket, faPlus } from "@fortawesome/free-solid-svg-icons";
+import s from "./CreateEvent.module.css";
+import btn from "../Common/Button.module.css";
 
 export const CreateEvent = ({ isEditing = false }) => {
   const navigate = useNavigate();
@@ -47,8 +49,8 @@ export const CreateEvent = ({ isEditing = false }) => {
       alert(t("atLeastOneTicketType"));
       return;
     }
-    const hasInvalidPrice = Object.values(formData.ticketTypes).some(price =>
-      price === null || price === undefined || price === '' || Number(price) < 0
+    const hasInvalidPrice = Object.values(formData.ticketTypes).some(
+      (price) => price === null || price === undefined || price === "" || Number(price) < 0
     );
     if (hasInvalidPrice) {
       alert(t("allTicketTypesMustHavePrice") || "All ticket types must have a valid price (0 or positive).");
@@ -59,7 +61,7 @@ export const CreateEvent = ({ isEditing = false }) => {
     } else {
       createEvent(formData);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
     navigate("/");
   };
 
@@ -107,11 +109,11 @@ export const CreateEvent = ({ isEditing = false }) => {
       const parsedData = JSON.parse(clipboardText);
       if (!parsedData.event) { alert("❌ Invalid JSON format"); return; }
       importData(parsedData);
-      alert(`✅ Event imported successfully!`);
+      alert("✅ Event imported successfully!");
       window.location.href = "/";
     } catch (error) {
       console.error("Paste error:", error);
-      alert(`❌ Error importing event`);
+      alert("❌ Error importing event");
     }
   };
 
@@ -123,181 +125,84 @@ export const CreateEvent = ({ isEditing = false }) => {
   };
 
   return (
-    <div className="min-h-screen px-3 py-4 md:px-6">
-      <style>{`
-        .glass-clean {
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .glass-elevated {
-          background: rgba(255, 255, 255, 0.08);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-        }
-        .text-heading {
-          font-size: 28px;
-          font-weight: 600;
-          line-height: 1.1;
-          color: #E2D1B9;
-          margin: 0;
-        }
-        .text-body {
-          font-size: 18px;
-          font-weight: 400;
-          line-height: 1.1;
-          color: #BEADFF;
-          margin: 0;
-        }
-        .text-label {
-          font-size: 14px;
-          font-weight: 600;
-          line-height: 1.1;
-          text-transform: uppercase;
-          color: #BEADFF;
-          opacity: 1;
-          margin: 0;
-        }
-        .shadow-floating {
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.10);
-        }
-        input, select {
-          background: rgba(255,255,255,0.05) !important;
-          border: 1px solid rgba(117,139,253,0.15) !important;
-          color: #E2D1B9 !important;
-          line-height: 1.1 !important;
-        }
-        input:focus {
-          border-color: rgba(117,139,253,0.5) !important;
-          outline: none !important;
-        }
-        .label-icon {
-          font-size: 14px;
-          color: #758BFD;
-          opacity: 0.8;
-        }
-      `}</style>
+    <div className={s.page}>
+      <form onSubmit={handleSubmit} className={s.form}>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-
-        {/* Quick Paste Area */}
+        {/* Paste button */}
         <button
           type="button"
           onClick={handlePasteFromClipboard}
-          className="w-full font-bold"
-          style={{
-            padding: '16px 24px',
-            margin: '6px',
-            borderRadius: '16px',
-            background: 'rgba(74, 222, 128, 0.1)',
-            border: '1px solid rgba(74, 222, 128, 0.3)',
-            color: '#4ade80',
-            fontSize: '16px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(74, 222, 128, 0.2)';
-            e.currentTarget.style.transform = 'scale(1.02)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(74, 222, 128, 0.1)';
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
+          className={`${btn.btn} ${btn.success} ${s.pasteBtn}`}
         >
           <FontAwesomeIcon icon={faPaste} />
           <span>Paste Event Data</span>
         </button>
 
         {/* Main Card */}
-        <div className="glass-elevated shadow-floating" style={{ borderRadius: '24px', padding: '4px', margin: '6px' }}>
+        <div className={`${s.mainCard} glass-elevated shadow-floating`}>
           {/* Header */}
-          <div style={{ padding: '12px 16px', background: 'rgba(117, 139, 253, 0.08)', borderRadius: '20px', marginBottom: '6px' }}>
-            <div className="flex items-center gap-3 mb-2">
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <FontAwesomeIcon icon={faWandMagicSparkles} style={{ color: 'white', fontSize: '14px' }} />
+          <div className={s.cardHeader}>
+            <div className={s.cardHeaderRow}>
+              <div className="icon-box">
+                <FontAwesomeIcon icon={faWandMagicSparkles} style={{ color: "white", fontSize: "14px" }} />
               </div>
-              <h1 className="text-heading" style={{ fontSize: '24px', paddingLeft: '8px' }}>
+              <h1 className={s.cardTitle}>
                 {isEditing ? t("editEventTitle") : t("createNewEvent")}
               </h1>
             </div>
-            <p className="text-body" style={{ fontSize: '14px', opacity: 0.7 }}>
-              {t("setupEventDetails")}
-            </p>
+            <p className={s.cardSubtitle}>{t("setupEventDetails")}</p>
           </div>
 
-          <div style={{ padding: '0 6px 6px 6px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className={s.cardContent}>
 
             {/* Event Info Section */}
-            <div className="glass-clean" style={{ borderRadius: '18px', padding: '12px' }}>
-              <div className="flex items-center gap-2" style={{ marginLeft: '4px', marginTop: '8px', marginBottom: '12px' }}>
+            <div className={`${s.section} glass-clean`}>
+              <div className={s.sectionHeader}>
                 <FontAwesomeIcon icon={faCalendarDay} className="label-icon" />
-                <h2 className="text-label" style={{ fontSize: '14px', marginLeft: '4px' }}>{t("eventDetails")}</h2>
+                <h2 className={s.sectionTitle}>{t("eventDetails")}</h2>
               </div>
 
-              <div className="space-y-3">
-                <div>
-                  <label className="text-label" style={{ fontSize: '12px', marginBottom: '8px', marginLeft: '4px', display: 'block' }}>{t("eventName")}</label>
+              <div className={s.fieldStack}>
+                <div className={s.field}>
+                  <label className={s.fieldLabel}>{t("eventName")}</label>
                   <input
-                    type="text"
-                    required
-                    value={formData.name}
+                    type="text" required value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg text-base"
                     placeholder={t("eventNamePlaceholder")}
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-label" style={{ fontSize: '12px', marginBottom: '8px', marginLeft: '4px', display: 'block' }}>{t("date")}</label>
+                <div className={s.fieldRow}>
+                  <div className={s.field}>
+                    <label className={s.fieldLabel}>{t("date")}</label>
                     <input
-                      type="date"
-                      required
-                      value={formData.date}
+                      type="date" required value={formData.date}
                       onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className="w-full px-3 py-2.5 rounded-lg text-base"
                     />
                   </div>
-                  <div>
-                    <label className="text-label" style={{ fontSize: '12px', marginBottom: '8px', marginLeft: '4px', display: 'block' }}>{t("entranceTime")}</label>
+                  <div className={s.field}>
+                    <label className={s.fieldLabel}>{t("entranceTime")}</label>
                     <input
-                      type="time"
-                      required
-                      value={formData.entranceTime}
+                      type="time" required value={formData.entranceTime}
                       onChange={(e) => setFormData({ ...formData, entranceTime: e.target.value })}
-                      className="w-full px-3 py-2.5 rounded-lg text-base"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-label" style={{ fontSize: '12px', marginBottom: '8px', marginLeft: '4px', display: 'block' }}>{t("venueName")}</label>
+                <div className={s.field}>
+                  <label className={s.fieldLabel}>{t("venueName")}</label>
                   <input
-                    type="text"
-                    required
-                    value={formData.venue}
+                    type="text" required value={formData.venue}
                     onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg text-base"
                     placeholder={t("venuePlaceholder")}
                   />
                 </div>
 
-                <div>
-                  <label className="text-label" style={{ fontSize: '12px', marginBottom: '8px', marginLeft: '4px', display: 'block' }}>{t("fullAddress")}</label>
+                <div className={s.field}>
+                  <label className={s.fieldLabel}>{t("fullAddress")}</label>
                   <input
-                    type="text"
-                    required
-                    value={formData.address}
+                    type="text" required value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg text-base"
                     placeholder={t("addressPlaceholder")}
                   />
                 </div>
@@ -305,173 +210,102 @@ export const CreateEvent = ({ isEditing = false }) => {
             </div>
 
             {/* Colors Section */}
-            <div className="glass-clean" style={{ borderRadius: '18px', padding: '12px' }}>
-              <div className="flex items-center gap-2" style={{ marginLeft: '4px', marginTop: '8px', marginBottom: '12px' }}>
+            <div className={`${s.section} glass-clean`}>
+              <div className={s.sectionHeader}>
                 <FontAwesomeIcon icon={faPalette} className="label-icon" />
-                <h2 className="text-label" style={{ fontSize: '14px', marginLeft: '4px' }}>{t("colorTheme")}</h2>
+                <h2 className={s.sectionTitle}>{t("colorTheme")}</h2>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 bg-white/5 p-2 rounded-xl">
-                  <input type="color" value={formData.colors.base} onChange={(e) => setFormData({ ...formData, colors: { ...formData.colors, base: e.target.value } })} className="w-10 h-10 rounded-full border-none bg-transparent" />
-                  <div className="flex flex-col">
-                    <span className="text-label" style={{ fontSize: '10px' }}>{t("baseColor")}</span>
-                    <span style={{ fontSize: '12px', color: '#E2D1B9', fontFamily: 'monospace' }}>{formData.colors.base}</span>
+              <div className={s.fieldRow}>
+                <div className={s.colorPickerBox}>
+                  <input
+                    type="color" value={formData.colors.base}
+                    onChange={(e) => setFormData({ ...formData, colors: { ...formData.colors, base: e.target.value } })}
+                    style={{ width: "40px", height: "40px", borderRadius: "50%", border: "none", background: "transparent", minHeight: "auto" }}
+                  />
+                  <div>
+                    <span className={s.colorHexLabel}>{t("baseColor")}</span>
+                    <span className={s.colorHex}>{formData.colors.base}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 bg-white/5 p-2 rounded-xl">
-                  <input type="color" value={formData.colors.emphasis} onChange={(e) => setFormData({ ...formData, colors: { ...formData.colors, emphasis: e.target.value } })} className="w-10 h-10 rounded-full border-none bg-transparent" />
-                  <div className="flex flex-col">
-                    <span className="text-label" style={{ fontSize: '10px' }}>{t("accentColor")}</span>
-                    <span style={{ fontSize: '12px', color: '#E2D1B9', fontFamily: 'monospace' }}>{formData.colors.emphasis}</span>
+                <div className={s.colorPickerBox}>
+                  <input
+                    type="color" value={formData.colors.emphasis}
+                    onChange={(e) => setFormData({ ...formData, colors: { ...formData.colors, emphasis: e.target.value } })}
+                    style={{ width: "40px", height: "40px", borderRadius: "50%", border: "none", background: "transparent", minHeight: "auto" }}
+                  />
+                  <div>
+                    <span className={s.colorHexLabel}>{t("accentColor")}</span>
+                    <span className={s.colorHex}>{formData.colors.emphasis}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Ticket Types Section - Table Style */}
-            <div className="glass-clean" style={{ borderRadius: '18px', padding: '12px' }}>
-              <div className="flex items-center gap-2" style={{ marginLeft: '4px', marginTop: '8px', marginBottom: '12px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <FontAwesomeIcon icon={faTicket} style={{ color: 'white', fontSize: '14px' }} />
+            {/* Ticket Types Section */}
+            <div className={`${s.section} glass-clean`}>
+              <div className={s.sectionHeader}>
+                <div className="icon-box">
+                  <FontAwesomeIcon icon={faTicket} style={{ color: "white", fontSize: "14px" }} />
                 </div>
-                <h2 className="text-label" style={{ fontSize: '14px', marginLeft: '4px' }}>{t("ticketTypes")}</h2>
+                <h2 className={s.sectionTitle}>{t("ticketTypes")}</h2>
               </div>
 
-              {/* Table Header */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '2fr 1fr 40px',
-                gap: '8px',
-                padding: '0 8px 8px 8px',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                marginBottom: '8px',
-                alignItems: 'center'
-              }}>
-                <p className="text-label" style={{ margin: '0', marginLeft: '4px', fontSize: '11px' }}>{t("type") || "Tipo"}</p>
-                <p className="text-label" style={{ margin: '0', marginLeft: '4px', fontSize: '11px', textAlign: 'right' }}>{t("price") || "Precio"}</p>
-                <p className="text-label" style={{ margin: '0', fontSize: '11px', textAlign: 'center' }}></p>
+              {/* Table header */}
+              <div className={s.tableHeader}>
+                <p className={s.tableHeaderCell}>{t("type") || "Tipo"}</p>
+                <p className={`${s.tableHeaderCell} ${s.tableHeaderCellRight}`}>{t("price") || "Precio"}</p>
+                <p className={s.tableHeaderCell}></p>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div className={s.typesList}>
                 {Object.entries(formData.ticketTypes).map(([type, price]) => (
-                  <div
-                    key={type}
-                    className="glass-clean"
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '2fr 1fr 40px',
-                      gap: '8px',
-                      padding: '8px',
-                      borderRadius: '16px',
-                      border: '1px solid rgba(117, 139, 253, 0.15)',
-                      alignItems: 'center'
-                    }}
-                  >
+                  <div key={type} className={`${s.typeRow} glass-clean`}>
                     <input
-                      type="text"
-                      value={type}
+                      type="text" value={type}
                       onChange={(e) => updateTicketTypeName(type, e.target.value)}
-                      className="bg-transparent border-none text-sm font-bold uppercase p-1"
-                      style={{ color: '#E2D1B9', marginLeft: '4px' }}
+                      className={s.typeNameInput}
                     />
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                      <span style={{ color: '#758BFD', fontSize: '14px', marginRight: '2px' }}>$</span>
+                    <div className={s.typePriceWrapper}>
+                      <span className={s.typePriceCurrency}>$</span>
                       <input
-                        type="number"
-                        value={price || ''}
+                        type="number" value={price || ""}
                         onChange={(e) => updateTicketPrice(type, e.target.value)}
-                        className="bg-transparent border-none text-sm font-bold text-right p-1"
-                        style={{ color: '#758BFD', width: '80px' }}
+                        className={s.typePriceInput}
                       />
                     </div>
                     <button
                       type="button"
                       onClick={() => removeTicketType(type)}
-                      style={{
-                        width: '30px',
-                        height: '30px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        borderRadius: '8px',
-                        color: '#ef4444',
-                        cursor: 'pointer',
-                        transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
-                        e.currentTarget.style.transform = 'scale(1.05)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
+                      className={`${s.iconBtn} ${s.iconBtnDelete}`}
                     >
-                      <FontAwesomeIcon icon={faTrash} style={{ fontSize: '12px' }} />
+                      <FontAwesomeIcon icon={faTrash} />
                     </button>
                   </div>
                 ))}
 
-                {/* Add New Type Row */}
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '2fr 1fr 40px',
-                    gap: '8px',
-                    padding: '8px',
-                    borderRadius: '16px',
-                    border: '2px dashed rgba(117, 139, 253, 0.2)',
-                    alignItems: 'center'
-                  }}
-                >
+                {/* Add new type row */}
+                <div className={s.newTypeRow}>
                   <input
-                    type="text"
-                    value={newTicketType.name}
+                    type="text" value={newTicketType.name}
                     onChange={(e) => setNewTicketType({ ...newTicketType, name: e.target.value })}
-                    className="bg-transparent border-none text-sm p-1"
-                    style={{ color: '#E2D1B9', marginLeft: '4px' }}
+                    className={s.newTypeNameInput}
                     placeholder={t("newType") || "New Type..."}
                   />
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                    <span style={{ color: '#BEADFF', fontSize: '14px', marginRight: '2px', opacity: 0.5 }}>$</span>
+                  <div className={s.typePriceWrapper}>
+                    <span className={s.newTypePriceCurrency}>$</span>
                     <input
-                      type="number"
-                      value={newTicketType.price || ''}
+                      type="number" value={newTicketType.price || ""}
                       onChange={(e) => setNewTicketType({ ...newTicketType, price: e.target.value })}
-                      className="bg-transparent border-none text-sm text-right p-1"
-                      style={{ color: '#BEADFF', width: '80px' }}
+                      className={s.newTypePriceInput}
                       placeholder="0"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={addTicketType}
-                    style={{
-                      width: '30px',
-                      height: '30px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      color: 'white',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 8px rgba(117, 139, 253, 0.3)',
-                      transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'scale(1.05)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(117, 139, 253, 0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(117, 139, 253, 0.3)';
-                    }}
+                    className={`${s.iconBtn} ${s.iconBtnAdd}`}
                   >
-                    <FontAwesomeIcon icon={faPlus} style={{ fontSize: '12px' }} />
+                    <FontAwesomeIcon icon={faPlus} />
                   </button>
                 </div>
               </div>
@@ -480,26 +314,8 @@ export const CreateEvent = ({ isEditing = false }) => {
             {/* Save Button */}
             <button
               type="submit"
-              className="w-full font-bold"
-              style={{
-                padding: '16px 24px',
-                borderRadius: '16px',
-                background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
-                border: 'none',
-                color: 'rgba(0, 0, 0, 0.75)',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(117, 139, 253, 0.3)',
-                transition: 'transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                marginTop: '8px'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.02)')}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+              className={`${btn.btn} ${btn.primary} ${btn.lg}`}
+              style={{ marginTop: "8px" }}
             >
               <FontAwesomeIcon icon={isEditing ? faFloppyDisk : faWandMagicSparkles} />
               <span>{isEditing ? t("updateEvent") : t("createEvent")}</span>
@@ -507,76 +323,41 @@ export const CreateEvent = ({ isEditing = false }) => {
           </div>
         </div>
 
-        {/* Danger Zone Pattern */}
+        {/* Danger Zone trigger */}
         {isEditing && !showDangerZone && (
           <button
             type="button"
             onClick={() => setShowDangerZone(true)}
-            className="w-full font-bold"
-            style={{
-              padding: '16px 24px',
-              borderRadius: '16px',
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#ef4444',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
-              e.currentTarget.style.transform = 'scale(1.02)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
+            className={`${btn.btn} ${btn.danger} ${btn.lg}`}
           >
             <FontAwesomeIcon icon={faTrash} />
             {t("deleteEvent")}
           </button>
         )}
 
+        {/* Danger Zone panel */}
         {isEditing && showDangerZone && (
-          <div className="glass-elevated" style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '16px', borderRadius: '24px' }}>
-            <div className="flex items-center gap-2" style={{ color: '#ef4444', marginBottom: '12px', marginLeft: '4px' }}>
+          <div className={`${s.dangerZone} glass-elevated`}>
+            <div className={s.dangerZoneHeader}>
               <FontAwesomeIcon icon={faTriangleExclamation} />
-              <h2 className="font-bold" style={{ marginLeft: '4px' }}>{t("dangerZone")}</h2>
+              <h2>{t("dangerZone")}</h2>
             </div>
-            <p style={{ fontSize: '13px', color: '#fca5a5', opacity: 0.9, marginBottom: '12px', marginLeft: '4px' }}>{t("deleteEventWarning")}</p>
-            <label className="flex items-center gap-2 cursor-pointer" style={{ padding: '12px', background: 'rgba(127, 29, 29, 0.2)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)', marginBottom: '12px' }}>
-              <input type="checkbox" checked={deleteConfirmChecked} onChange={(e) => setDeleteConfirmChecked(e.target.checked)} className="w-4 h-4" />
-              <span style={{ fontSize: '13px', color: '#fca5a5' }}>{t("confirmDeleteMessage")}</span>
+            <p className={s.dangerZoneText}>{t("deleteEventWarning")}</p>
+            <label className={s.dangerCheckboxRow}>
+              <input
+                type="checkbox"
+                checked={deleteConfirmChecked}
+                onChange={(e) => setDeleteConfirmChecked(e.target.checked)}
+                style={{ minHeight: "auto", width: "16px" }}
+              />
+              <span className={s.dangerCheckboxText}>{t("confirmDeleteMessage")}</span>
             </label>
-            <div className="flex gap-3">
+            <div className={s.dangerActions}>
               <button
                 type="button"
                 onClick={() => setShowDangerZone(false)}
-                className="flex-1 font-bold"
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '16px',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(117, 139, 253, 0.3)',
-                  color: '#758BFD',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(117, 139, 253, 0.1)';
-                  e.currentTarget.style.transform = 'scale(1.02)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
+                className={`${btn.btn} ${btn.ghost} ${btn.md}`}
+                style={{ flex: 1 }}
               >
                 CANCEL
               </button>
@@ -584,25 +365,8 @@ export const CreateEvent = ({ isEditing = false }) => {
                 type="button"
                 onClick={handleDeleteEvent}
                 disabled={!deleteConfirmChecked}
-                className="flex-1 font-bold"
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '16px',
-                  background: deleteConfirmChecked ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'rgba(255, 255, 255, 0.1)',
-                  border: 'none',
-                  color: deleteConfirmChecked ? 'white' : 'rgba(255, 255, 255, 0.3)',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: deleteConfirmChecked ? 'pointer' : 'not-allowed',
-                  boxShadow: deleteConfirmChecked ? '0 4px 12px rgba(239, 68, 68, 0.3)' : 'none',
-                  transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)'
-                }}
-                onMouseEnter={(e) => {
-                  if (deleteConfirmChecked) e.currentTarget.style.transform = 'scale(1.02)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
+                className={`${btn.btn} ${btn.dangerConfirm} ${btn.md}`}
+                style={{ flex: 1 }}
               >
                 DELETE
               </button>

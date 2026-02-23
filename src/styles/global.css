@@ -1,0 +1,199 @@
+/*
+ * ============================================================
+ * SÍGALE — GLOBAL BASE STYLES
+ * Resets, body defaults, element-level rules.
+ * All values reference tokens from tokens.css.
+ * No raw hex, px, or timing values here.
+ * ============================================================
+ */
+
+/* ── Font Face ──────────────────────────────────────────── */
+@font-face {
+  font-family: 'D-DIN Condensed';
+  src: url('/fonts/D-DINCondensed.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+/* ── Box Model Reset ────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* ── HTML Root ──────────────────────────────────────────── */
+html {
+  /* Prevent font scaling on orientation change (iOS) */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Prevent tap highlight flash on mobile */
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+
+/* ── Body ───────────────────────────────────────────────── */
+body {
+  font-family: var(--font-base);
+  /* 18px prevents iOS auto-zoom on input focus */
+  font-size: var(--text-lg);
+  font-weight: var(--weight-normal);
+  line-height: var(--leading-normal);
+  letter-spacing: var(--tracking-normal);
+  color: var(--color-text-primary);
+
+  /* Fixed gradient spanning full viewport height */
+  background: var(--gradient-bg);
+  background-attachment: fixed;
+
+  min-height: 100dvh;
+  overflow-x: hidden;
+
+  /* Smooth momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+
+  /* Improve text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* ── Headings ───────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: var(--tracking-tight);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: var(--color-text-heading);
+}
+
+
+/* ── Links ──────────────────────────────────────────────── */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+
+/* ── Buttons ────────────────────────────────────────────── */
+button {
+  font-family: var(--font-base);
+  cursor: pointer;
+  /* Remove default iOS styling */
+  -webkit-appearance: none;
+  appearance: none;
+  /* Prevent text selection on tap-hold */
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Inline-flex so icons align naturally */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* ── Form Elements ──────────────────────────────────────── */
+input,
+textarea,
+select {
+  font-family: var(--font-base);
+  /* 18px is the iOS zoom threshold */
+  font-size: var(--text-lg);
+  /* Override iOS default appearance */
+  -webkit-appearance: none;
+  appearance: none;
+  /* Touch-friendly minimum height (Apple HIG) */
+  min-height: var(--touch-min);
+  /* Consistent horizontal padding from tokens */
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
+  border-radius: var(--radius-md);
+  width: 100%;
+  /* Palette colors — warm cream text on deep purple */
+  color: var(--color-text-primary);
+  background: var(--color-input-bg-solid);
+  border: 1px solid var(--color-border-primary-lg);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.50;
+}
+
+/* ── Focus States ───────────────────────────────────────── */
+input:focus,
+textarea:focus,
+select:focus,
+button:focus {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-border-primary-focus);
+}
+
+
+/* ── Smooth transitions on all interactive elements ─────── */
+a,
+button,
+input,
+select,
+textarea {
+  transition: var(--transition-fast);
+}
+
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-primary-md);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+
+/* ── Named Animations ───────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideFromLeft {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slideFromRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+/* Animation utility classes (referenced by Navbar) */
+.animate-fadeIn        { animation: fadeIn        var(--duration-slower) var(--ease-out); }
+.animate-slideFromLeft { animation: slideFromLeft var(--duration-slower) var(--ease-out); }
+.animate-slideFromRight{ animation: slideFromRight var(--duration-slower) var(--ease-out); }

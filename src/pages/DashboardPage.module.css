@@ -1,0 +1,106 @@
+/*
+ * ============================================================
+ * SÍGALE — DashboardPage Module
+ * Tab navigation + stats/check-in panels.
+ * ============================================================
+ */
+
+.page {
+  min-height: 100dvh;
+  padding: var(--space-7) var(--space-4);
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ── Page header row ─────────────────────────────────────── */
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--radius-2xl);
+  margin: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.pageTitle {
+  font-size: 24px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-heading);
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+/* Storage chip */
+.storageChip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-md);
+}
+
+.storageLabel {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  opacity: 0.70;
+}
+
+.storageValue {
+  font-size: var(--text-base);
+  color: var(--color-text-heading);
+  font-weight: var(--weight-bold);
+  margin-left: var(--space-2);
+}
+
+/* ── Tab navigation ──────────────────────────────────────── */
+.tabBar {
+  border-radius: var(--radius-lg);
+  padding: var(--space-1);
+  margin: var(--space-3);
+  margin-bottom: var(--space-6);
+  display: flex;
+  gap: var(--space-2);
+}
+
+.tab {
+  flex: 1;
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-md);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-md);
+  cursor: pointer;
+  border: none;
+  transition: var(--transition-base);
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+
+.tab.active {
+  background: var(--gradient-primary);
+  color: rgba(0, 0, 0, 0.75);
+  box-shadow: var(--shadow-btn);
+}
+
+.tab:not(.active):hover {
+  background: var(--color-tint-white-sm);
+  transform: scale(1.02);
+}
+
+.tab.active:hover {
+  transform: scale(1.02);
+}
+
+/* ── Content area ────────────────────────────────────────── */
+.content {
+  animation: fadeIn var(--duration-slower) var(--ease-out);
+}

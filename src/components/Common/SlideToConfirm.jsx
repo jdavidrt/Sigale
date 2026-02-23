@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronRight, faTrash } from "@fortawesome/free-solid-svg-icons";
+import s from "./SlideToConfirm.module.css";
 
 export const SlideToConfirm = ({ onConfirm, label, disabled = false }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -9,11 +10,11 @@ export const SlideToConfirm = ({ onConfirm, label, disabled = false }) => {
   const containerRef = useRef(null);
   const startXRef = useRef(0);
 
-  const THRESHOLD = 0.85; // 85% of the track to confirm
+  const THRESHOLD = 0.85;
 
   const getMaxPosition = () => {
     if (!containerRef.current) return 200;
-    return containerRef.current.offsetWidth - 56; // 56px is the thumb width
+    return containerRef.current.offsetWidth - 56;
   };
 
   const handleStart = (clientX) => {
@@ -32,10 +33,8 @@ export const SlideToConfirm = ({ onConfirm, label, disabled = false }) => {
   const handleEnd = () => {
     if (!isDragging || disabled || confirmed) return;
     setIsDragging(false);
-
     const maxPos = getMaxPosition();
     const progress = position / maxPos;
-
     if (progress >= THRESHOLD) {
       setPosition(maxPos);
       setConfirmed(true);
@@ -45,34 +44,13 @@ export const SlideToConfirm = ({ onConfirm, label, disabled = false }) => {
     }
   };
 
-  // Mouse events
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    handleStart(e.clientX);
-  };
+  const handleMouseDown = (e) => { e.preventDefault(); handleStart(e.clientX); };
+  const handleMouseMove = (e) => { handleMove(e.clientX); };
+  const handleMouseUp = () => { handleEnd(); };
+  const handleTouchStart = (e) => { handleStart(e.touches[0].clientX); };
+  const handleTouchMove = (e) => { handleMove(e.touches[0].clientX); };
+  const handleTouchEnd = () => { handleEnd(); };
 
-  const handleMouseMove = (e) => {
-    handleMove(e.clientX);
-  };
-
-  const handleMouseUp = () => {
-    handleEnd();
-  };
-
-  // Touch events
-  const handleTouchStart = (e) => {
-    handleStart(e.touches[0].clientX);
-  };
-
-  const handleTouchMove = (e) => {
-    handleMove(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    handleEnd();
-  };
-
-  // Add global mouse listeners when dragging
   useEffect(() => {
     if (isDragging) {
       window.addEventListener("mousemove", handleMouseMove);
@@ -87,51 +65,31 @@ export const SlideToConfirm = ({ onConfirm, label, disabled = false }) => {
   const maxPos = getMaxPosition();
   const progress = maxPos > 0 ? position / maxPos : 0;
 
+  // Dynamic background based on drag progress — kept as inline style (computed value)
+  const trackBg = confirmed
+    ? "linear-gradient(90deg, #dc2626, #b91c1c)"
+    : `linear-gradient(90deg, rgba(220, 38, 38, ${0.3 + progress * 0.7}), rgba(185, 28, 28, ${0.3 + progress * 0.7}))`;
+
   return (
     <div
       ref={containerRef}
-      className={`relative h-14 rounded-xl overflow-hidden select-none ${
-        disabled ? "opacity-50 cursor-not-allowed" : ""
-      }`}
-      style={{
-        background: confirmed
-          ? "linear-gradient(90deg, #dc2626, #b91c1c)"
-          : `linear-gradient(90deg, rgba(220, 38, 38, ${0.3 + progress * 0.7}), rgba(185, 28, 28, ${0.3 + progress * 0.7}))`,
-      }}
-      onMouseMove={isDragging ? handleMouseMove : undefined}
-      onMouseUp={isDragging ? handleMouseUp : undefined}
-      onMouseLeave={isDragging ? handleMouseUp : undefined}
+      className={`${s.track} ${disabled ? s.disabled : ""}`}
+      style={{ background: trackBg }}
     >
-      {/* Background track with animated arrows */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="flex items-center gap-2 text-white text-opacity-60">
-          <FontAwesomeIcon
-            icon={faChevronRight}
-            className={`text-sm transition-opacity ${progress > 0.2 ? "opacity-0" : "opacity-100"}`}
-          />
-          <FontAwesomeIcon
-            icon={faChevronRight}
-            className={`text-sm transition-opacity ${progress > 0.4 ? "opacity-0" : "opacity-100"}`}
-          />
-          <span className={`text-sm font-medium transition-opacity ${progress > 0.5 ? "opacity-0" : "opacity-100"}`}>
-            {confirmed ? "" : label}
-          </span>
-          <FontAwesomeIcon
-            icon={faChevronRight}
-            className={`text-sm transition-opacity ${progress > 0.6 ? "opacity-0" : "opacity-100"}`}
-          />
-          <FontAwesomeIcon
-            icon={faChevronRight}
-            className={`text-sm transition-opacity ${progress > 0.8 ? "opacity-0" : "opacity-100"}`}
-          />
-        </div>
+      {/* Background label */}
+      <div className={s.labelRow}>
+        <FontAwesomeIcon icon={faChevronRight} className={s.chevron} style={{ opacity: progress > 0.2 ? 0 : 1 }} />
+        <FontAwesomeIcon icon={faChevronRight} className={s.chevron} style={{ opacity: progress > 0.4 ? 0 : 1 }} />
+        <span className={s.labelText} style={{ opacity: progress > 0.5 ? 0 : 1 }}>
+          {confirmed ? "" : label}
+        </span>
+        <FontAwesomeIcon icon={faChevronRight} className={s.chevron} style={{ opacity: progress > 0.6 ? 0 : 1 }} />
+        <FontAwesomeIcon icon={faChevronRight} className={s.chevron} style={{ opacity: progress > 0.8 ? 0 : 1 }} />
       </div>
 
       {/* Draggable thumb */}
       <div
-        className={`absolute top-1 bottom-1 left-1 w-12 rounded-lg flex items-center justify-center cursor-grab active:cursor-grabbing transition-colors ${
-          confirmed ? "bg-white" : "bg-white"
-        } ${isDragging ? "shadow-lg" : "shadow-md"}`}
+        className={s.thumb}
         style={{
           transform: `translateX(${position}px)`,
           transition: isDragging ? "none" : "transform 0.3s ease-out",
@@ -141,18 +99,13 @@ export const SlideToConfirm = ({ onConfirm, label, disabled = false }) => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <FontAwesomeIcon
-          icon={confirmed ? faTrash : faChevronRight}
-          className={`text-lg ${confirmed ? "text-red-600" : "text-red-500"}`}
-        />
+        <FontAwesomeIcon icon={confirmed ? faTrash : faChevronRight} />
       </div>
 
-      {/* Confirmed state overlay */}
+      {/* Confirmed overlay */}
       {confirmed && (
-        <div className="absolute inset-0 flex items-center justify-center bg-red-600">
-          <span className="text-white font-bold flex items-center gap-2">
-            <FontAwesomeIcon icon={faTrash} />
-          </span>
+        <div className={s.confirmedOverlay}>
+          <FontAwesomeIcon icon={faTrash} />
         </div>
       )}
     </div>
