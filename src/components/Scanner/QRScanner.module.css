@@ -46,6 +46,18 @@
 }
 
 
+/* ── Permission error banner ────────────────────────────── */
+.permissionError {
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) var(--space-7);
+  border: 1px solid var(--color-border-error);
+  color: var(--color-error);
+  font-size: var(--text-base);
+  text-align: center;
+  line-height: var(--leading-loose);
+}
+
+
 /* ── Instructions panel ─────────────────────────────────── */
 .instructionsPanel {
   border-radius: var(--radius-3xl);
