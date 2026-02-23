@@ -123,7 +123,7 @@ export const CreateEvent = ({ isEditing = false }) => {
   };
 
   return (
-    <div className="min-h-screen px-2 py-4 md:px-6">
+    <div className="min-h-screen px-3 py-4 md:px-6">
       <style>{`
         .glass-clean {
           background: rgba(255, 255, 255, 0.05);
@@ -180,7 +180,7 @@ export const CreateEvent = ({ isEditing = false }) => {
         }
       `}</style>
 
-      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
         {/* Quick Paste Area */}
         <button
@@ -189,6 +189,7 @@ export const CreateEvent = ({ isEditing = false }) => {
           className="w-full font-bold"
           style={{
             padding: '16px 24px',
+            margin: '6px',
             borderRadius: '16px',
             background: 'rgba(74, 222, 128, 0.1)',
             border: '1px solid rgba(74, 222, 128, 0.3)',
@@ -216,14 +217,14 @@ export const CreateEvent = ({ isEditing = false }) => {
         </button>
 
         {/* Main Card */}
-        <div className="glass-elevated shadow-floating" style={{ borderRadius: '24px', padding: '6px' }}>
+        <div className="glass-elevated shadow-floating" style={{ borderRadius: '24px', padding: '4px', margin: '6px' }}>
           {/* Header */}
           <div style={{ padding: '12px 16px', background: 'rgba(117, 139, 253, 0.08)', borderRadius: '20px', marginBottom: '6px' }}>
             <div className="flex items-center gap-3 mb-2">
               <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FontAwesomeIcon icon={faWandMagicSparkles} style={{ color: 'white', fontSize: '14px' }} />
               </div>
-              <h1 className="text-heading" style={{ fontSize: '24px' }}>
+              <h1 className="text-heading" style={{ fontSize: '24px', paddingLeft: '8px' }}>
                 {isEditing ? t("editEventTitle") : t("createNewEvent")}
               </h1>
             </div>
@@ -236,14 +237,14 @@ export const CreateEvent = ({ isEditing = false }) => {
 
             {/* Event Info Section */}
             <div className="glass-clean" style={{ borderRadius: '18px', padding: '12px' }}>
-              <div className="flex items-center gap-2" style={{ marginLeft: '4px', marginBottom: '12px' }}>
+              <div className="flex items-center gap-2" style={{ marginLeft: '4px', marginTop: '8px', marginBottom: '12px' }}>
                 <FontAwesomeIcon icon={faCalendarDay} className="label-icon" />
                 <h2 className="text-label" style={{ fontSize: '14px', marginLeft: '4px' }}>{t("eventDetails")}</h2>
               </div>
 
               <div className="space-y-3">
                 <div>
-                  <label className="text-label" style={{ fontSize: '11px', marginBottom: '4px', display: 'block' }}>{t("eventName")}</label>
+                  <label className="text-label" style={{ fontSize: '12px', marginBottom: '8px', marginLeft: '4px', display: 'block' }}>{t("eventName")}</label>
                   <input
                     type="text"
                     required
@@ -256,7 +257,7 @@ export const CreateEvent = ({ isEditing = false }) => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-label" style={{ fontSize: '11px', marginBottom: '4px', display: 'block' }}>{t("date")}</label>
+                    <label className="text-label" style={{ fontSize: '12px', marginBottom: '8px', marginLeft: '4px', display: 'block' }}>{t("date")}</label>
                     <input
                       type="date"
                       required
@@ -266,7 +267,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                     />
                   </div>
                   <div>
-                    <label className="text-label" style={{ fontSize: '11px', marginBottom: '4px', display: 'block' }}>{t("entranceTime")}</label>
+                    <label className="text-label" style={{ fontSize: '12px', marginBottom: '8px', marginLeft: '4px', display: 'block' }}>{t("entranceTime")}</label>
                     <input
                       type="time"
                       required
@@ -278,7 +279,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                 </div>
 
                 <div>
-                  <label className="text-label" style={{ fontSize: '11px', marginBottom: '4px', display: 'block' }}>{t("venueName")}</label>
+                  <label className="text-label" style={{ fontSize: '12px', marginBottom: '8px', marginLeft: '4px', display: 'block' }}>{t("venueName")}</label>
                   <input
                     type="text"
                     required
@@ -290,7 +291,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                 </div>
 
                 <div>
-                  <label className="text-label" style={{ fontSize: '11px', marginBottom: '4px', display: 'block' }}>{t("fullAddress")}</label>
+                  <label className="text-label" style={{ fontSize: '12px', marginBottom: '8px', marginLeft: '4px', display: 'block' }}>{t("fullAddress")}</label>
                   <input
                     type="text"
                     required
@@ -305,7 +306,7 @@ export const CreateEvent = ({ isEditing = false }) => {
 
             {/* Colors Section */}
             <div className="glass-clean" style={{ borderRadius: '18px', padding: '12px' }}>
-              <div className="flex items-center gap-2" style={{ marginLeft: '4px', marginBottom: '12px' }}>
+              <div className="flex items-center gap-2" style={{ marginLeft: '4px', marginTop: '8px', marginBottom: '12px' }}>
                 <FontAwesomeIcon icon={faPalette} className="label-icon" />
                 <h2 className="text-label" style={{ fontSize: '14px', marginLeft: '4px' }}>{t("colorTheme")}</h2>
               </div>
@@ -329,7 +330,7 @@ export const CreateEvent = ({ isEditing = false }) => {
 
             {/* Ticket Types Section - Table Style */}
             <div className="glass-clean" style={{ borderRadius: '18px', padding: '12px' }}>
-              <div className="flex items-center gap-2" style={{ marginLeft: '4px', marginBottom: '12px' }}>
+              <div className="flex items-center gap-2" style={{ marginLeft: '4px', marginTop: '8px', marginBottom: '12px' }}>
                 <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <FontAwesomeIcon icon={faTicket} style={{ color: 'white', fontSize: '14px' }} />
                 </div>

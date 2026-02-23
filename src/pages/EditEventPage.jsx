@@ -7,7 +7,7 @@ export const EditEventPage = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen px-2 py-4 md:px-6">
+    <div className="min-h-screen px-3 py-4 md:px-6">
       <style>{`
         /* Glass & Density System */
         .glass-clean {
@@ -49,24 +49,6 @@ export const EditEventPage = () => {
       <div className="fixed top-[200px] right-[-50px] w-[200px] h-[200px] rounded-full bg-[#BEADFF] opacity-[0.03] pointer-events-none" />
 
       <div className="max-w-2xl mx-auto">
-        {/* Page Header - Compact Glass Style */}
-        <div className="glass-elevated shadow-floating" style={{ borderRadius: '24px', padding: '6px', marginBottom: '6px' }}>
-          <div style={{ padding: '12px 16px', borderRadius: '20px', background: 'rgba(117, 139, 253, 0.08)' }}>
-            <div className="flex items-center gap-3 mb-2">
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <FontAwesomeIcon icon={faPenToSquare} style={{ color: 'white', fontSize: '14px' }} />
-              </div>
-              <h1 className="text-heading" style={{ fontSize: '24px' }}>
-                {t("editEventTitle")}
-              </h1>
-            </div>
-            <p className="text-body" style={{ fontSize: '14px', opacity: 0.7 }}>
-              {t("updateEventDetails")}
-            </p>
-          </div>
-        </div>
-
-
         {/* Form Content */}
         <CreateEvent isEditing={true} />
 

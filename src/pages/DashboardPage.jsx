@@ -16,7 +16,7 @@ export const DashboardPage = () => {
   ];
 
   return (
-    <div className="min-h-screen px-2 py-4 md:px-6">
+    <div className="min-h-screen px-3 py-4 md:px-6">
       <style>{`
         /* Glass & Density System */
         .glass-clean {
@@ -61,13 +61,13 @@ export const DashboardPage = () => {
 
       <div className="max-w-7xl mx-auto">
         {/* Page Header - Super Compact */}
-        <div style={{ marginBottom: '6px' }}>
-          <div className="flex items-center justify-between glass-elevated" style={{ padding: '6px 12px', borderRadius: '16px' }}>
+        <div style={{ marginBottom: '12px' }}>
+          <div className="flex items-center justify-between glass-elevated" style={{ padding: '4px 12px', borderRadius: '16px', margin: '6px' }}>
             <div className="flex items-center gap-3">
               <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FontAwesomeIcon icon={faChartLine} style={{ color: 'white', fontSize: '14px' }} />
               </div>
-              <h1 className="text-heading" style={{ fontSize: '24px' }}>
+              <h1 className="text-heading" style={{ fontSize: '24px', paddingLeft: '8px' }}>
                 {t("dashboard")}
               </h1>
             </div>
@@ -82,7 +82,7 @@ export const DashboardPage = () => {
         </div>
 
         {/* Tab Navigation - Glass Pill */}
-        <div className="glass-elevated" style={{ borderRadius: '12px', padding: '3px', marginBottom: '6px' }}>
+        <div className="glass-elevated" style={{ borderRadius: '12px', padding: '3px', marginBottom: '12px', margin: '6px' }}>
           <div className="flex gap-1">
             {tabs.map((tab) => (
               <button

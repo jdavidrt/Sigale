@@ -133,27 +133,41 @@ export const Home = () => {
         }
       `}</style>
 
-      <div style={{ padding: '24px 16px', maxWidth: '800px', margin: '0 auto' }}>
-        {/* Welcome Badge */}
-        <div style={{ marginBottom: '8px' }}>
-          <span style={{
-            background: 'linear-gradient(135deg, #758BFD, #BEADFF)',
-            color: 'rgba(0, 0, 0, 0.7)',
-            padding: '6px 12px',
-            borderRadius: '8px',
-            fontSize: '12px',
-            fontWeight: '600'
-          }}>
-            {t("welcome")} Sígale
-          </span>
-        </div>
-
+      <div style={{ padding: '4px 16px 24px 16px', maxWidth: '800px', margin: '0 auto' }}>
         {/* Event Hero Card - StylePreview Style */}
         <div className="glass-elevated shadow-floating card-clean hover-lift">
-          {/* Event Title */}
-          <h1 className="text-title" style={{ margin: '8px', fontSize: '36px' }}>
-            {event.name}
-          </h1>
+          {/* Event Title + Sell Button */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '12px' }}>
+            <h1 className="text-title" style={{ margin: 0, fontSize: '36px', flex: 1 }}>
+              {event.name}
+            </h1>
+            <button
+              onClick={() => navigate("/sell-tickets")}
+              className="hover-scale"
+              style={{
+                width: '52px',
+                height: '52px',
+                borderRadius: '14px',
+                background: 'rgba(74, 222, 128, 0.15)',
+                border: '2px solid #4ade80',
+                color: '#4ade80',
+                fontSize: '44px',
+                fontWeight: '300',
+                lineHeight: 0,
+                paddingBottom: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                marginLeft: '12px',
+                boxShadow: '0 0 10px rgba(74, 222, 128, 0.15), 0 6px 20px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3)',
+              }}
+              aria-label={t("sellTicketsTitle")}
+            >
+              +
+            </button>
+          </div>
 
           {/* Event Details Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
@@ -197,7 +211,7 @@ export const Home = () => {
           </div>
 
           {/* Quick Stats Section */}
-          <div className="glass-clean card-section" style={{ background: 'rgba(117, 139, 253, 0.08)' }}>
+          <div className="glass-clean card-section" style={{ background: 'rgba(117, 139, 253, 0.08)', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.15)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', textAlign: 'center' }}>
               <div>
                 <p className="text-label" style={{ margin: '8px', fontSize: '14px' }}>Vendidas</p>
@@ -222,8 +236,8 @@ export const Home = () => {
             style={{
               borderRadius: '20px',
               padding: '6px',
-              marginTop: '6px',
-              marginBottom: '6px'
+              marginTop: '12px',
+              marginBottom: '12px'
             }}
           >
             {/* Section Header */}
@@ -245,7 +259,7 @@ export const Home = () => {
             </div>
 
             {/* Ticket Type Cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {Object.entries(event.ticketTypes).map(([type, price]) => {
                 const ticketCount = getTicketCountByType(type);
                 return (
@@ -256,10 +270,11 @@ export const Home = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '4px 6px',
+                      padding: '8px 10px',
                       borderRadius: '14px',
                       cursor: 'pointer',
-                      border: '1px solid rgba(117, 139, 253, 0.15)'
+                      border: '1px solid rgba(117, 139, 253, 0.15)',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.12)'
                     }}
                     onClick={() => navigate(`/tickets?type=${type}`)}
                   >
@@ -289,26 +304,28 @@ export const Home = () => {
                 );
               })}
 
-              {/* Divider */}
-              <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.1)', margin: '4px 0' }} />
-
               {/* Edit Link */}
               <Link
                 to="/edit-event"
-                className="hover-scale"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: '8px',
-                  color: '#758BFD',
+                  color: '#BEADFF',
                   textDecoration: 'none',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  padding: '2px 0',
-                  margin: 0
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  padding: '10px 16px',
+                  borderRadius: '12px',
+                  background: 'rgba(117, 139, 253, 0.12)',
+                  border: '1px dashed rgba(117, 139, 253, 0.35)',
+                  transition: 'background 200ms',
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(117, 139, 253, 0.2)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(117, 139, 253, 0.12)')}
               >
-                <FontAwesomeIcon icon={faPenToSquare} style={{ fontSize: '20px' }} />
+                <FontAwesomeIcon icon={faPenToSquare} style={{ fontSize: '14px' }} />
                 <span>{t("editEvent")}</span>
               </Link>
             </div>

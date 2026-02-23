@@ -77,7 +77,7 @@ export const CopyEventPage = () => {
   if (!event) return null;
 
   return (
-    <div className="min-h-screen px-2 py-4 md:px-6">
+    <div className="min-h-screen px-3 py-4 md:px-6">
       <style>{`
         .glass-clean { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .glass-elevated { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.12); }
@@ -87,10 +87,10 @@ export const CopyEventPage = () => {
         .shadow-floating { box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.10); }
       `}</style>
 
-      <div className="max-w-4xl mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div className="max-w-4xl mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
         {/* Main Card */}
-        <div className="glass-elevated shadow-floating" style={{ borderRadius: '24px', padding: '6px' }}>
+        <div className="glass-elevated shadow-floating" style={{ borderRadius: '24px', padding: '4px', margin: '6px' }}>
 
           {/* Header */}
           <div style={{ padding: '12px 16px', background: 'rgba(117, 139, 253, 0.08)', borderRadius: '20px', marginBottom: '6px' }}>
@@ -98,7 +98,7 @@ export const CopyEventPage = () => {
               <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FontAwesomeIcon icon={faCopy} style={{ color: 'white', fontSize: '14px' }} />
               </div>
-              <h1 className="text-heading" style={{ fontSize: '24px' }}>Copy Event Data</h1>
+              <h1 className="text-heading" style={{ fontSize: '24px', paddingLeft: '8px' }}>Copy Event Data</h1>
             </div>
             <p className="text-body" style={{ fontSize: '14px', opacity: 0.7 }}>Backup or transfer your event and ticket data</p>
           </div>

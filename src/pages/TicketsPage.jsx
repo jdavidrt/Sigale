@@ -77,7 +77,7 @@ export const TicketsPage = () => {
   }
 
   return (
-    <div className="min-h-screen px-2 py-4 md:px-6">
+    <div className="min-h-screen px-3 py-4 md:px-6">
       <style>{`
         /* Glass & Density System */
         .glass-clean {
@@ -146,14 +146,14 @@ export const TicketsPage = () => {
       `}</style>
 
       <div className="max-w-6xl mx-auto">
-        {/* Header - Super Compact */}
-        <div style={{ marginBottom: '6px' }}>
-          <div className="flex items-center justify-between glass-elevated" style={{ padding: '6px 12px', borderRadius: '16px' }}>
+        {/* Header */}
+        <div style={{ marginBottom: '12px' }}>
+          <div className="flex items-center justify-between glass-elevated" style={{ padding: '4px 12px', borderRadius: '16px', margin: '6px' }}>
             <div className="flex items-center gap-3">
               <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FontAwesomeIcon icon={faTicketSimple} style={{ color: 'white', fontSize: '14px' }} />
               </div>
-              <h1 className="text-heading" style={{ fontSize: '24px', marginLeft: '4px' }}>
+              <h1 className="text-heading" style={{ fontSize: '24px', paddingLeft: '8px' }}>
                 {t("allTickets")}
               </h1>
             </div>
@@ -165,8 +165,8 @@ export const TicketsPage = () => {
           </div>
         </div>
 
-        {/* Filters - High Density */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2" style={{ marginBottom: '6px' }}>
+        {/* Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3" style={{ marginBottom: '12px', margin: '6px', padding: '4px' }}>
           {/* Search Bar */}
           <div className="relative">
             <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 -translate-y-1/2 color-primary opacity-50" style={{ fontSize: '14px' }} />
@@ -214,7 +214,7 @@ export const TicketsPage = () => {
           </div>
         ) : (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '6px', marginTop: '6px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '12px', marginTop: '12px' }}>
               {filteredTickets.map((ticket) => (
                 <TicketCard key={ticket.ticketId} ticket={ticket} />
               ))}

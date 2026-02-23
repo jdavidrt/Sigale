@@ -30,7 +30,7 @@ body {
   color: #FFEDD8;
   letter-spacing: -0.01em;
   /* Mobile-friendly base font size - prevents iOS zoom on input focus */
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.5;
   /* Prevent horizontal scroll on mobile */
   overflow-x: hidden;
@@ -50,7 +50,7 @@ h1, h2, h3, h4, h5, h6 {
 input, textarea, select, button {
   font-family: inherit;
   /* Prevents iOS zoom on focus */
-  font-size: 16px;
+  font-size: 18px;
   min-height: 44px;
 }
 
@@ -74,7 +74,11 @@ input, textarea, select {
   -webkit-appearance: none;
   appearance: none;
   /* Prevent zoom on iOS */
-  font-size: max(16px, 1rem);
+  font-size: max(18px, 1rem);
+  /* Consistent padding and rounded corners */
+  padding-left: 12px;
+  padding-right: 12px;
+  border-radius: 12px;
 }
 
 /* Mobile-friendly focus states */

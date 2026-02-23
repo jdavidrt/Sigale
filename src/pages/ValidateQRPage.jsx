@@ -7,7 +7,7 @@ export const ValidateQRPage = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen px-2 py-4 md:px-6">
+    <div className="min-h-screen px-3 py-4 md:px-6">
       <style>{`
         /* Glass & Density System */
         .glass-clean {
@@ -60,14 +60,14 @@ export const ValidateQRPage = () => {
 
       {/* Main Container - High Density */}
       <div className="max-w-2xl mx-auto">
-        <div className="glass-elevated shadow-floating" style={{ borderRadius: '24px', padding: '6px' }}>
+        <div className="glass-elevated shadow-floating" style={{ borderRadius: '24px', padding: '4px', margin: '6px' }}>
           {/* Header Card */}
           <div style={{ padding: '12px 16px', borderRadius: '20px', background: 'rgba(117, 139, 253, 0.08)', marginBottom: '6px' }}>
             <div className="flex items-center gap-3 mb-2">
               <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, #758BFD, #BEADFF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <FontAwesomeIcon icon={faQrcode} style={{ color: 'white', fontSize: '16px' }} />
               </div>
-              <h1 className="text-heading" style={{ fontSize: '24px' }}>
+              <h1 className="text-heading" style={{ fontSize: '24px', paddingLeft: '8px' }}>
                 {t("checkInValidation")}
               </h1>
             </div>
