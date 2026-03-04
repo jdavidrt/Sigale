@@ -40,7 +40,7 @@ export const TicketForm = () => {
       } else {
         const ticket = await addTicket(formData);
         setCreatedTicket(ticket);
-        setFormData({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "" });
+        setFormData({ buyerName: "", buyerId: "", buyerPhone: "000", ticketType: "" });
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } catch (error) {
