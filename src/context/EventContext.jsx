@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { loadFromStorage } from "../utils/storage";
 
 const EventContext = createContext();
 
@@ -16,16 +17,18 @@ export const EventProvider = ({ children }) => {
   });
 
   const createEvent = (eventData) => {
+    const fresh = loadFromStorage() || data;
     setData({
-      ...data,
+      ...fresh,
       event: { ...eventData, createdAt: new Date().toISOString() },
     });
   };
 
   const updateEvent = (eventData) => {
+    const fresh = loadFromStorage() || data;
     setData({
-      event: { ...data.event, ...eventData },
-      tickets: data.tickets || [], // Preserve existing tickets
+      ...fresh,
+      event: { ...fresh.event, ...eventData },
     });
   };
 
