@@ -109,7 +109,7 @@ export const CopyEventPage = () => {
     // Helper: Draw table with correct pagination
     function drawTable(startY, ticketsArr, title) {
       let left = 8;
-      let colWidths = [110, 30, 22, 22]; // Even wider Buyer Name, bigger Attendance
+      let colWidths = [95, 30, 37, 22]; // Buyer Name, ID, Ticket Type (wider), Attendance
       let headerHeight = 10;
       let y = startY;
       // Estimate max rows per page (average row height 10, but may be 18 for double-line names)
@@ -149,8 +149,10 @@ export const CopyEventPage = () => {
         let startI = i;
         while (i < ticketsArr.length && pageHeight < maxPageHeight) {
           let ticket = ticketsArr[i];
-          let nameLines = wrapText(ticket.buyerName || '', 38);
-          let rowHeight = nameLines[1] ? 18 : 10;
+          let nameLines = wrapText(ticket.buyerName || '', 32);
+          let typeLines = wrapText((ticket.ticketType || '').toUpperCase(), 14);
+          let maxLines = Math.max(nameLines.length, typeLines.length);
+          let rowHeight = maxLines > 1 ? 18 : 10;
           let rowY = y + pageHeight;
           // Alternating row color
           if ((i - startI) % 2 === 1) {
@@ -165,7 +167,9 @@ export const CopyEventPage = () => {
           doc.setFontSize(10);
           doc.text(ticket.buyerId || '', left + colWidths[0] + 2, rowY + 7);
           doc.setFontSize(9);
-          doc.text((ticket.ticketType || '').toUpperCase(), left + colWidths[0] + colWidths[1] + 2, rowY + 7);
+          let typeX = left + colWidths[0] + colWidths[1] + 2;
+          doc.text(typeLines[0], typeX, rowY + 7);
+          if (typeLines[1]) doc.text(typeLines[1], typeX, rowY + 15);
           doc.setFontSize(10);
           // Attendance: smaller square
           doc.rect(left + colWidths[0] + colWidths[1] + colWidths[2] + 2, rowY + 4, 4, 4);

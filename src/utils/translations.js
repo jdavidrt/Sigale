@@ -65,7 +65,7 @@ export const translations = {
     buyerInfo: "Información del Comprador",
     buyerInfoDesc: "Complete la información del comprador para generar una boleta",
     pasteNameAndId: "Pegar Nombre y Cédula",
-    buyerName: "Nombre del Comprador",
+    buyerName: "Nombre",
     idNumber: "ID",
     phoneNumber: "Número de Teléfono",
     ticketType: "Tipo de Boleta",
