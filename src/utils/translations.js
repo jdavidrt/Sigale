@@ -183,6 +183,16 @@ export const translations = {
     csvImportSuccess: "Importación exitosa",
     csvTicketsAdded: "boletas agregadas",
     csvImportErrors: "Errores de importación",
+
+    // Attendance Sheet PDF
+    exportAttendanceSheet: "Exportar Hoja de Asistencia",
+    attendanceSheet: "Hoja de Asistencia",
+    artistCourtesy: "Artista/Cortesía",
+    attendance: "Asistencia",
+    copyJSON: "Copiar JSON",
+    downloadJSON: "Descargar JSON",
+    copyCSV: "Copiar CSV",
+    downloadCSV: "Descargar CSV",
   },
 
   en: {
@@ -367,6 +377,16 @@ export const translations = {
     csvImportSuccess: "Import successful",
     csvTicketsAdded: "tickets added",
     csvImportErrors: "Import errors",
+
+    // Attendance Sheet PDF
+    exportAttendanceSheet: "Export Attendance Sheet",
+    attendanceSheet: "Attendance Sheet",
+    artistCourtesy: "Artist/Courtesy",
+    attendance: "Attendance",
+    copyJSON: "Copy JSON",
+    downloadJSON: "Download JSON",
+    copyCSV: "Copy CSV",
+    downloadCSV: "Download CSV",
   }
 };
 

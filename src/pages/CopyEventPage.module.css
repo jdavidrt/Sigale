@@ -149,6 +149,12 @@
   border: none;
 }
 
+.actionBtnPDF {
+  color: #ff8800;
+  background: var(--color-tint-primary);
+  border: 0.5px solid #ff8800;
+}
+
 .actionBtnLabel {
   font-size: var(--text-base);
   text-transform: uppercase;
