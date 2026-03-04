@@ -147,12 +147,14 @@ export const CopyEventPage = () => {
         // Table rows for this page
         let pageHeight = 0;
         let startI = i;
-        while (i < ticketsArr.length && pageHeight < maxPageHeight) {
+        while (i < ticketsArr.length) {
           let ticket = ticketsArr[i];
           let nameLines = wrapText(ticket.buyerName || '', 32);
           let typeLines = wrapText((ticket.ticketType || '').toUpperCase(), 14);
           let maxLines = Math.max(nameLines.length, typeLines.length);
           let rowHeight = maxLines > 1 ? 18 : 10;
+          // Break to new page if this row won't fit
+          if (pageHeight + rowHeight > maxPageHeight) break;
           let rowY = y + pageHeight;
           // Alternating row color
           if ((i - startI) % 2 === 1) {
@@ -171,8 +173,9 @@ export const CopyEventPage = () => {
           doc.text(typeLines[0], typeX, rowY + 7);
           if (typeLines[1]) doc.text(typeLines[1], typeX, rowY + 15);
           doc.setFontSize(10);
-          // Attendance: smaller square
-          doc.rect(left + colWidths[0] + colWidths[1] + colWidths[2] + 2, rowY + 4, 4, 4);
+          // Attendance: smaller square, centered in Attendance column
+          let attColX = left + colWidths[0] + colWidths[1] + colWidths[2];
+          doc.rect(attColX + (colWidths[3] - 4) / 2, rowY + 4, 4, 4);
           pageHeight += rowHeight;
           i++;
         }
