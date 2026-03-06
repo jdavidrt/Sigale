@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { loadFromStorage } from "../utils/storage";
 import { generateValidationHash, generateTicketId } from "../utils/hashGenerator";
 
 const TicketContext = createContext();
@@ -26,7 +27,8 @@ export const TicketProvider = ({ children }) => {
     const validationHash = await generateValidationHash(ticket);
     ticket.validationHash = validationHash;
 
-    setData({ ...data, tickets: [...data.tickets, ticket] });
+    const fresh = loadFromStorage() || data;
+    setData({ ...fresh, tickets: [...fresh.tickets, ticket] });
     return ticket;
   };
 
@@ -48,31 +50,30 @@ export const TicketProvider = ({ children }) => {
   const getTicketByHash = (hash) => data.tickets.find((t) => t.validationHash === hash);
 
   const checkInTicket = (ticketId) => {
-    const updatedTickets = data.tickets.map((ticket) =>
+    const fresh = loadFromStorage() || data;
+    const updatedTickets = fresh.tickets.map((ticket) =>
       ticket.ticketId === ticketId
         ? { ...ticket, checkedIn: true, checkInTime: new Date().toISOString() }
         : ticket
     );
-    setData({ ...data, tickets: updatedTickets });
+    setData({ ...fresh, tickets: updatedTickets });
   };
 
   const updateTicket = async (ticketId, updatedData) => {
-    const updatedTickets = data.tickets.map((ticket) => {
+    const fresh = loadFromStorage() || data;
+    const updatedTickets = fresh.tickets.map((ticket) => {
       if (ticket.ticketId === ticketId) {
-        const updatedTicket = {
-          ...ticket,
-          ...updatedData,
-        };
-        return updatedTicket;
+        return { ...ticket, ...updatedData };
       }
       return ticket;
     });
-    setData({ ...data, tickets: updatedTickets });
+    setData({ ...fresh, tickets: updatedTickets });
   };
 
   const deleteTicket = (ticketId) => {
-    const updatedTickets = data.tickets.filter((ticket) => ticket.ticketId !== ticketId);
-    setData({ ...data, tickets: updatedTickets });
+    const fresh = loadFromStorage() || data;
+    const updatedTickets = fresh.tickets.filter((ticket) => ticket.ticketId !== ticketId);
+    setData({ ...fresh, tickets: updatedTickets });
   };
 
   const getStats = () => {
@@ -103,12 +104,13 @@ export const TicketProvider = ({ children }) => {
   };
 
   const resetAllCheckIns = () => {
-    const updatedTickets = data.tickets.map((ticket) => ({
+    const fresh = loadFromStorage() || data;
+    const updatedTickets = fresh.tickets.map((ticket) => ({
       ...ticket,
       checkedIn: false,
       checkInTime: null,
     }));
-    setData({ ...data, tickets: updatedTickets });
+    setData({ ...fresh, tickets: updatedTickets });
   };
 
   const addTicketsFromCSV = async (ticketDataArray) => {
@@ -137,7 +139,7 @@ export const TicketProvider = ({ children }) => {
       }
     }
 
-    setData({ ...data, tickets: newTickets });
+    setData({ ...data, tickets: [...data.tickets, ...newTickets] });
     return results;
   };
 
