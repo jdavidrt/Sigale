@@ -78,7 +78,7 @@ export const TicketProvider = ({ children }) => {
 
   const getStats = () => {
     const stats = {
-      totalSold: data.tickets.length,
+      totalSold: data.tickets.filter((t) => (data.event?.ticketTypes[t.ticketType] || 0) > 0).length,
       totalCheckedIn: data.tickets.filter((t) => t.checkedIn).length,
       byType: {},
       revenue: { total: 0, byType: {} },
@@ -87,10 +87,10 @@ export const TicketProvider = ({ children }) => {
     data.tickets.forEach((ticket) => {
       const type = ticket.ticketType;
       if (!stats.byType[type]) stats.byType[type] = { sold: 0, checkedIn: 0 };
-      stats.byType[type].sold++;
+      const price = data.event?.ticketTypes[type] || 0;
+      if (price > 0) stats.byType[type].sold++;
       if (ticket.checkedIn) stats.byType[type].checkedIn++;
 
-      const price = data.event?.ticketTypes[type] || 0;
       stats.revenue.total += price;
       if (!stats.revenue.byType[type]) stats.revenue.byType[type] = 0;
       stats.revenue.byType[type] += price;

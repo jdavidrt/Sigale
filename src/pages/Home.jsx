@@ -23,7 +23,7 @@ export const Home = () => {
   const getTicketCountByType = (type) =>
     tickets.filter((ticket) => ticket.ticketType === type).length;
 
-  const totalTicketsSold = tickets.length;
+  const totalTicketsSold = tickets.filter((ticket) => (event.ticketTypes[ticket.ticketType] || 0) > 0).length;
   const totalRevenue = tickets.reduce((acc, ticket) => {
     const price = event.ticketTypes[ticket.ticketType] || 0;
     return acc + price;

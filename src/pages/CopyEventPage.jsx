@@ -229,7 +229,7 @@ export const CopyEventPage = () => {
               </div>
               <div>
                 <p className={s.summaryLabel}>TOTAL TICKETS</p>
-                <p className={s.summaryCount}>{tickets.length}</p>
+                <p className={s.summaryCount}>{tickets.filter((t) => (event?.ticketTypes[t.ticketType] || 0) > 0).length}</p>
               </div>
             </div>
 
