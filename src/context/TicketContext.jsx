@@ -137,7 +137,7 @@ export const TicketProvider = ({ children }) => {
       }
     }
 
-    setData({ ...data, tickets: [...data.tickets, ...newTickets] });
+    setData({ ...data, tickets: newTickets });
     return results;
   };
 
