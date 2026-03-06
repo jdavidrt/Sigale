@@ -124,7 +124,7 @@ export const TicketsPage = () => {
             {tickets.length > 0 && (
               <div className={s.resetRow}>
                 <button onClick={handleResetAllCheckIns} className={`${btn.btn} ${btn.primary} ${btn.lg}`}>
-                  🔄 {t("resetAllCheckIns") || "Reset All Check-Ins"}
+                  🗑️ {t("resetAllCheckIns") || "Delete All Tickets"}
                 </button>
               </div>
             )}

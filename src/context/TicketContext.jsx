@@ -105,12 +105,7 @@ export const TicketProvider = ({ children }) => {
 
   const resetAllCheckIns = () => {
     const fresh = loadFromStorage() || data;
-    const updatedTickets = fresh.tickets.map((ticket) => ({
-      ...ticket,
-      checkedIn: false,
-      checkInTime: null,
-    }));
-    setData({ ...fresh, tickets: updatedTickets });
+    setData({ ...fresh, tickets: [] });
   };
 
   const addTicketsFromCSV = async (ticketDataArray) => {

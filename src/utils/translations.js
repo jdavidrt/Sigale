@@ -110,11 +110,11 @@ export const translations = {
     ticketsFound: "boletas encontradas",
     checkedIn: "Registrado",
     notCheckedIn: "No Registrado",
-    resetAllCheckIns: "Reiniciar Todos los Registros",
-    confirmResetCheckIns: "¿Está seguro de que desea reiniciar todos los registros? Esta acción no se puede deshacer.",
-    enterPasswordToReset: "Ingrese la contraseña para reiniciar todos los registros:",
-    incorrectPassword: "Contraseña incorrecta. Reinicio cancelado.",
-    checkInsReset: "Todos los registros han sido reiniciados exitosamente.",
+    resetAllCheckIns: "Eliminar Todas las Boletas",
+    confirmResetCheckIns: "¿Está seguro de que desea eliminar todas las boletas? Esta acción no se puede deshacer.",
+    enterPasswordToReset: "Ingrese la contraseña para eliminar todas las boletas:",
+    incorrectPassword: "Contraseña incorrecta. Eliminación cancelada.",
+    checkInsReset: "Todas las boletas han sido eliminadas exitosamente.",
 
     // Home Page
     welcome: "Bienvenido a",
@@ -304,11 +304,11 @@ export const translations = {
     ticketsFound: "tickets found",
     checkedIn: "Checked In",
     notCheckedIn: "Not Checked In",
-    resetAllCheckIns: "Reset All Check-Ins",
-    confirmResetCheckIns: "Are you sure you want to reset all check-ins? This action cannot be undone.",
-    enterPasswordToReset: "Enter password to reset all check-ins:",
-    incorrectPassword: "Incorrect password. Reset cancelled.",
-    checkInsReset: "All check-ins have been reset successfully.",
+    resetAllCheckIns: "Delete All Tickets",
+    confirmResetCheckIns: "Are you sure you want to delete all tickets? This action cannot be undone.",
+    enterPasswordToReset: "Enter password to delete all tickets:",
+    incorrectPassword: "Incorrect password. Deletion cancelled.",
+    checkInsReset: "All tickets have been deleted successfully.",
 
     // Home Page
     welcome: "Welcome to",
