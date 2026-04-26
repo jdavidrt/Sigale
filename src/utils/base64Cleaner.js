@@ -63,13 +63,3 @@ export const toDataURI = (base64Data, mimeType = 'image/png') => {
   const cleaned = cleanBase64(base64Data);
   return `data:${mimeType};base64,${cleaned}`;
 };
-
-/**
- * Extracts MIME type from data URI
- * @param {string} dataURI - Data URI string
- * @returns {string|null} MIME type or null if not found
- */
-export const extractMimeType = (dataURI) => {
-  const match = dataURI.match(/^data:([a-z]+\/[a-z]+);base64,/i);
-  return match ? match[1] : null;
-};

@@ -1,7 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { useTickets } from "../../context/TicketContext";
+import { useEvent } from "../../context/EventContext";
+import { useLanguage } from "../../context/LanguageContext";
 import { parseQRData } from "../../utils/qrGenerator";
+import { checkInWindowStatus } from "../../utils/timeFormat";
 import { ValidationResult } from "./ValidationResult";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStop } from "@fortawesome/free-solid-svg-icons";
@@ -15,6 +18,8 @@ const SCAN_CONFIG = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 
 
 export const QRScanner = ({ autoStart = false }) => {
   const { tickets, checkInTicket } = useTickets();
+  const { event, eventId } = useEvent();
+  const { t } = useLanguage();
   const [scanResult, setScanResult]             = useState(null);
   const [isScanning, setIsScanning]             = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
@@ -100,23 +105,63 @@ export const QRScanner = ({ autoStart = false }) => {
 
     const qrData = parseQRData(decodedText);
     if (!qrData || !qrData.hash) {
-      setScanResult({ success: false, message: "Invalid QR code format", type: "invalid" });
+      setScanResult({ success: false, message: t("qrInvalidFormat"), type: "invalid" });
       return;
     }
 
-    const ticket = tickets.find((t) => t.validationHash === qrData.hash);
+    // M1: Reject QR codes whose embedded eventId doesn't match the currently
+    // loaded event. Only enforced when BOTH sides have an id — legacy QR codes
+    // (generated before M1 shipped) don't carry one and should still scan.
+    if (qrData.eventId && eventId && qrData.eventId !== eventId) {
+      setScanResult({
+        success: false,
+        message: t("ticketForDifferentEvent"),
+        type: "wrong_event",
+        qrData,
+      });
+      return;
+    }
+
+    // H5: warn if the scan is outside the event-date window. Rehearsals and
+    // teardown happen legitimately, so we confirm rather than block hard.
+    const windowStatus = checkInWindowStatus(event);
+    if (windowStatus.status === "early" || windowStatus.status === "late") {
+      const days = String(Math.abs(windowStatus.daysDiff));
+      const key = windowStatus.status === "early" ? "checkInEarlyWarning" : "checkInLateWarning";
+      const label = t(key).replace("{days}", days);
+      if (!globalThis.confirm(label)) {
+        setScanResult({
+          success: false,
+          message: t("checkInCancelledOutsideWindow"),
+          type: "invalid",
+        });
+        return;
+      }
+    }
+
+    const ticket = tickets.find((tk) => tk.validationHash === qrData.hash);
     if (!ticket) {
-      setScanResult({ success: false, message: "Ticket not found in database", type: "not_found", qrData });
+      setScanResult({ success: false, message: t("ticketNotFoundInDb"), type: "not_found", qrData });
       return;
     }
 
     if (ticket.checkedIn) {
-      setScanResult({ success: false, isDuplicate: true, message: "This ticket has already been checked in", type: "duplicate", ticket });
+      setScanResult({ success: false, isDuplicate: true, message: t("alreadyCheckedInMessage"), type: "duplicate", ticket });
       return;
     }
 
-    checkInTicket(ticket.ticketId);
-    setScanResult({ success: true, message: "Check-in successful!", type: "success", ticket });
+    // Race-aware: checkInTicket re-reads fresh storage and rejects if
+    // another tab checked the ticket in between our render and this call.
+    const result = checkInTicket(ticket.ticketId);
+    if (result.ok) {
+      setScanResult({ success: true, message: t("checkInSuccessful"), type: "success", ticket: result.ticket });
+    } else if (result.reason === "already-checked-in") {
+      setScanResult({ success: false, isDuplicate: true, message: t("alreadyCheckedInMessage"), type: "duplicate", ticket: result.ticket });
+    } else if (result.reason === "write-failed") {
+      setScanResult({ success: false, message: t("checkInSaveFailed"), type: "invalid" });
+    } else {
+      setScanResult({ success: false, message: t("ticketNotFoundInDb"), type: "not_found", qrData });
+    }
   }
 
   function onScanError(error) {
@@ -140,7 +185,7 @@ export const QRScanner = ({ autoStart = false }) => {
         <div className={s.controls}>
           <button onClick={handleStop} className={`${btn.btn} ${btn.danger} ${btn.lg}`}>
             <FontAwesomeIcon icon={faStop} />
-            <span>Stop Camera</span>
+            <span>{t("stopCamera")}</span>
           </button>
         </div>
       )}
@@ -148,7 +193,7 @@ export const QRScanner = ({ autoStart = false }) => {
       {/* Permission denied */}
       {permissionDenied && (
         <div className={`glass-clean ${s.permissionError}`}>
-          <p>Camera access was denied. Please allow camera permission in your browser settings and reload the page.</p>
+          <p>{t("cameraPermissionDenied")}</p>
         </div>
       )}
 
@@ -156,7 +201,7 @@ export const QRScanner = ({ autoStart = false }) => {
       {isScanning && (
         <div className={`glass-clean ${s.scannerContainer}`}>
           <div id="qr-reader" className={s.scannerViewport} />
-          <p className={s.scannerHint}>Position the QR code within the frame</p>
+          <p className={s.scannerHint}>{t("positionQRCode")}</p>
         </div>
       )}
 

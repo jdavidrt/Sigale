@@ -28,9 +28,6 @@ const event = {
   }
 };
 
-// Simplified QR placeholder (a simple black square pattern)
-const qrDataURL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-
 // Helper functions from svgTicketTemplate.js
 const splitTextIntoLines = (text, maxCharsPerLine) => {
   if (text.length <= maxCharsPerLine) return [text];

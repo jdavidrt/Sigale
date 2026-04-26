@@ -6,14 +6,26 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import s from "./TicketList.module.css";
 
+// H4: POC-friendly cap. Full virtualization is overkill before we have a
+// backend; this keeps DOM node count bounded on large ticket sets while
+// the user can still reveal more in batches.
+const INITIAL_PAGE_SIZE = 100;
+const PAGE_INCREMENT    = 200;
+
 export const TicketList = () => {
   const { searchTickets } = useTickets();
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(INITIAL_PAGE_SIZE);
 
   const filteredTickets = useMemo(() => {
     return searchTickets(searchQuery);
   }, [searchQuery, searchTickets]);
+
+  const visibleTickets = useMemo(
+    () => filteredTickets.slice(0, visibleCount),
+    [filteredTickets, visibleCount]
+  );
 
   const stats = useMemo(() => ({
     total: filteredTickets.length,
@@ -54,11 +66,28 @@ export const TicketList = () => {
           </p>
         </div>
       ) : (
-        <div className={s.list}>
-          {filteredTickets.map((ticket) => (
-            <TicketCard key={ticket.ticketId} ticket={ticket} />
-          ))}
-        </div>
+        <>
+          <div className={s.list}>
+            {visibleTickets.map((ticket) => (
+              <TicketCard key={ticket.ticketId} ticket={ticket} />
+            ))}
+          </div>
+          {visibleCount < filteredTickets.length && (
+            <button
+              type="button"
+              onClick={() => setVisibleCount((c) => c + PAGE_INCREMENT)}
+              className={s.showMoreBtn}
+              style={{
+                marginTop: 16, padding: "10px 16px", width: "100%",
+                borderRadius: 12, border: "1px solid rgba(255,255,255,0.15)",
+                background: "rgba(255,255,255,0.06)", color: "inherit",
+                cursor: "pointer",
+              }}
+            >
+              Show more ({filteredTickets.length - visibleCount} remaining)
+            </button>
+          )}
+        </>
       )}
     </div>
   );

@@ -21,7 +21,9 @@
       "Bash(ls:*)",
       "WebFetch(domain:localhost)",
       "Bash(timeout:*)",
-      "Bash(ping:*)"
+      "Bash(ping:*)",
+      "Bash(npx vitest *)",
+      "Bash(npm test *)"
     ],
     "deny": [],
     "ask": []

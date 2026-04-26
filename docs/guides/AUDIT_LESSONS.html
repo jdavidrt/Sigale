@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sígale Audit — Interactive Study Guide</title>
+<style>
+  :root {
+    --bg-0: #0d0f1a;
+    --bg-1: #151829;
+    --bg-2: #1d2138;
+    --border: #2a2f4a;
+    --text: #e6e8f0;
+    --text-dim: #a0a6c2;
+    --text-faint: #6b7196;
+    --accent: #ff7a6b;
+    --accent-soft: #ff7a6b22;
+    --good: #7dd87a;
+    --bad: #ff6b6b;
+    --warn: #ffc857;
+    --info: #6ec5ff;
+    --code-bg: #0a0c16;
+    --shadow: 0 12px 40px rgba(0,0,0,0.4);
+    --radius: 14px;
+    --t: 0.35s cubic-bezier(.2,.8,.2,1);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-0);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* Background gradient */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(255,122,107,0.08), transparent 40%),
+      radial-gradient(circle at 85% 100%, rgba(110,197,255,0.06), transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Layout */
+  .app {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100vh;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 18px 24px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .brand span { color: var(--accent); }
+  .progress-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--bg-2);
+    border-radius: 2px;
+    overflow: hidden;
+    max-width: 400px;
+  }
+  .progress {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--info));
+    width: 0%;
+    transition: width var(--t);
+  }
+  .counter {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-faint);
+    font-size: 13px;
+    min-width: 70px;
+    text-align: right;
+  }
+
+  /* Slide area */
+  .stage {
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 24px 4px 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .stage::-webkit-scrollbar { width: 8px; }
+  .stage::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .slide {
+    display: none;
+    animation: fade 0.4s ease;
+  }
+  .slide.active { display: block; }
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Typography */
+  h1, h2, h3 { margin: 0 0 12px; line-height: 1.25; }
+  h1 { font-size: 36px; letter-spacing: -0.01em; }
+  h2 { font-size: 26px; letter-spacing: -0.005em; }
+  h3 { font-size: 18px; color: var(--text-dim); font-weight: 600; }
+  p  { margin: 0 0 14px; color: var(--text); }
+  .lead { font-size: 18px; color: var(--text-dim); }
+  .eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin: 6px 0; }
+  strong { color: var(--text); }
+  em { color: var(--accent); font-style: normal; }
+
+  /* Cards */
+  .card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin: 14px 0;
+  }
+  .card.tight { padding: 12px 16px; }
+  .card.accent { border-left: 4px solid var(--accent); }
+  .card.good   { border-left: 4px solid var(--good); }
+  .card.bad    { border-left: 4px solid var(--bad); }
+  .card.warn   { border-left: 4px solid var(--warn); }
+  .card.info   { border-left: 4px solid var(--info); }
+
+  .card-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .card.bad  .card-title { color: var(--bad); }
+  .card.good .card-title { color: var(--good); }
+  .card.warn .card-title { color: var(--warn); }
+  .card.info .card-title { color: var(--info); }
+  .card.accent .card-title { color: var(--accent); }
+
+  /* Code */
+  pre, code {
+    font-family: "JetBrains Mono", "SF Mono", Menlo, Monaco, Consolas, monospace;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 8px 0;
+  }
+  code:not(pre code) {
+    background: var(--bg-2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--accent);
+  }
+  .tok-c { color: #6b7196; font-style: italic; }
+  .tok-k { color: #ff7a6b; }
+  .tok-s { color: #7dd87a; }
+  .tok-n { color: #6ec5ff; }
+  .tok-f { color: #ffc857; }
+
+  /* Grid */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 720px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+
+  /* Stats */
+  .stat {
+    text-align: center;
+    padding: 18px 8px;
+  }
+  .stat-num {
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-top: 6px;
+  }
+
+  /* TOC */
+  .toc {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+  }
+  @media (max-width: 720px) { .toc { grid-template-columns: 1fr; } }
+  .toc-item {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all var(--t);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+    width: 100%;
+  }
+  .toc-item:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    background: var(--bg-2);
+  }
+  .toc-num {
+    font-weight: 800;
+    color: var(--accent);
+    font-size: 18px;
+    min-width: 28px;
+    font-variant-numeric: tabular-nums;
+  }
+  .toc-text {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .toc-text small { display: block; color: var(--text-faint); font-size: 12px; margin-top: 2px; }
+
+  /* Reveal */
+  .reveal {
+    margin: 14px 0;
+  }
+  .reveal-trigger {
+    background: var(--bg-2);
+    border: 1px dashed var(--border);
+    color: var(--text-dim);
+    padding: 14px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    font-size: 14px;
+    transition: all var(--t);
+  }
+  .reveal-trigger:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  .reveal-trigger::before {
+    content: "👁  ";
+    margin-right: 4px;
+  }
+  .reveal-content {
+    display: none;
+    margin-top: 10px;
+    animation: fade 0.4s ease;
+  }
+  .reveal.open .reveal-trigger { display: none; }
+  .reveal.open .reveal-content { display: block; }
+
+  /* Footer / Nav */
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    gap: 12px;
+  }
+  .nav-btn {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 18px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--t);
+    font-weight: 600;
+  }
+  .nav-btn:hover:not(:disabled) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg-0);
+  }
+  .nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .nav-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg-0);
+  }
+  .nav-btn.primary:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+  .nav-hint {
+    color: var(--text-faint);
+    font-size: 12px;
+    text-align: center;
+  }
+  .nav-hint kbd {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: monospace;
+  }
+
+  /* Title slide */
+  .title-slide {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .title-slide h1 {
+    font-size: 48px;
+    background: linear-gradient(135deg, var(--accent), var(--info));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .title-slide .lead { max-width: 600px; margin: 0 auto 30px; }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    color: var(--text-faint);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--accent); }
+
+  /* Checklist */
+  .checklist { list-style: none; padding: 0; }
+  .checklist li {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 6px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all var(--t);
+    user-select: none;
+  }
+  .checklist li::before {
+    content: "○";
+    color: var(--text-faint);
+    font-size: 18px;
+    line-height: 1.3;
+    flex-shrink: 0;
+  }
+  .checklist li:hover { border-color: var(--accent); }
+  .checklist li.checked {
+    background: var(--bg-2);
+    border-color: var(--good);
+    color: var(--text-dim);
+  }
+  .checklist li.checked::before {
+    content: "✓";
+    color: var(--good);
+    font-weight: 700;
+  }
+
+  /* Quiz */
+  .q-card { padding: 22px; }
+  .q-num { font-size: 13px; color: var(--text-faint); margin-bottom: 8px; }
+  .q-text { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+  .q-options { display: flex; flex-direction: column; gap: 8px; }
+  .q-opt {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    font-size: 14px;
+    transition: all var(--t);
+  }
+  .q-opt:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--bg-1);
+  }
+  .q-opt.correct {
+    background: rgba(125, 216, 122, 0.15);
+    border-color: var(--good);
+    color: var(--good);
+  }
+  .q-opt.wrong {
+    background: rgba(255, 107, 107, 0.12);
+    border-color: var(--bad);
+    color: var(--bad);
+  }
+  .q-opt.reveal-correct {
+    border-color: var(--good);
+  }
+  .q-feedback {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+  }
+  .q-feedback.show { display: block; }
+  .q-feedback.good {
+    background: rgba(125, 216, 122, 0.1);
+    border-left: 3px solid var(--good);
+    color: var(--text);
+  }
+  .q-feedback.bad {
+    background: rgba(255, 107, 107, 0.1);
+    border-left: 3px solid var(--bad);
+    color: var(--text);
+  }
+  .q-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .q-score {
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+  .q-score b { color: var(--accent); }
+
+  /* Calc */
+  .calc {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 14px 0;
+    flex-wrap: wrap;
+  }
+  .calc input {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    width: 120px;
+  }
+  .calc input:focus { outline: 2px solid var(--accent); }
+  .calc-result {
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+  .calc-result b { color: var(--accent); font-size: 18px; }
+
+  /* End */
+  .final-grade {
+    text-align: center;
+    padding: 30px 20px;
+  }
+  .final-grade .stat-num { font-size: 64px; }
+
+  /* Highlight */
+  .hl { background: var(--accent-soft); padding: 1px 6px; border-radius: 3px; color: var(--accent); }
+
+  /* Two-column compare */
+  .compare-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 6px 0;
+  }
+  @media (max-width: 720px) { .compare-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="brand">SÍGALE <span>·</span> AUDIT LESSONS</div>
+    <div class="progress-wrap"><div class="progress" id="progress"></div></div>
+    <div class="counter" id="counter">1 / 17</div>
+  </header>
+
+  <main class="stage" id="stage">
+
+    <!-- ============ SLIDE 1: TITLE ============ -->
+    <section class="slide active" data-title="Welcome">
+      <div class="title-slide">
+        <div class="eyebrow">Interactive study guide</div>
+        <h1>Lessons from the Sígale Audit</h1>
+        <p class="lead">
+          Twenty-five findings across two audit passes — distilled into the
+          design principles each one teaches.
+        </p>
+        <div class="grid-4" style="max-width:600px; margin: 30px auto 0;">
+          <div class="card stat tight"><div class="stat-num">5</div><div class="stat-label">Critical</div></div>
+          <div class="card stat tight"><div class="stat-num">8</div><div class="stat-label">High</div></div>
+          <div class="card stat tight"><div class="stat-num">9</div><div class="stat-label">Medium</div></div>
+          <div class="card stat tight"><div class="stat-num">6</div><div class="stat-label">Low</div></div>
+        </div>
+        <p style="margin-top:30px; color: var(--text-faint); font-size: 13px;">
+          Press <kbd>→</kbd> or click <em>Next</em> to begin.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 2: TOC ============ -->
+    <section class="slide" data-title="Contents">
+      <div class="eyebrow">Roadmap</div>
+      <h2>Thirteen lessons, organised by principle</h2>
+      <p class="lead">Click any lesson to jump straight to it.</p>
+      <div class="toc" id="toc">
+        <!-- populated by JS -->
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 3: STATE PERSISTENCE ============ -->
+    <section class="slide" data-title="1. State persistence">
+      <div class="eyebrow">Lesson 1 · C1, C4, C5, M4</div>
+      <h2>localStorage is a database without the safety nets</h2>
+      <p class="lead">The moment two tabs race for the same key, you discover all the durability guarantees you took for granted are missing.</p>
+
+      <div class="card bad">
+        <div class="card-title">What we found</div>
+        <ul>
+          <li><b>C1</b> — Two scanners both read the array, both wrote a check-in flag, the second write silently wiped the first.</li>
+          <li><b>C4</b> — CSV import spread <code>data.tickets</code> directly instead of re-reading fresh storage.</li>
+          <li><b>C5</b> — <code>QuotaExceededError</code> caught, <code>false</code> returned, no caller cared. Check-ins appeared to succeed but never persisted.</li>
+          <li><b>M4</b> — One giant blob under a single key. Creating Event B overwrote Event A. No <code>schemaVersion</code>.</li>
+        </ul>
+      </div>
+
+      <div class="reveal">
+        <button class="reveal-trigger">Reveal the lesson</button>
+        <div class="reveal-content">
+          <div class="card good">
+            <div class="card-title">Treat storage like a tiny database</div>
+            <ol>
+              <li>Read fresh, <em>then</em> write. Never write based on a cached snapshot.</li>
+              <li>Every write returns a result. Storage failures must surface to the UI.</li>
+              <li>Plan for schema evolution from day 1 — a <code>version</code> field costs nothing.</li>
+              <li>One key per logical entity. Two events under one key is one event.</li>
+            </ol>
+          </div>
+          <p style="color: var(--text-faint); font-size: 13px;">Each fix maps 1:1 to a server concept: transactions, returned errors, migrations, table-per-entity.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 4: ENTROPY ============ -->
+    <section class="slide" data-title="2. Identity & entropy">
+      <div class="eyebrow">Lesson 2 · C2, L5</div>
+      <h2>Do the math before you pick a length</h2>
+      <p class="lead">Validation hashes were 10 hex characters. Sounds plenty — until the birthday paradox shows up.</p>
+
+      <div class="grid-2">
+        <div class="card bad">
+          <div class="card-title">Before</div>
+          <pre><code><span class="tok-k">return</span> hashHex.<span class="tok-f">substring</span>(<span class="tok-n">0</span>, <span class="tok-n">10</span>);
+<span class="tok-c">// 40 bits. ~0.5% collision at 10k tickets</span></code></pre>
+        </div>
+        <div class="card good">
+          <div class="card-title">After</div>
+          <pre><code><span class="tok-k">return</span> hashHex.<span class="tok-f">substring</span>(<span class="tok-n">0</span>, <span class="tok-n">16</span>);
+<span class="tok-c">// 64 bits. ~10⁻⁸ collision at 10k</span></code></pre>
+        </div>
+      </div>
+
+      <h3 style="margin-top:18px;">Entropy budget for ~1-in-10⁹ collision odds</h3>
+      <table>
+        <thead><tr><th>Items</th><th>Bits needed</th><th>Hex chars</th></tr></thead>
+        <tbody>
+          <tr><td>1 000</td><td class="num">~50</td><td class="num">13</td></tr>
+          <tr><td>10 000</td><td class="num">~57</td><td class="num">15</td></tr>
+          <tr><td>100 000</td><td class="num">~64</td><td class="num">16</td></tr>
+          <tr><td>1 000 000</td><td class="num">~70</td><td class="num">18</td></tr>
+        </tbody>
+      </table>
+
+      <div class="card info">
+        <div class="card-title">The lesson</div>
+        <p style="margin:0;">Collision probability is <code>n² / 2^(k+1)</code>, not <code>n / 2^k</code>. <code>crypto.randomUUID()</code> gives you <em>122 bits</em> in every modern browser — free. Reach for it by default; only optimise downward when you've measured a reason.</p>
+      </div>
+
+      <div class="card tight">
+        <div class="card-title">Try it — how many items can you have?</div>
+        <div class="calc">
+          <span>Bits of entropy:</span>
+          <input type="number" id="bitsInput" value="40" min="8" max="128" />
+          <span class="calc-result">→ <b id="bitsOut">~150</b> items at 0.5% collision risk</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 5: NAMES ============ -->
+    <section class="slide" data-title="3. Names are contracts">
+      <div class="eyebrow">Lesson 3 · C3</div>
+      <h2>Names are part of the contract</h2>
+      <p class="lead"><code>resetAllCheckIns()</code> deleted every ticket. Not the check-in flags — the entire ticket array.</p>
+
+      <div class="card bad">
+        <div class="card-title">The mismatch</div>
+        <pre><code><span class="tok-k">function</span> <span class="tok-f">resetAllCheckIns</span>() {
+  <span class="tok-f">setData</span>({ ...fresh, tickets: [] });  <span class="tok-c">// ← deletes everything</span>
+}</code></pre>
+        <p style="margin-bottom:0;">UI prompt said <em>"Reset all check-ins."</em> Function did <em>"Delete every ticket."</em> The password gate above couldn't save you from that gap.</p>
+      </div>
+
+      <div class="reveal">
+        <button class="reveal-trigger">What's the right fix?</button>
+        <div class="reveal-content">
+          <div class="card good">
+            <div class="card-title">A function name is a public contract</div>
+            <p>Renaming costs five minutes. The operator who clicks it once costs a sold-out event.</p>
+            <p>When you find a name/behaviour mismatch, the answer is <em>never</em> "add a confirm dialog." Fix the name <em>or</em> fix the body.</p>
+          </div>
+          <p style="color: var(--text-faint); font-size: 13px;">Generalises to variable names, file names, route paths, translation keys. The closer two things look, the more dangerous it is when they diverge.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 6: INPUTS ============ -->
+    <section class="slide" data-title="4. Input boundaries">
+      <div class="eyebrow">Lesson 4 · H6, H7, H8, L6</div>
+      <h2>Inputs deserve four things at every boundary</h2>
+      <p class="lead">Anywhere data crosses a trust boundary — paste, CSV, JSON, scanner — you owe it four checks.</p>
+
+      <div class="grid-2">
+        <div class="card accent">
+          <div class="card-title">1 · Shape</div>
+          <p>Is the structure what we expect? CSV header check. JSON <code>event</code> key check.</p>
+        </div>
+        <div class="card accent">
+          <div class="card-title">2 · Length cap</div>
+          <p>What's the max any reasonable input is? <code>maxLength=100/30/30</code> on name/id/phone, mirrored in CSV import.</p>
+        </div>
+        <div class="card accent">
+          <div class="card-title">3 · Escape for next sink</div>
+          <p>Where will this data end up? CSV → Excel formula. SVG → markup. Each sink has its own escaping.</p>
+        </div>
+        <div class="card accent">
+          <div class="card-title">4 · Accept what's valid</div>
+          <p><code>/[^a-zA-Z]/</code> mangles non-Latin scripts. Use <code>\p{L}\p{M}</code> for any-script letters.</p>
+        </div>
+      </div>
+
+      <div class="card warn">
+        <div class="card-title">The standout: CSV injection (H8)</div>
+        <p style="margin-bottom: 8px;">A buyer name <code>=HYPERLINK("http://evil","click me")</code> opens the link when the operator opens the export in Excel.</p>
+        <pre><code><span class="tok-c">// Prefix any cell starting with =, +, -, @, \t, \r</span>
+<span class="tok-k">if</span> (<span class="tok-f">/^[=+\-@\t\r]/</span>.<span class="tok-f">test</span>(cell)) cell = <span class="tok-s">"'"</span> + cell;</code></pre>
+        <p style="margin-bottom: 0;"><em>You're not the only program that will read your output.</em> Sanitise for the dumbest downstream consumer you can imagine.</p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 7: REACT ============ -->
+    <section class="slide" data-title="5. Re-render economics">
+      <div class="eyebrow">Lesson 5 · H2, H3, M8, M9, H4</div>
+      <h2>React re-render economics in a context-heavy app</h2>
+      <p class="lead">Identity matters as much as value. Context is a re-render multiplier.</p>
+
+      <div class="grid-2">
+        <div class="card bad">
+          <div class="card-title">Before — fresh object every render</div>
+          <pre><code>&lt;<span class="tok-n">Provider</span> value={{ tickets, addTicket }}&gt;
+  {children}
+&lt;/<span class="tok-n">Provider</span>&gt;
+<span class="tok-c">// Every consumer re-renders. Always.</span></code></pre>
+        </div>
+        <div class="card good">
+          <div class="card-title">After — stable identity</div>
+          <pre><code><span class="tok-k">const</span> addTicket = <span class="tok-f">useCallback</span>(..., [deps]);
+<span class="tok-k">const</span> value = <span class="tok-f">useMemo</span>(
+  () =&gt; ({ tickets, addTicket }),
+  [tickets, addTicket]
+);</code></pre>
+        </div>
+      </div>
+
+      <div class="card info">
+        <div class="card-title">Rules of thumb</div>
+        <ul style="margin-bottom:0;">
+          <li>Any <em>object</em> passed down through Context must be <code>useMemo</code>'d.</li>
+          <li>Any <em>function</em> passed down must be <code>useCallback</code>'d.</li>
+          <li>The dep arrays must list every captured value.</li>
+        </ul>
+      </div>
+
+      <div class="reveal">
+        <button class="reveal-trigger">Why does this bite later, not now?</button>
+        <div class="reveal-content">
+          <div class="card warn">
+            <p style="margin:0;">The first time you skip <code>useMemo</code>, it doesn't bite. The hundredth time it does, you can't tell which skip caused it. <em>Identity discipline is structural, not situational.</em></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 8: REAL WORLD ============ -->
+    <section class="slide" data-title="6. Real-world hazards">
+      <div class="eyebrow">Lesson 6 · H5, M1, M6, M7</div>
+      <h2>The real world doesn't show up in test fixtures</h2>
+      <p class="lead">Time, identity, and cache are the three places where <em>"works on my machine"</em> diverges hardest from production.</p>
+
+      <div class="grid-2">
+        <div class="card warn">
+          <div class="card-title">Time — H5, M6</div>
+          <ul style="margin-bottom:0;">
+            <li><b>H5</b> — scan at any time on any day. Fix: soft confirm if outside <code>[event ± 1d]</code>.</li>
+            <li><b>M6</b> — <code>toISOString().split("T")[0]</code> is <em>UTC</em>, not local. Off-by-one near midnight.</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <div class="card-title">Identity — M1</div>
+          <p style="margin-bottom:0;">QR had no <code>eventId</code>. A ticket from Event A scans clean at Event B if the device hasn't been wiped.</p>
+        </div>
+      </div>
+
+      <div class="card warn">
+        <div class="card-title">Cache — M7</div>
+        <p style="margin-bottom:0;">Service worker rendered a stale app shell from the previous event before localStorage cleared. <em>Whenever you see a service worker, ask: what happens after I deploy a new version?</em></p>
+      </div>
+
+      <div class="reveal">
+        <button class="reveal-trigger">UX lesson worth its own slide</button>
+        <div class="reveal-content">
+          <div class="card accent">
+            <div class="card-title">Never hard-block the operator</div>
+            <p style="margin:0;">At a live event, the operator is the ground truth. Events run late, VIPs arrive early, rehearsals happen. Make the software <em>whisper, not scream</em> — soft confirms beat hard blocks every time.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 9: SECURITY ============ -->
+    <section class="slide" data-title="7. Security theater">
+      <div class="eyebrow">Lesson 7 · H1</div>
+      <h2>Security theater is worse than no security</h2>
+
+      <div class="card bad">
+        <div class="card-title">The "auth"</div>
+        <pre><code><span class="tok-k">if</span> (password !== <span class="tok-s">"980827"</span>) {
+  alert(<span class="tok-s">"Incorrect password"</span>);
+  <span class="tok-k">return</span>;
+}</code></pre>
+        <ul>
+          <li>Anyone with DevTools can <em>read</em> it.</li>
+          <li>Anyone can <em>bypass</em> it via <code>setData(...)</code> in the console.</li>
+          <li>It implies a guarantee the system can't keep.</li>
+        </ul>
+      </div>
+
+      <div class="card good">
+        <div class="card-title">The fix — honest friction</div>
+        <p style="margin-bottom: 8px;">Replaced password with two-step <em>"type DELETE to confirm."</em> The confirmation is honest about what it is: friction against fat-fingering, not auth.</p>
+      </div>
+
+      <div class="card info">
+        <div class="card-title">Be ruthless about your security model</div>
+        <ul style="margin-bottom: 0;">
+          <li>If the secret ships in the JS bundle, <em>it isn't secret</em>.</li>
+          <li>If the check can be bypassed via DevTools, <em>it isn't a check</em>.</li>
+          <li>Replace fake security with honest friction.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 10: INJECTION ============ -->
+    <section class="slide" data-title="8. SVG/HTML injection">
+      <div class="eyebrow">Lesson 8 · M2, M3</div>
+      <h2>Escape at the boundary, every time</h2>
+      <p class="lead">Source-side escaping is fragile — new code paths bypass it. Boundary-side escaping is structural — every string crossing into the sink gets the same treatment by construction.</p>
+
+      <div class="card bad">
+        <div class="card-title">M2 — one field forgot</div>
+        <pre><code>&lt;text&gt;{<span class="tok-f">escapeXml</span>(buyerName)}&lt;/text&gt;
+&lt;text&gt;{<span class="tok-f">escapeXml</span>(venue)}&lt;/text&gt;
+&lt;text&gt;{ticketId}&lt;/text&gt;  <span class="tok-c">// ← unescaped</span></code></pre>
+      </div>
+
+      <div class="card warn">
+        <div class="card-title">M3 — <code>dangerouslySetInnerHTML</code> is a code smell</div>
+        <p style="margin-bottom:0;">Sometimes necessary, never casual. Treat it as a <code>// CONTRACT:</code> comment that every input upstream is sanitised — and re-verify that contract whenever the upstream code changes.</p>
+      </div>
+
+      <div class="card good">
+        <div class="card-title">The fix</div>
+        <ul style="margin-bottom:0;">
+          <li>Escape <em>at the boundary</em> (the place data becomes markup), not at the source.</li>
+          <li>Run final SVG output through DOMPurify before injecting.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 11: i18n ============ -->
+    <section class="slide" data-title="9. i18n discipline">
+      <div class="eyebrow">Lesson 9 · L2, N1, N2, N3 + scanner pass</div>
+      <h2>Route strings at the first display site</h2>
+      <p class="lead">Six of 25 findings were "hardcoded English string in a Spanish app." They re-emerge because each developer types literal text inline when they're solving the <em>real</em> problem in front of them.</p>
+
+      <div class="card bad">
+        <div class="card-title">The pattern that creates the bug</div>
+        <pre><code>&lt;button&gt;Update Ticket&lt;/button&gt;     <span class="tok-c">// English in JSX</span>
+{success && &lt;p&gt;Ready to Go!&lt;/p&gt;}    <span class="tok-c">// Same trap, success path</span></code></pre>
+      </div>
+
+      <div class="card good">
+        <div class="card-title">The rule</div>
+        <p style="margin-bottom: 8px;"><em>The moment a string is rendered, it should already be <code>t()</code>'d.</em></p>
+        <pre><code>&lt;button&gt;{<span class="tok-f">t</span>(<span class="tok-s">"updateTicket"</span>)}&lt;/button&gt;</code></pre>
+        <p style="margin-bottom: 0;">Cost of doing it right: one extra import + one new key. Cost of doing it wrong: a follow-up audit pass three months later.</p>
+      </div>
+
+      <div class="card info">
+        <div class="card-title">Edge case — short universal labels</div>
+        <p style="margin-bottom:0;"><code>"ID"</code>, <code>"USD"</code>, units. Debatable. In Sígale we routed even those through <code>t()</code> (e.g. <code>detailId</code>, <code>detailPrice</code>) so the ES/EN switch is uniform — no half-translated screens.</p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 12: DEAD CODE ============ -->
+    <section class="slide" data-title="10. Dead code">
+      <div class="eyebrow">Lesson 10 · L1, L3, L4, N4</div>
+      <h2>The cost of "I'll come back to this"</h2>
+      <p class="lead">Friction-free dev environments accumulate dead code at compound interest.</p>
+
+      <div class="grid-2">
+        <div class="card bad">
+          <div class="card-title">L1 — unused imports</div>
+          <p>ESLint set to <code>warn</code>. Bumped to <code>error</code>; fixed offenders.</p>
+        </div>
+        <div class="card bad">
+          <div class="card-title">L4 — colliding CSV shapes</div>
+          <p>Two formats (5-col, 6-col) shared <em>one</em> function name. Round-trip was broken. Split into <code>ticketsToRoundTripCSV</code> + <code>ticketsToHumanCSV</code>.</p>
+        </div>
+        <div class="card bad">
+          <div class="card-title">N4 — exports never imported</div>
+          <p><code>extractMimeType</code>, <code>purgeNavigationCache</code> — dead. Deleted.</p>
+        </div>
+        <div class="card bad">
+          <div class="card-title">L3 — undocumented route</div>
+          <p>Catch-all <code>*</code> not in CLAUDE.md. The next dev (you, in 3 months) doesn't know it exists.</p>
+        </div>
+      </div>
+
+      <div class="card good">
+        <div class="card-title">The lesson</div>
+        <ul style="margin-bottom:0;">
+          <li><b>Lint at <code>error</code>, not <code>warn</code>.</b> The line between "noise" and "must-fix" is what keeps codebases honest.</li>
+          <li><b>When two artifacts share a name, they share a fate</b> — split early, alias only with a back-compat story.</li>
+          <li><b>Document every code path</b> — if it's not in your CLAUDE.md (or equivalent), it might as well not exist.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 13: SQL ============ -->
+    <section class="slide" data-title="Cross-cutting · SQL">
+      <div class="eyebrow">Cross-cutting</div>
+      <h2>Designing for a future SQL migration</h2>
+      <p class="lead">Throughout the remediation we kept asking: <em>if this code has to move to a server next quarter, does the shape help or hurt?</em></p>
+
+      <div class="card good">
+        <div class="card-title">Pattern 1 — pure-function business logic</div>
+        <pre><code><span class="tok-f">checkInWindowStatus</span>(event, now, windowDays)
+<span class="tok-f">computeStats</span>(tickets, event)
+<span class="tok-f">csvToTickets</span>(string)
+<span class="tok-f">generateValidationHash</span>(ticket)</code></pre>
+        <p style="margin-bottom:0;">All take primitives + records, return values, no React, no storage. Each lifts to a server endpoint or stored procedure verbatim.</p>
+      </div>
+
+      <div class="card good">
+        <div class="card-title">Pattern 2 — schema-version anchor</div>
+        <p style="margin-bottom:0;">M4 added <code>schemaVersion</code> at the storage root. When you migrate, that's where the migration script branches. Without it, you're guessing which version of the data shape lives on each device.</p>
+      </div>
+
+      <div class="card good">
+        <div class="card-title">Pattern 3 — foreign-key thinking, even without an FK</div>
+        <p style="margin-bottom:0;">M1's <code>eventId</code> in the QR is a foreign key in everything but name. <em>That's exactly what survives the migration.</em></p>
+      </div>
+
+      <div class="card info" style="margin-top:18px;">
+        <p style="margin:0;"><b>The opposite pattern</b> — write to localStorage from inside a <code>useEffect</code>, read from <code>useState</code> in three places, derive a sum in JSX — is what makes migrations hard. <em>Pure functions don't care where state lives. UI-coupled logic does.</em></p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 14: POC ============ -->
+    <section class="slide" data-title="Cross-cutting · POC">
+      <div class="eyebrow">Cross-cutting</div>
+      <h2>POC mindset vs. production paranoia</h2>
+      <p class="lead">"This is a POC for ≤2 users" isn't an excuse. It's a <em>budget</em>.</p>
+
+      <div class="grid-2">
+        <div class="card good">
+          <div class="card-title">In scope</div>
+          <ul style="margin-bottom:0;">
+            <li>Correctness — can't ship wrong data.</li>
+            <li>Boundary safety — CSV injection, XSS, length caps.</li>
+            <li>Name honesty — don't lie to the operator.</li>
+            <li>Basic re-render hygiene — don't ship a phone-freezer.</li>
+          </ul>
+        </div>
+        <div class="card warn">
+          <div class="card-title">Deferred (not forgotten)</div>
+          <ul style="margin-bottom:0;">
+            <li>Virtualisation for 10k+ rows.</li>
+            <li>Multi-event storage isolation per device.</li>
+            <li>Bundle-split for cold-load on 4G.</li>
+            <li>Bulletproof cross-tab consensus.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card accent">
+        <div class="card-title">The trick: write the condition, not the intent</div>
+        <div class="compare-row">
+          <div class="card bad tight" style="margin:0;">
+            <div class="card-title">Bad</div>
+            <pre style="margin:0;"><code><span class="tok-c">// TODO: virtualise this later</span></code></pre>
+          </div>
+          <div class="card good tight" style="margin:0;">
+            <div class="card-title">Good</div>
+            <pre style="margin:0;"><code><span class="tok-c">// H4: virtualise when ticket count
+// > 5k. Acceptable per POC scope.</span></code></pre>
+          </div>
+        </div>
+        <p style="margin-bottom:0; margin-top:12px;">Without the threshold, the deferred item turns into the production incident.</p>
+      </div>
+    </section>
+
+    <!-- ============ SLIDE 15: CHECKLIST ============ -->
+    <section class="slide" data-title="Self-review checklist">
+      <div class="eyebrow">Habits</div>
+      <h2>Self-review checklist</h2>
+      <p class="lead">Click each item as you internalise it. Good code isn't memorised — it's the questions you ask out of habit.</p>
+
+      <ul class="checklist" id="checklist">
+        <li>Did I read storage fresh before I write?</li>
+        <li>Did I memoise the context value and <code>useCallback</code> the actions?</li>
+        <li>Did I cap input length and escape for the next sink?</li>
+        <li>Is my function name the same shape as my function body?</li>
+        <li>Did the string go through <code>t()</code>?</li>
+        <li>If this had to run on a server tomorrow, would it?</li>
+        <li>Have I budgeted entropy of my IDs against birthday-paradox math?</li>
+        <li>If this is a deferral, did I write the <em>condition</em>, not the intent?</li>
+        <li>If the code touches dates, is it timezone-aware?</li>
+        <li>If the code uses <code>dangerouslySetInnerHTML</code>, is the upstream contract still true?</li>
+      </ul>
+    </section>
+
+    <!-- ============ SLIDE 16: QUIZ ============ -->
+    <section class="slide" data-title="Quiz">
+      <div class="eyebrow">Self-test</div>
+      <h2>Did it stick?</h2>
+      <p class="lead">Ten questions. No score on screen until you finish — answer honestly.</p>
+      <div class="q-meta">
+        <div class="q-score">Question <b id="qNum">1</b> of <b>10</b></div>
+        <div class="q-score">Score: <b id="qScore">0</b></div>
+      </div>
+      <div id="quizArea"></div>
+    </section>
+
+    <!-- ============ SLIDE 17: END ============ -->
+    <section class="slide" data-title="End">
+      <div class="title-slide final-grade">
+        <div class="eyebrow">You finished</div>
+        <h1 id="finalTitle">Lessons internalised</h1>
+        <div class="stat-num" id="finalScore" style="font-size:64px; margin: 20px 0;">—</div>
+        <p class="lead" id="finalMsg">Re-read any section by clicking <em>Contents</em> in the table of contents.</p>
+
+        <div class="card info" style="text-align:left; margin-top: 30px;">
+          <div class="card-title">Further reading</div>
+          <ul style="margin-bottom:0;">
+            <li><b>Birthday paradox</b> — Wikipedia "Birthday attack"</li>
+            <li><b>OWASP CSV injection</b> — owasp.org/www-community/attacks/CSV_Injection</li>
+            <li><b>React Context performance</b> — Kent C. Dodds, "How to optimize your context value"</li>
+            <li><b><code>crypto.randomUUID()</code></b> — MDN</li>
+            <li><b>Service worker lifecycle</b> — MDN "Using Service Workers"</li>
+            <li><b>Unicode property escapes</b> — MDN Regular Expressions</li>
+          </ul>
+        </div>
+
+        <div style="margin-top: 24px;">
+          <button class="nav-btn primary" onclick="goTo(0)">↺ Restart</button>
+          <button class="nav-btn" onclick="goTo(1)">📑 Contents</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <button class="nav-btn" id="prevBtn">← Prev</button>
+    <div class="nav-hint">
+      <kbd>←</kbd> <kbd>→</kbd> navigate · <kbd>Esc</kbd> contents
+    </div>
+    <button class="nav-btn primary" id="nextBtn">Next →</button>
+  </footer>
+</div>
+
+<script>
+  // ---------- Slide engine ----------
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const stage = document.getElementById('stage');
+
+  function goTo(i) {
+    current = Math.max(0, Math.min(total - 1, i));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    counter.textContent = `${current + 1} / ${total}`;
+    progress.style.width = `${((current) / (total - 1)) * 100}%`;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    nextBtn.textContent = current === total - 1 ? 'Done ✓' : 'Next →';
+    stage.scrollTop = 0;
+  }
+
+  prevBtn.addEventListener('click', () => goTo(current - 1));
+  nextBtn.addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(current - 1); }
+    else if (e.key === 'Escape') { e.preventDefault(); goTo(1); }
+    else if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+    else if (e.key === 'End')  { e.preventDefault(); goTo(total - 1); }
+  });
+
+  // ---------- TOC ----------
+  const tocItems = [
+    { idx: 2,  num: '1',  text: 'State persistence', sub: 'localStorage as a tiny database' },
+    { idx: 3,  num: '2',  text: 'Identity & entropy', sub: 'Birthday-paradox math' },
+    { idx: 4,  num: '3',  text: 'Names are contracts', sub: 'Mismatch = footgun' },
+    { idx: 5,  num: '4',  text: 'Input boundaries', sub: 'Four checks, every time' },
+    { idx: 6,  num: '5',  text: 'React re-render economics', sub: 'Identity matters' },
+    { idx: 7,  num: '6',  text: 'Real-world hazards', sub: 'Time, identity, cache' },
+    { idx: 8,  num: '7',  text: 'Security theater', sub: 'Honest friction over fake auth' },
+    { idx: 9,  num: '8',  text: 'SVG/HTML injection', sub: 'Escape at the boundary' },
+    { idx: 10, num: '9',  text: 'i18n discipline', sub: 'Strings through t() at first sight' },
+    { idx: 11, num: '10', text: 'Dead code', sub: 'Lint at error, not warn' },
+    { idx: 12, num: '✦',  text: 'Cross-cutting · SQL', sub: 'Pure functions migrate' },
+    { idx: 13, num: '✦',  text: 'Cross-cutting · POC', sub: 'Conditions over intents' },
+    { idx: 14, num: '☑',  text: 'Self-review checklist', sub: 'Habits, not memory' },
+    { idx: 15, num: '?',  text: 'Quiz', sub: 'Test yourself' },
+  ];
+  const toc = document.getElementById('toc');
+  tocItems.forEach(item => {
+    const btn = document.createElement('button');
+    btn.className = 'toc-item';
+    btn.innerHTML = `
+      <div class="toc-num">${item.num}</div>
+      <div class="toc-text">${item.text}<small>${item.sub}</small></div>
+    `;
+    btn.addEventListener('click', () => goTo(item.idx));
+    toc.appendChild(btn);
+  });
+
+  // ---------- Reveal ----------
+  document.querySelectorAll('.reveal-trigger').forEach(btn => {
+    btn.addEventListener('click', () => btn.parentElement.classList.add('open'));
+  });
+
+  // ---------- Checklist ----------
+  document.querySelectorAll('#checklist li').forEach(li => {
+    li.addEventListener('click', () => li.classList.toggle('checked'));
+  });
+
+  // ---------- Birthday calculator ----------
+  // For 0.5% collision probability: n ≈ sqrt(2 * 2^bits * ln(1/(1-p)))
+  // Approximation: n ≈ 2^(bits/2) * sqrt(2 * 0.005)
+  const bitsInput = document.getElementById('bitsInput');
+  const bitsOut = document.getElementById('bitsOut');
+  function updateBits() {
+    const bits = Math.max(8, Math.min(128, Number(bitsInput.value) || 0));
+    // n at p=0.005:  n ≈ sqrt(2 * 2^bits * ln(1/(1-0.005)))
+    const n = Math.sqrt(2 * Math.pow(2, bits) * Math.log(1 / 0.995));
+    let formatted;
+    if (n < 1000) formatted = `~${Math.round(n)}`;
+    else if (n < 1e6) formatted = `~${(n/1000).toFixed(1)}k`;
+    else if (n < 1e9) formatted = `~${(n/1e6).toFixed(1)}M`;
+    else if (n < 1e12) formatted = `~${(n/1e9).toFixed(1)}B`;
+    else formatted = `~${n.toExponential(1)}`;
+    bitsOut.textContent = formatted;
+  }
+  bitsInput.addEventListener('input', updateBits);
+  updateBits();
+
+  // ---------- Quiz ----------
+  const questions = [
+    {
+      q: "You're storing a hash to identify ~10,000 items. Minimum entropy for ~1-in-10⁹ collision risk?",
+      opts: ["32 bits", "40 bits", "57 bits", "64 bits"],
+      a: 2,
+      why: "Birthday-paradox: collision probability is n²/2^(k+1). For 10k items at 10⁻⁹ risk you need ~57 bits. The original 40-bit hash gave ~0.5% collision at the same scale."
+    },
+    {
+      q: "Your context provider passes <code>value={{ tickets, addTicket, removeTicket }}</code>. What happens?",
+      opts: [
+        "Nothing — React handles it",
+        "Every consumer re-renders on every parent render",
+        "Only consumers reading <code>tickets</code> re-render",
+        "The provider crashes"
+      ],
+      a: 1,
+      why: "The object literal is a fresh reference every render, so <code>===</code> comparison fails for every consumer. Wrap with <code>useMemo</code> and <code>useCallback</code> on the actions."
+    },
+    {
+      q: "A CSV cell starts with <code>=</code>. Why is that dangerous?",
+      opts: [
+        "It breaks parsers",
+        "Excel will execute it as a formula",
+        "It causes encoding issues",
+        "It's flagged as spam"
+      ],
+      a: 1,
+      why: "Excel evaluates cells starting with =, +, -, @, tab, or carriage return as formulas. <code>=HYPERLINK(...)</code> opens links. OWASP fix: prefix with a single quote."
+    },
+    {
+      q: "<code>resetAllCheckIns()</code> deletes all tickets. The right fix is:",
+      opts: [
+        "Add a confirmation dialog",
+        "Add a password prompt",
+        "Rename the function, OR change the body",
+        "Add a unit test"
+      ],
+      a: 2,
+      why: "A function name is a public contract. Closing the gap requires fixing one side or the other. Confirms and passwords don't repair the underlying mismatch — they paper over it."
+    },
+    {
+      q: "<code>localStorage.setItem</code> throws QuotaExceededError. Catch returns <code>false</code>. No caller checks. User-visible bug?",
+      opts: [
+        "The app crashes",
+        "Check-in appears to succeed but is never persisted",
+        "Storage is silently cleared",
+        "The next write fails"
+      ],
+      a: 1,
+      why: "UI shows the new state from React memory, but the next reload reverts to the last successful save — and the same person gets admitted again."
+    },
+    {
+      q: "A hardcoded password <code>if (password !== \"980827\")</code> in client JS:",
+      opts: [
+        "Provides limited but real security",
+        "Provides no security and false confidence",
+        "Is fine if obfuscated",
+        "Is fine for POCs"
+      ],
+      a: 1,
+      why: "The bundle ships to every browser. <code>grep</code> finds it instantly. The check provides no real access control — and worse, it implies a guarantee the system can't keep."
+    },
+    {
+      q: "<code>new Date().toISOString().split(\"T\")[0]</code> in Bogotá (UTC−5) at 11pm Tuesday returns:",
+      opts: [
+        "\"Tuesday\"",
+        "Wednesday's date string (next day, UTC)",
+        "The local date string",
+        "An error"
+      ],
+      a: 1,
+      why: "<code>toISOString</code> converts to UTC first. 23:00 UTC−5 = 04:00 next-day UTC. Result: tomorrow's date, off by one. Use local-timezone date parts."
+    },
+    {
+      q: "QR for Event A. Device still has Event B's data cached. With no eventId in the QR payload:",
+      opts: [
+        "The scan fails harmlessly",
+        "The wrong-event ticket may scan as valid",
+        "The browser blocks the scan",
+        "The QR rotates automatically"
+      ],
+      a: 1,
+      why: "The validation hash is the only identifier. If it happens to match anything in current storage, the scan succeeds — even though it's the wrong event. Embed an eventId and reject mismatches."
+    },
+    {
+      q: "<code>\\p{L}\\p{M}</code> in a regex matches:",
+      opts: [
+        "Letters and combining marks from any script",
+        "Latin letters only",
+        "Lowercase letters",
+        "Special punctuation"
+      ],
+      a: 0,
+      why: "Unicode property escapes. <code>\\p{L}</code> = any letter, <code>\\p{M}</code> = combining marks (accents, diacritics). Replaces brittle <code>[a-zA-ZÀ-ÿ]</code> that mangles non-Latin names."
+    },
+    {
+      q: "You defer a virtualization fix. The TODO comment should say:",
+      opts: [
+        "<code>// TODO: virtualise later</code>",
+        "<code>// virtualise when ticket count > 5k. Currently acceptable per POC scope.</code>",
+        "<code>// FIXME</code>",
+        "<code>// performance optimization needed</code>"
+      ],
+      a: 1,
+      why: "Write the <em>condition</em> under which the deferral stops being acceptable, not the intent. Without a threshold, deferred items become production incidents."
+    }
+  ];
+
+  let qIdx = 0;
+  let qScore = 0;
+  const quizArea = document.getElementById('quizArea');
+  const qNum = document.getElementById('qNum');
+  const qScoreEl = document.getElementById('qScore');
+
+  function renderQuestion() {
+    const q = questions[qIdx];
+    qNum.textContent = qIdx + 1;
+    qScoreEl.textContent = qScore;
+    quizArea.innerHTML = `
+      <div class="card q-card">
+        <div class="q-text">${q.q}</div>
+        <div class="q-options">
+          ${q.opts.map((o, i) => `<button class="q-opt" data-i="${i}">${o}</button>`).join('')}
+        </div>
+        <div class="q-feedback" id="qfb"></div>
+      </div>
+    `;
+    quizArea.querySelectorAll('.q-opt').forEach(btn => {
+      btn.addEventListener('click', () => answer(Number(btn.dataset.i)));
+    });
+  }
+
+  function answer(i) {
+    const q = questions[qIdx];
+    const opts = quizArea.querySelectorAll('.q-opt');
+    opts.forEach(b => b.disabled = true);
+    const correct = i === q.a;
+    if (correct) qScore++;
+    opts[i].classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) opts[q.a].classList.add('reveal-correct');
+
+    const fb = document.getElementById('qfb');
+    fb.className = `q-feedback show ${correct ? 'good' : 'bad'}`;
+    fb.innerHTML = `<b>${correct ? '✓ Correct.' : '✗ Not quite.'}</b> ${q.why}
+      <div style="margin-top: 12px;">
+        <button class="nav-btn primary" id="nextQ">${qIdx === questions.length - 1 ? 'See results →' : 'Next question →'}</button>
+      </div>`;
+    document.getElementById('nextQ').addEventListener('click', () => {
+      qIdx++;
+      qScoreEl.textContent = qScore;
+      if (qIdx >= questions.length) {
+        showFinal();
+      } else {
+        renderQuestion();
+      }
+    });
+  }
+
+  function showFinal() {
+    const pct = Math.round((qScore / questions.length) * 100);
+    document.getElementById('finalScore').textContent = `${qScore} / ${questions.length}`;
+
+    let title, msg;
+    if (pct === 100) {
+      title = "Internalised. ✓";
+      msg = "Every lesson stuck. The questions you ask out of habit are now the right ones.";
+    } else if (pct >= 80) {
+      title = "Strong grasp.";
+      msg = "Most lessons stuck. Re-read the sections behind the missed questions to close the gap.";
+    } else if (pct >= 60) {
+      title = "Solid foundation.";
+      msg = "Half the lessons stuck. Walk through the table of contents once more — the patterns repeat.";
+    } else {
+      title = "Worth another pass.";
+      msg = "Don't sweat the score — these are habits, not facts. Re-read with the checklist open.";
+    }
+    document.getElementById('finalTitle').textContent = title;
+    document.getElementById('finalMsg').innerHTML = msg;
+    goTo(total - 1);
+  }
+
+  renderQuestion();
+
+  // ---------- Init ----------
+  goTo(0);
+</script>
+</body>
+</html>

@@ -35,7 +35,7 @@ export const TicketForm = () => {
     try {
       if (isEditMode) {
         await updateTicket(editTicket.ticketId, formData);
-        alert(t("ticketUpdated") || "Ticket updated successfully!");
+        alert(t("ticketUpdated"));
         navigate("/validate-qr");
       } else {
         const ticket = await addTicket(formData);
@@ -84,7 +84,10 @@ export const TicketForm = () => {
       }
 
       id = id.replace(/[^\d]/g, "");
-      name = name.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, "").replace(/\s+/g, " ").trim();
+      // L6: use Unicode property escapes so non-Latin names (Cyrillic,
+      // Arabic, CJK, Hebrew, etc.) aren't stripped. \p{L} = letter,
+      // \p{M} = combining mark (accents, etc.).
+      name = name.replace(/[^\p{L}\p{M}\s'-]/gu, "").replace(/\s+/g, " ").trim();
       if (name && id) setFormData((prev) => ({ ...prev, buyerName: name, buyerId: id }));
     } catch { /* Clipboard access denied */ }
   };
@@ -102,7 +105,7 @@ export const TicketForm = () => {
                 <FontAwesomeIcon icon={faTicketSimple} style={{ color: "white", fontSize: "14px" }} />
               </div>
               <h1 className={s.cardTitle}>
-                {createdTicket ? t("ticketCreated") : (isEditMode ? "Update Ticket" : t("sellTicketsTitle"))}
+                {createdTicket ? t("ticketCreated") : (isEditMode ? t("updateTicket") : t("sellTicketsTitle"))}
               </h1>
             </div>
             <p className={s.cardSubtitle}>
@@ -118,30 +121,30 @@ export const TicketForm = () => {
                   <div className={s.successCircle}>
                     <FontAwesomeIcon icon={faCheckCircle} size="2x" />
                   </div>
-                  <p className={s.successHeading}>Ready to Go!</p>
-                  <p className={s.successSubtitle}>Ticket has been generated.</p>
+                  <p className={s.successHeading}>{t("readyToGo")}</p>
+                  <p className={s.successSubtitle}>{t("ticketGenerated")}</p>
                 </div>
 
                 {/* Ticket details */}
                 <div className={`glass-clean ${s.detailsSection}`}>
                   <div className={s.detailsGrid}>
                     <div>
-                      <p className={s.detailKey}>TYPE</p>
+                      <p className={s.detailKey}>{t("detailType")}</p>
                       <p className={s.detailValuePrimary}>{createdTicket.ticketType}</p>
                     </div>
                     <div className={s.detailsGridRight}>
-                      <p className={s.detailKey}>PRICE</p>
+                      <p className={s.detailKey}>{t("detailPrice")}</p>
                       <p className={s.detailValueHeading}>${event.ticketTypes[createdTicket.ticketType]?.toLocaleString()}</p>
                     </div>
                   </div>
                   <div className={s.detailsDivider} />
                   <div className={s.detailsGrid}>
                     <div>
-                      <p className={s.detailKey}>ID</p>
+                      <p className={s.detailKey}>{t("detailId")}</p>
                       <p className={s.detailValueMuted}>{createdTicket.buyerId}</p>
                     </div>
                     <div className={s.detailsGridRight}>
-                      <p className={s.detailKey}>PHONE</p>
+                      <p className={s.detailKey}>{t("detailPhone")}</p>
                       <p className={s.detailValueMuted}>{createdTicket.buyerPhone}</p>
                     </div>
                   </div>
@@ -176,7 +179,7 @@ export const TicketForm = () => {
                       <FontAwesomeIcon icon={faUser} className="label-icon" />
                       <label className={s.fieldLabelText}>{t("buyerName")}</label>
                     </div>
-                    <input type="text" required value={formData.buyerName} onChange={(e) => setFormData({ ...formData, buyerName: e.target.value })} placeholder={t("enterFullName")} />
+                    <input type="text" required maxLength={100} value={formData.buyerName} onChange={(e) => setFormData({ ...formData, buyerName: e.target.value })} placeholder={t("enterFullName")} />
                   </div>
 
                   {/* ID + Phone two-col */}
@@ -186,14 +189,14 @@ export const TicketForm = () => {
                         <FontAwesomeIcon icon={faIdCard} className="label-icon" />
                         <label className={s.fieldLabelText}>{t("idNumber")}</label>
                       </div>
-                      <input type="tel" required value={formData.buyerId} onChange={(e) => setFormData({ ...formData, buyerId: e.target.value })} placeholder="ID..." className="text-mono" />
+                      <input type="tel" required maxLength={30} value={formData.buyerId} onChange={(e) => setFormData({ ...formData, buyerId: e.target.value })} placeholder="ID..." className="text-mono" />
                     </div>
                     <div>
                       <div className={s.fieldLabelRow}>
                         <FontAwesomeIcon icon={faPhone} className="label-icon" />
                         <label className={s.fieldLabelText}>{t("phoneNumber")}</label>
                       </div>
-                      <input type="tel" required value={formData.buyerPhone} onChange={(e) => setFormData({ ...formData, buyerPhone: e.target.value })} onFocus={(e) => e.target.select()} placeholder="Phone..." className="text-mono" />
+                      <input type="tel" required maxLength={30} value={formData.buyerPhone} onChange={(e) => setFormData({ ...formData, buyerPhone: e.target.value })} onFocus={(e) => e.target.select()} placeholder="Phone..." className="text-mono" />
                     </div>
                   </div>
 
@@ -215,7 +218,7 @@ export const TicketForm = () => {
 
                 <button type="submit" disabled={isSubmitting} className={`${btn.btn} ${btn.primary} ${btn.lg}`}>
                   <FontAwesomeIcon icon={isEditMode ? faPenToSquare : faPlusCircle} />
-                  <span>{isSubmitting ? "..." : (isEditMode ? "Update Ticket" : t("createTicket"))}</span>
+                  <span>{isSubmitting ? "..." : (isEditMode ? t("updateTicket") : t("createTicket"))}</span>
                 </button>
               </form>
             )}

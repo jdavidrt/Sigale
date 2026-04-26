@@ -41,6 +41,7 @@ All features complete:
 /validate-qr      QR scanner
 /copy-event       Export data
 /dashboard        Analytics
+*                 Catch-all → <Navigate to="/" replace /> (any unmatched path redirects to Home)
 ```
 
 ## Key Files

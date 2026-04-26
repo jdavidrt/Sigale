@@ -81,7 +81,7 @@ export const usePageVisibility = () => {
       try {
         sessionStorage.setItem('sigale-last-active', Date.now().toString());
         sessionStorage.setItem('sigale-last-path', window.location.pathname);
-      } catch (e) {
+      } catch {
         // Ignore — sessionStorage may be unavailable
       }
     };

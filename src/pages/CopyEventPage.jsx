@@ -4,6 +4,7 @@ import { useTickets } from "../context/TicketContext";
 import { useLanguage } from "../context/LanguageContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faDownload, faFileCode, faFileCsv, faInfoCircle, faChevronDown, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import { ticketsToHumanCSV } from "../utils/csvUtils";
 import s from "./CopyEventPage.module.css";
 
 export const CopyEventPage = () => {
@@ -38,14 +39,10 @@ export const CopyEventPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  const generateCSVContent = () => {
-    const headers = ["Buyer Name", "Buyer ID", "Buyer Phone", "Ticket Type", "Purchase Date", "Ticket Price"];
-    const rows = tickets.map((ticket) => {
-      const price = event?.ticketTypes?.[ticket.ticketType] || 0;
-      return [ticket.buyerName, ticket.buyerId, ticket.buyerPhone, ticket.ticketType, ticket.purchaseDate, price];
-    });
-    return [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n");
-  };
+  // L4: human-facing CSV (with price column) vs round-trip CSV (5-column,
+  // re-importable) are distinct shapes — see csvUtils.js module docs. This
+  // page exports the human-facing variant for Excel/Sheets reports.
+  const generateCSVContent = () => ticketsToHumanCSV(tickets, event);
 
   const handleCopyCSV = async () => {
     try {
@@ -207,9 +204,9 @@ export const CopyEventPage = () => {
               <div className="icon-box">
                 <FontAwesomeIcon icon={faCopy} style={{ color: "white", fontSize: "14px" }} />
               </div>
-              <h1 className={s.cardTitle}>Copy Event Data</h1>
+              <h1 className={s.cardTitle}>{t("copyEventData")}</h1>
             </div>
-            <p className={s.cardSubtitle}>Backup or transfer your event and ticket data</p>
+            <p className={s.cardSubtitle}>{t("copyEventSubtitle")}</p>
           </div>
 
           <div className={s.cardContent}>
@@ -269,7 +266,7 @@ export const CopyEventPage = () => {
                 className={`glass-clean ${s.actionBtn} ${s.actionBtnPDF}`}
               >
                 <FontAwesomeIcon icon={faDownload} size="lg" />
-                <span className={s.actionBtnLabel}>{t('exportAttendanceSheet') || (language === 'es' ? 'Exportar Hoja de Asistencia' : 'Export Attendance Sheet')}</span>
+                <span className={s.actionBtnLabel}>{t('exportAttendanceSheet')}</span>
               </button>
             </div>
 

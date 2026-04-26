@@ -4,6 +4,7 @@ import { generateQRData } from "../../utils/qrGenerator";
 import { copySVGToClipboard, copyPNGToClipboard, shareQR } from "../../utils/qrCopy";
 import { generateTicketSVG } from "../../utils/svgTicketTemplate";
 import { useLanguage } from "../../context/LanguageContext";
+import { useEvent } from "../../context/EventContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faImage, faShareNodes } from "@fortawesome/free-solid-svg-icons";
 import s from "./QRDisplay.module.css";
@@ -14,7 +15,8 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
   const [copyStatus, setCopyStatus] = useState("");
   const [ticketSVG, setTicketSVG] = useState("");
   const { t, language } = useLanguage();
-  const qrData = generateQRData(ticket, event);
+  const { eventId } = useEvent();
+  const qrData = generateQRData(ticket, event, eventId);
 
   useEffect(() => {
     const generatePreview = async () => {

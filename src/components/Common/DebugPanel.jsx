@@ -76,7 +76,7 @@ export const DebugPanel = () => {
                 localStorage.setItem('debug-test', '1');
                 localStorage.removeItem('debug-test');
                 addLog('💾 localStorage: OK');
-            } catch (e) {
+            } catch {
                 addLog('❌ localStorage: FAILED');
             }
         };
@@ -102,7 +102,7 @@ export const DebugPanel = () => {
                     const cacheNames = await caches.keys();
                     const hasIndexHtml = await caches.match('/index.html');
                     addLog(`📦 Cache: ${cacheNames.length} caches, index.html ${hasIndexHtml ? 'CACHED' : 'MISSING'}`);
-                } catch (e) {
+                } catch {
                     addLog('📦 Cache: Error checking');
                 }
             }

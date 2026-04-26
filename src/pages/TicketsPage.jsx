@@ -13,7 +13,7 @@ import btn from "../components/Common/Button.module.css";
 export const TicketsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { event } = useEvent();
-  const { tickets, searchTickets, resetAllCheckIns } = useTickets();
+  const { tickets, searchTickets, clearAllTickets } = useTickets();
   const { t } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,17 +36,28 @@ export const TicketsPage = () => {
     else setSearchParams({ type: newType });
   };
 
-  const handleResetAllCheckIns = () => {
-    const password = window.prompt(t("enterPasswordToReset") || "Enter password to reset all check-ins:");
-    if (password === null) return;
-    if (password !== "980827") {
-      alert(t("incorrectPassword") || "Incorrect password. Reset cancelled.");
+  // H1: A hard-coded password in a static bundle is not access control — anyone
+  // can read it with DevTools. Removing the password theater; rely on an
+  // explicit two-step confirmation instead. Operators who need real access
+  // control should deploy the app behind an auth'd reverse proxy.
+  const handleClearAllTickets = () => {
+    if (tickets.length === 0) return;
+    const firstPrompt = window.confirm(
+      t("confirmResetCheckIns") ||
+        `Delete all ${tickets.length} tickets?\n\nThis cannot be undone.`
+    );
+    if (!firstPrompt) return;
+    const typed = window.prompt(
+      t("confirmResetCheckInsRetype") ||
+        `Type DELETE to confirm deleting all ${tickets.length} tickets:`
+    );
+    if (typed === null) return;
+    if (typed.trim().toUpperCase() !== "DELETE") {
+      alert(t("deletionCancelled") || "Deletion cancelled.");
       return;
     }
-    if (window.confirm(t("confirmResetCheckIns") || "Are you sure you want to reset all check-ins? This action cannot be undone.")) {
-      resetAllCheckIns();
-      alert(t("checkInsReset") || "All check-ins have been reset successfully.");
-    }
+    clearAllTickets();
+    alert(t("checkInsReset") || "All tickets have been deleted.");
   };
 
   if (!event) {
@@ -96,7 +107,7 @@ export const TicketsPage = () => {
               onChange={handleTypeChange}
               className={`glass-clean ${s.filterSelect}`}
             >
-              <option value="all" style={{ background: "#1a1152" }}>{t("ticketType")}: All / Todos</option>
+              <option value="all" style={{ background: "#1a1152" }}>{t("ticketType")}: {t("filterAll")}</option>
               {event.ticketTypes && Object.keys(event.ticketTypes).map((type) => (
                 <option key={type} value={type} style={{ background: "#1a1152" }}>
                   {type.toUpperCase()}
@@ -123,8 +134,8 @@ export const TicketsPage = () => {
 
             {tickets.length > 0 && (
               <div className={s.resetRow}>
-                <button onClick={handleResetAllCheckIns} className={`${btn.btn} ${btn.primary} ${btn.lg}`}>
-                  🗑️ {t("resetAllCheckIns") || "Delete All Tickets"}
+                <button onClick={handleClearAllTickets} className={`${btn.btn} ${btn.primary} ${btn.lg}`}>
+                  🗑️ {t("clearAllTickets") || "Delete All Tickets"}
                 </button>
               </div>
             )}

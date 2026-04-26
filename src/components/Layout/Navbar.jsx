@@ -2,12 +2,10 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHouse, faTicket, faTicketSimple, faCircleCheck, faClipboard, faChartLine, faGlobe, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
 import s from "./Navbar.module.css";
 
 export const Navbar = () => {
-  const { event } = useEvent();
   const { t, toggleLanguage, language } = useLanguage();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,9 +15,9 @@ export const Navbar = () => {
   const navLinks = [
     { path: "/", label: t("home"), icon: faHouse, iconClass: s.iconHome },
     { path: "/sell-tickets", label: t("sell"), icon: faTicket, iconClass: s.iconSell },
-    { path: "/tickets", label: "Tickets", icon: faTicketSimple, iconClass: s.iconTickets },
+    { path: "/tickets", label: t("navTickets"), icon: faTicketSimple, iconClass: s.iconTickets },
     { path: "/validate-qr", label: t("validate"), icon: faCircleCheck, iconClass: s.iconScan },
-    { path: "/copy-event", label: "Copy", icon: faClipboard, iconClass: s.iconCopy },
+    { path: "/copy-event", label: t("navCopy"), icon: faClipboard, iconClass: s.iconCopy },
     { path: "/dashboard", label: t("dashboard"), icon: faChartLine, iconClass: s.iconDash },
   ];
 

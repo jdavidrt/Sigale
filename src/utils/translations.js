@@ -110,11 +110,18 @@ export const translations = {
     ticketsFound: "boletas encontradas",
     checkedIn: "Registrado",
     notCheckedIn: "No Registrado",
-    resetAllCheckIns: "Eliminar Todas las Boletas",
+    clearAllTickets: "Eliminar Todas las Boletas",
     confirmResetCheckIns: "¿Está seguro de que desea eliminar todas las boletas? Esta acción no se puede deshacer.",
+    confirmResetCheckInsRetype: "Escriba DELETE para confirmar la eliminación de todas las boletas:",
     enterPasswordToReset: "Ingrese la contraseña para eliminar todas las boletas:",
     incorrectPassword: "Contraseña incorrecta. Eliminación cancelada.",
-    checkInsReset: "Todas las boletas han sido eliminadas exitosamente.",
+    deletionCancelled: "Eliminación cancelada.",
+    checkInsReset: "Todas las boletas han sido eliminadas.",
+    confirmDeleteTicket: "¿Eliminar esta boleta?\n\nComprador: {buyer}\nID de Boleta: {id}\n\nEsta acción no se puede deshacer.",
+    filterAll: "Todas",
+    cannotRemoveTicketTypeInUse: "No se puede eliminar el tipo de boleta — ya existen {count} boleta(s) de este tipo. Reasigne o elimine esas boletas primero.",
+    navTickets: "Boletas",
+    navCopy: "Copiar",
 
     // Home Page
     welcome: "Bienvenido a",
@@ -193,6 +200,58 @@ export const translations = {
     downloadJSON: "Descargar JSON",
     copyCSV: "Copiar CSV",
     downloadCSV: "Descargar CSV",
+
+    // Copy Event Page
+    copyEventData: "Copiar Datos del Evento",
+    copyEventSubtitle: "Respalda o transfiere los datos de tu evento y boletas",
+
+    // H5 — check-in window warnings (soft, confirm-to-proceed)
+    checkInEarlyWarning: "La fecha del evento es en {days} día(s). ¿Continuar con el registro?",
+    checkInLateWarning: "La fecha del evento fue hace {days} día(s). ¿Continuar con el registro?",
+    checkInCancelledOutsideWindow: "Registro cancelado (fuera de la ventana del evento)",
+
+    // N1 — JSON import (Event page)
+    jsonImportInvalid: "❌ Formato JSON inválido",
+    eventImported: "✅ ¡Evento importado exitosamente!",
+    eventImportError: "❌ Error al importar el evento",
+    pasteEventData: "Pegar Datos del Evento",
+    allTicketTypesMustHavePrice: "Todos los tipos de boleta deben tener un precio válido (0 o positivo).",
+    type: "Tipo",
+    newType: "Nuevo Tipo...",
+
+    // N2 — Ticket Form success state + update mode
+    updateTicket: "Actualizar Boleta",
+    ticketUpdated: "¡Boleta actualizada exitosamente!",
+    readyToGo: "¡Lista!",
+    ticketGenerated: "La boleta ha sido generada.",
+    detailType: "TIPO",
+    detailPrice: "PRECIO",
+    detailId: "ID",
+    detailPhone: "TEL",
+
+    // N3 — Ticket Card toasts
+    copyFailed: "Error al copiar",
+    shareNotSupported: "Compartir no disponible",
+
+    // Scanner flow — QRScanner.jsx status messages
+    qrInvalidFormat: "Formato de código QR inválido",
+    ticketForDifferentEvent: "Esta boleta fue emitida para un evento diferente",
+    ticketNotFoundInDb: "Boleta no encontrada en la base de datos",
+    alreadyCheckedInMessage: "Esta boleta ya ha sido registrada",
+    checkInSuccessful: "¡Registro exitoso!",
+    checkInSaveFailed: "No se pudo guardar el registro. Verifique el almacenamiento e intente de nuevo.",
+    stopCamera: "Detener Cámara",
+    cameraPermissionDenied: "Se denegó el acceso a la cámara. Permita el permiso de cámara en la configuración de su navegador y recargue la página.",
+    positionQRCode: "Coloque el código QR dentro del marco",
+
+    // Scanner flow — ValidationResult.jsx labels
+    checkInSuccessTitle: "¡Registro Exitoso!",
+    checkInFailedTitle: "Registro Fallido",
+    resultBuyer: "Comprador",
+    originalCheckIn: "Registro original",
+    qrDataLabel: "Datos QR",
+    continueAction: "Continuar",
+    tryAgain: "Intentar de nuevo",
   },
 
   en: {
@@ -304,11 +363,18 @@ export const translations = {
     ticketsFound: "tickets found",
     checkedIn: "Checked In",
     notCheckedIn: "Not Checked In",
-    resetAllCheckIns: "Delete All Tickets",
+    clearAllTickets: "Delete All Tickets",
     confirmResetCheckIns: "Are you sure you want to delete all tickets? This action cannot be undone.",
+    confirmResetCheckInsRetype: "Type DELETE to confirm deleting all tickets:",
     enterPasswordToReset: "Enter password to delete all tickets:",
     incorrectPassword: "Incorrect password. Deletion cancelled.",
-    checkInsReset: "All tickets have been deleted successfully.",
+    deletionCancelled: "Deletion cancelled.",
+    checkInsReset: "All tickets have been deleted.",
+    confirmDeleteTicket: "Delete this ticket?\n\nBuyer: {buyer}\nTicket ID: {id}\n\nThis action cannot be undone.",
+    filterAll: "All",
+    cannotRemoveTicketTypeInUse: "Cannot remove ticket type — {count} ticket(s) of this type already exist. Reassign or delete those tickets first.",
+    navTickets: "Tickets",
+    navCopy: "Copy",
 
     // Home Page
     welcome: "Welcome to",
@@ -387,6 +453,58 @@ export const translations = {
     downloadJSON: "Download JSON",
     copyCSV: "Copy CSV",
     downloadCSV: "Download CSV",
+
+    // Copy Event Page
+    copyEventData: "Copy Event Data",
+    copyEventSubtitle: "Backup or transfer your event and ticket data",
+
+    // H5 — check-in window warnings (soft, confirm-to-proceed)
+    checkInEarlyWarning: "Event date is in {days} day(s). Continue with check-in?",
+    checkInLateWarning: "Event date was {days} day(s) ago. Continue with check-in?",
+    checkInCancelledOutsideWindow: "Check-in cancelled (outside event window)",
+
+    // N1 — JSON import (Event page)
+    jsonImportInvalid: "❌ Invalid JSON format",
+    eventImported: "✅ Event imported successfully!",
+    eventImportError: "❌ Error importing event",
+    pasteEventData: "Paste Event Data",
+    allTicketTypesMustHavePrice: "All ticket types must have a valid price (0 or positive).",
+    type: "Type",
+    newType: "New Type...",
+
+    // N2 — Ticket Form success state + update mode
+    updateTicket: "Update Ticket",
+    ticketUpdated: "Ticket updated successfully!",
+    readyToGo: "Ready to Go!",
+    ticketGenerated: "Ticket has been generated.",
+    detailType: "TYPE",
+    detailPrice: "PRICE",
+    detailId: "ID",
+    detailPhone: "PHONE",
+
+    // N3 — Ticket Card toasts
+    copyFailed: "Failed to copy",
+    shareNotSupported: "Share not supported",
+
+    // Scanner flow — QRScanner.jsx status messages
+    qrInvalidFormat: "Invalid QR code format",
+    ticketForDifferentEvent: "This ticket was issued for a different event",
+    ticketNotFoundInDb: "Ticket not found in database",
+    alreadyCheckedInMessage: "This ticket has already been checked in",
+    checkInSuccessful: "Check-in successful!",
+    checkInSaveFailed: "Check-in could not be saved. Check storage and try again.",
+    stopCamera: "Stop Camera",
+    cameraPermissionDenied: "Camera access was denied. Please allow camera permission in your browser settings and reload the page.",
+    positionQRCode: "Position the QR code within the frame",
+
+    // Scanner flow — ValidationResult.jsx labels
+    checkInSuccessTitle: "Check-In Successful!",
+    checkInFailedTitle: "Check-In Failed",
+    resultBuyer: "Buyer",
+    originalCheckIn: "Original check-in",
+    qrDataLabel: "QR Data",
+    continueAction: "Continue",
+    tryAgain: "Try Again",
   }
 };
 

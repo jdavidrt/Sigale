@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { generateQRData } from "../../utils/qrGenerator";
@@ -12,28 +12,15 @@ import s from "./TicketCard.module.css";
 
 export const TicketCard = ({ ticket }) => {
   const navigate = useNavigate();
-  const { event } = useEvent();
+  const { event, eventId } = useEvent();
   const { deleteTicket } = useTickets();
   const { t, language } = useLanguage();
   const qrRef = useRef(null);
-  const cardRef = useRef(null);
   const [copyStatus, setCopyStatus] = useState("");
-  const [parallaxTransform, setParallaxTransform] = useState("");
-  const qrData = generateQRData(ticket, event);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (cardRef.current) {
-        const rect = cardRef.current.getBoundingClientRect();
-        const scrollProgress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
-        setParallaxTransform(`translateY(${(scrollProgress - 0.5) * 10}px)`);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const qrData = generateQRData(ticket, event, eventId);
+  // M9: dropped the per-card scroll parallax — at scale it spawned N scroll
+  // listeners that stuttered phones. The effect was decorative; we can add
+  // a single shared rAF-driven version later if we miss it.
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -48,10 +35,11 @@ export const TicketCard = ({ ticket }) => {
   };
 
   const handleDelete = () => {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete this ticket?\n\nBuyer: ${ticket.buyerName}\nTicket ID: ${ticket.ticketId}\n\nThis action cannot be undone.`
-    );
-    if (confirmDelete) {
+    // L2: route through t() so the confirm dialog follows the app language.
+    const msg = t("confirmDeleteTicket")
+      .replace("{buyer}", ticket.buyerName)
+      .replace("{id}", ticket.ticketId);
+    if (window.confirm(msg)) {
       deleteTicket(ticket.ticketId);
     }
   };
@@ -60,7 +48,7 @@ export const TicketCard = ({ ticket }) => {
     if (qrRef.current) {
       const svg = qrRef.current.querySelector("svg");
       const success = await copyPNGToClipboard(svg, ticket, event);
-      setCopyStatus(success ? `✓ ${t("copiedToClipboard")}` : "✗ Failed to copy");
+      setCopyStatus(success ? `✓ ${t("copiedToClipboard")}` : `✗ ${t("copyFailed")}`);
       setTimeout(() => setCopyStatus(""), 2000);
     }
   }, [ticket, event, t]);
@@ -70,17 +58,15 @@ export const TicketCard = ({ ticket }) => {
       const svg = qrRef.current.querySelector("svg");
       const success = await shareQR(svg, ticket, event, language);
       if (!success) {
-        setCopyStatus("Share not supported");
+        setCopyStatus(t("shareNotSupported"));
         setTimeout(() => setCopyStatus(""), 2000);
       }
     }
-  }, [ticket, event, language]);
+  }, [ticket, event, language, t]);
 
   return (
     <div
-      ref={cardRef}
       className={`glass-clean ${s.card} ${ticket.checkedIn ? s.checkedIn : ""} hover-lift`}
-      style={{ transform: parallaxTransform, transition: "transform 0.1s ease-out" }}
     >
       {/* Hidden QR for processing */}
       <div ref={qrRef} style={{ display: "none" }}>

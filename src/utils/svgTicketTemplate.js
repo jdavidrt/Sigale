@@ -129,7 +129,7 @@ export const generateTicketSVG = (ticket, event, qrDataURL) => {
   const illustrationX = 230; // Align with right column left margin (x=230)
   const illustrationY = totalHeight - illustrationHeight - 15; // 15px from bottom
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  const svgMarkup = `<?xml version="1.0" encoding="UTF-8"?>
 <svg id="Capa_1" data-name="Capa 1" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${ticketWidth} ${totalHeight}">
   <defs>
     <style>
@@ -191,6 +191,8 @@ export const generateTicketSVG = (ticket, event, qrDataURL) => {
   <!-- Charly Illustration (Bottom Right, aligned with right column) - Outside clipping -->
   ${charlyIllustration ? `<image x="${illustrationX}" y="${illustrationY}" width="${illustrationWidth}" height="${illustrationHeight}" href="data:image/jpeg;base64,${charlyIllustration}" preserveAspectRatio="xMidYMid meet" opacity="0.9"/>` : ''}
 </svg>`;
+
+  return assertSafeSvg(svgMarkup);
 };
 
 /**
@@ -238,7 +240,7 @@ const generateLeftColumn = (eventNameLines, eventNameFontSize, venueLines, venue
 
   // Ticket ID - Monaco monospace font (close to date/time) - Dark grey
   content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="8" fill="#666">
-    <tspan x="30" y="${currentY}">${ticketId}</tspan>
+    <tspan x="30" y="${currentY}">${escapeXml(ticketId)}</tspan>
   </text>`;
 
   return content;
@@ -283,16 +285,45 @@ const generateRightColumn = (ticket, ticketPrice, buyerNameLines, buyerNameFontS
 };
 
 /**
- * Escape XML special characters
- * @param {string} str - String to escape
- * @returns {string} Escaped string
+ * Escape XML special characters used in text nodes and attribute values.
+ * Must be applied to EVERY user-controlled string interpolated into the
+ * SVG template. A defense-in-depth check runs post-generation
+ * (assertSafeSvg) to catch any missed call sites.
  */
-const escapeXml = (str) => {
-  if (!str) return '';
-  return str
+export const escapeXml = (str) => {
+  if (str === null || str === undefined) return '';
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
+};
+
+/**
+ * Defense-in-depth tripwire for audit finding M3. The final SVG is
+ * rendered via dangerouslySetInnerHTML, so any regression that smuggles
+ * executable markup through an unescaped interpolation is a real XSS.
+ * This function throws loudly in dev and strips the dangerous nodes in
+ * prod. Keep the denylist narrow — only constructs that execute.
+ */
+const DANGEROUS_SVG_PATTERNS = [
+  /<script\b/i,
+  /<iframe\b/i,
+  /<foreignObject\b/i,
+  /\son\w+\s*=/i,           // on-* event handler attributes
+  /\shref\s*=\s*["']?\s*javascript:/i,
+  /\sxlink:href\s*=\s*["']?\s*javascript:/i,
+];
+
+export const assertSafeSvg = (svg) => {
+  for (const pattern of DANGEROUS_SVG_PATTERNS) {
+    if (pattern.test(svg)) {
+      const message = `Unsafe SVG detected (matched ${pattern}). Check that every interpolated string passes through escapeXml().`;
+      if (import.meta?.env?.DEV) throw new Error(message);
+      console.error(message);
+      return svg.replace(pattern, '');
+    }
+  }
+  return svg;
 };

@@ -9,13 +9,23 @@ export const useLocalStorage = (initialValue) => {
     return stored || initialValue;
   });
 
+  // Last write error (null when the last write succeeded). UI can subscribe
+  // to this and surface a banner to the operator — silent failures at the
+  // door are the worst case (ticket seems checked in, but wasn't persisted).
+  const [lastError, setLastError] = useState(null);
+
   const setData = useCallback((newValue) => {
     setDataState(newValue);
-    saveToStorage(newValue);
+    const result = saveToStorage(newValue);
+    if (result.ok) {
+      setLastError(null);
+    } else {
+      setLastError({ reason: result.reason, at: Date.now() });
+    }
     window.dispatchEvent(new Event(SYNC_EVENT));
+    return result;
   }, []);
 
-  // Sync state when another context instance writes to the same storage key
   useEffect(() => {
     const handler = () => {
       const stored = loadFromStorage();
@@ -25,5 +35,7 @@ export const useLocalStorage = (initialValue) => {
     return () => window.removeEventListener(SYNC_EVENT, handler);
   }, []);
 
-  return [data, setData];
+  const clearError = useCallback(() => setLastError(null), []);
+
+  return [data, setData, { lastError, clearError }];
 };

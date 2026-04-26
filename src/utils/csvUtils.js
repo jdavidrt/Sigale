@@ -1,7 +1,20 @@
 /**
- * CSV utility functions for ticket import/export
- * Export: 5 columns (buyerName, buyerId, buyerPhone, ticketType, purchaseDate)
- * Import: Creates NEW tickets only (no updates to existing tickets)
+ * CSV utility functions for ticket import/export.
+ *
+ * L4: there are TWO distinct CSV shapes in the app. They are not interchangeable.
+ *
+ *   1. `ticketsToRoundTripCSV` + `csvToTickets`
+ *      - 5 columns: buyerName, buyerId, buyerPhone, ticketType, purchaseDate
+ *      - camelCase headers, byte-for-byte round-trippable through the import path
+ *      - Use this when you want to export → re-import into another instance
+ *
+ *   2. `ticketsToHumanCSV` (in this file — see below)
+ *      - 6 columns: Buyer Name, Buyer ID, Buyer Phone, Ticket Type, Purchase Date, Ticket Price
+ *      - Title-Case headers, includes derived Ticket Price column for reporting
+ *      - Opens cleanly in Excel/Sheets; NOT importable back (price is not on ticket)
+ *      - Used by the Copy Event Page for human-facing exports
+ *
+ * Mixing the two shapes breaks round-tripping; keep them separate on purpose.
  */
 
 const CSV_HEADERS = [
@@ -17,27 +30,76 @@ const CSV_HEADERS = [
  * @param {Array} tickets - Array of ticket objects
  * @returns {string} CSV formatted string
  */
-export const ticketsToCSV = (tickets) => {
+// OWASP CSV-injection guard: Excel/Sheets treat leading =, +, -, @, tab
+// and CR as formula prefixes. Prepend a single quote so the cell is
+// rendered as literal text.
+const FORMULA_PREFIX = /^[=+\-@\t\r]/;
+const sanitizeCell = (stringValue) =>
+  FORMULA_PREFIX.test(stringValue) ? `'${stringValue}` : stringValue;
+
+// H7: field length caps — must match the `maxLength` on the form inputs so
+// CSV import cannot be used as an end-run around UI validation. Values that
+// exceed the cap are rejected with an explicit error instead of truncated
+// silently, so the operator sees the bad row.
+export const CSV_FIELD_LIMITS = {
+  buyerName: 100,
+  buyerId: 30,
+  buyerPhone: 30,
+  ticketType: 50,
+  purchaseDate: 10,
+};
+
+const quoteIfNeeded = (safeValue) => {
+  if (safeValue.includes(',') || safeValue.includes('"') || safeValue.includes('\n')) {
+    return `"${safeValue.replace(/"/g, '""')}"`;
+  }
+  return safeValue;
+};
+
+const formatCell = (raw) => {
+  if (raw === null || raw === undefined) return '';
+  return quoteIfNeeded(sanitizeCell(String(raw)));
+};
+
+/**
+ * Round-trip export. Pair with `csvToTickets` for import.
+ * 5 columns, camelCase headers; no derived fields.
+ */
+export const ticketsToRoundTripCSV = (tickets) => {
   const headerRow = CSV_HEADERS.join(',');
-
-  const dataRows = tickets.map(ticket => {
-    return CSV_HEADERS.map(header => {
-      const value = ticket[header];
-
-      // Handle null/undefined
-      if (value === null || value === undefined) return '';
-
-      // Handle strings with commas or quotes (escape them)
-      const stringValue = String(value);
-      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-        return `"${stringValue.replace(/"/g, '""')}"`;
-      }
-
-      return stringValue;
-    }).join(',');
-  });
-
+  const dataRows = tickets.map(ticket =>
+    CSV_HEADERS.map(header => formatCell(ticket[header])).join(',')
+  );
   return [headerRow, ...dataRows].join('\n');
+};
+
+// Backward-compat alias. `ticketsToCSV` predates the human/round-trip split;
+// existing callers + tests still reach for this name, so we keep the export.
+export const ticketsToCSV = ticketsToRoundTripCSV;
+
+/**
+ * Human-facing export. Title-Case headers, includes derived ticket price so
+ * Excel/Sheets reports come out readable. NOT importable — price is derived
+ * from event.ticketTypes at export time and isn't stored on tickets. For
+ * backup/transfer use `ticketsToRoundTripCSV` instead.
+ *
+ * @param {Array} tickets - Ticket objects to export
+ * @param {Object} event  - Event with `ticketTypes: { [type]: price }` for price lookup
+ */
+export const ticketsToHumanCSV = (tickets, event) => {
+  const headers = ['Buyer Name', 'Buyer ID', 'Buyer Phone', 'Ticket Type', 'Purchase Date', 'Ticket Price'];
+  const dataRows = tickets.map(ticket => {
+    const price = event?.ticketTypes?.[ticket.ticketType] ?? 0;
+    return [
+      ticket.buyerName,
+      ticket.buyerId,
+      ticket.buyerPhone,
+      ticket.ticketType,
+      ticket.purchaseDate,
+      price,
+    ].map(formatCell).join(',');
+  });
+  return [headers.join(','), ...dataRows].join('\n');
 };
 
 /**
@@ -107,6 +169,17 @@ export const csvToTickets = (csvString) => {
         errors.push(`Row ${i + 1}: purchaseDate must be YYYY-MM-DD format`);
         continue;
       }
+
+      // H7: enforce field length limits (matches UI maxLength)
+      let overLength = false;
+      for (const [field, max] of Object.entries(CSV_FIELD_LIMITS)) {
+        if (ticketData[field] && ticketData[field].length > max) {
+          errors.push(`Row ${i + 1}: ${field} exceeds ${max} characters`);
+          overLength = true;
+          break;
+        }
+      }
+      if (overLength) continue;
 
       tickets.push(ticketData);
     } catch (err) {

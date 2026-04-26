@@ -11,7 +11,7 @@ import btn from "../Common/Button.module.css";
 export const CreateEvent = ({ isEditing = false }) => {
   const navigate = useNavigate();
   const { createEvent, updateEvent, event } = useEvent();
-  const { importData } = useTickets();
+  const { importData, tickets } = useTickets();
   const { t } = useLanguage();
 
   const [showDangerZone, setShowDangerZone] = useState(false);
@@ -78,6 +78,20 @@ export const CreateEvent = ({ isEditing = false }) => {
 
   const removeTicketType = (typeToRemove) => {
     if (Object.keys(formData.ticketTypes).length <= 1) { alert(t("mustHaveOneTicketType")); return; }
+    // M5: removing a type that still has sold tickets would orphan those
+    // tickets (they'd disappear from "total sold" because getStats gates on
+    // a non-zero price for the type). Block the removal instead.
+    const orphanCount = isEditing
+      ? tickets.filter((tk) => tk.ticketType === typeToRemove).length
+      : 0;
+    if (orphanCount > 0) {
+      alert(
+        (t("cannotRemoveTicketTypeInUse") ||
+          "Cannot remove ticket type — {count} ticket(s) of this type already exist. Re-assign or delete those tickets first.")
+          .replace("{count}", String(orphanCount))
+      );
+      return;
+    }
     const updatedTypes = { ...formData.ticketTypes };
     delete updatedTypes[typeToRemove];
     setFormData({ ...formData, ticketTypes: updatedTypes });
@@ -107,13 +121,13 @@ export const CreateEvent = ({ isEditing = false }) => {
     try {
       const clipboardText = await navigator.clipboard.readText();
       const parsedData = JSON.parse(clipboardText);
-      if (!parsedData.event) { alert("❌ Invalid JSON format"); return; }
+      if (!parsedData.event) { alert(t("jsonImportInvalid")); return; }
       importData(parsedData);
-      alert("✅ Event imported successfully!");
+      alert(t("eventImported"));
       window.location.href = "/";
     } catch (error) {
       console.error("Paste error:", error);
-      alert("❌ Error importing event");
+      alert(t("eventImportError"));
     }
   };
 
@@ -135,7 +149,7 @@ export const CreateEvent = ({ isEditing = false }) => {
           className={`${btn.btn} ${btn.success} ${s.pasteBtn}`}
         >
           <FontAwesomeIcon icon={faPaste} />
-          <span>Paste Event Data</span>
+          <span>{t("pasteEventData")}</span>
         </button>
 
         {/* Main Card */}
@@ -166,7 +180,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                 <div className={s.field}>
                   <label className={s.fieldLabel}>{t("eventName")}</label>
                   <input
-                    type="text" required value={formData.name}
+                    type="text" required maxLength={100} value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder={t("eventNamePlaceholder")}
                   />
@@ -192,7 +206,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                 <div className={s.field}>
                   <label className={s.fieldLabel}>{t("venueName")}</label>
                   <input
-                    type="text" required value={formData.venue}
+                    type="text" required maxLength={100} value={formData.venue}
                     onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                     placeholder={t("venuePlaceholder")}
                   />
@@ -201,7 +215,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                 <div className={s.field}>
                   <label className={s.fieldLabel}>{t("fullAddress")}</label>
                   <input
-                    type="text" required value={formData.address}
+                    type="text" required maxLength={200} value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     placeholder={t("addressPlaceholder")}
                   />
@@ -359,7 +373,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                 className={`${btn.btn} ${btn.ghost} ${btn.md}`}
                 style={{ flex: 1 }}
               >
-                CANCEL
+                {t("cancel").toUpperCase()}
               </button>
               <button
                 type="button"
@@ -368,7 +382,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                 className={`${btn.btn} ${btn.dangerConfirm} ${btn.md}`}
                 style={{ flex: 1 }}
               >
-                DELETE
+                {t("delete").toUpperCase()}
               </button>
             </div>
           </div>

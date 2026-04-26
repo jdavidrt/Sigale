@@ -9,8 +9,6 @@
  *   - Periodic update polling (every 60 min)
  */
 
-let swRegistration = null;
-
 export const registerServiceWorker = async () => {
   // Only register in production
   if (import.meta.env.DEV) {
@@ -27,7 +25,6 @@ export const registerServiceWorker = async () => {
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/',
     });
-    swRegistration = registration;
 
     console.log('[SW] Service Worker registered successfully:', registration.scope);
 
@@ -87,16 +84,6 @@ export const registerServiceWorker = async () => {
 export const checkCacheHealth = () => {
   if (navigator.serviceWorker && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({ type: 'CHECK_CACHE_HEALTH' });
-  }
-};
-
-/**
- * Ask the SW to purge the navigation cache entries.
- * Useful as a manual recovery trigger from the UI.
- */
-export const purgeNavigationCache = () => {
-  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({ type: 'PURGE_NAVIGATION_CACHE' });
   }
 };
 

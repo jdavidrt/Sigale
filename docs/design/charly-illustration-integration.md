@@ -12,7 +12,6 @@ Added Charly's illustration (4 characters with bow ties) to the **bottom right c
   - `isValidBase64(str)` - Validates base64 alphabet
   - `cleanAndValidateBase64(rawData)` - Combined clean + validate
   - `toDataURI(base64Data, mimeType)` - Convert base64 to data URI
-  - `extractMimeType(dataURI)` - Extract MIME type from data URI
 
 **Fixed Issue**: The original `dibujosCharly64.txt` had a `data:image/jpeg;base64,` prefix which caused the API error `invalid base64 data`. This utility strips that prefix and validates the data.
 

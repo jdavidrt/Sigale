@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Style foundation — import order is intentional:
@@ -11,13 +11,16 @@ import { EventProvider } from "./context/EventContext";
 import { TicketProvider } from "./context/TicketContext";
 import { Layout } from "./components/Layout/Layout";
 import { Home } from "./pages/Home";
-import { CreateEventPage } from "./pages/CreateEventPage";
-import { EditEventPage } from "./pages/EditEventPage";
-import { SellTicketsPage } from "./pages/SellTicketsPage";
-import { TicketsPage } from "./pages/TicketsPage";
-import { ValidateQRPage } from "./pages/ValidateQRPage";
-import { CopyEventPage } from "./pages/CopyEventPage";
-import { DashboardPage } from "./pages/DashboardPage";
+// M8: split heavier routes out of the main bundle. ValidateQRPage pulls in
+// html5-qrcode (~100KB gz) and is only needed on one route; the rest of the
+// pages are split too so the landing page ships as little JS as possible.
+const CreateEventPage = lazy(() => import("./pages/CreateEventPage").then((m) => ({ default: m.CreateEventPage })));
+const EditEventPage   = lazy(() => import("./pages/EditEventPage").then((m) => ({ default: m.EditEventPage })));
+const SellTicketsPage = lazy(() => import("./pages/SellTicketsPage").then((m) => ({ default: m.SellTicketsPage })));
+const TicketsPage     = lazy(() => import("./pages/TicketsPage").then((m) => ({ default: m.TicketsPage })));
+const ValidateQRPage  = lazy(() => import("./pages/ValidateQRPage").then((m) => ({ default: m.ValidateQRPage })));
+const CopyEventPage   = lazy(() => import("./pages/CopyEventPage").then((m) => ({ default: m.CopyEventPage })));
+const DashboardPage   = lazy(() => import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 import { loadCharlyIllustration } from "./utils/svgTicketTemplate";
 import { CHARLY_ILLUSTRATION_BASE64 } from "./assets/charlyIllustration";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
@@ -46,18 +49,20 @@ function AppContent() {
         <TicketProvider>
           <BrowserRouter>
             <Layout>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/create-event" element={<CreateEventPage />} />
-                <Route path="/edit-event" element={<EditEventPage />} />
-                <Route path="/sell-tickets" element={<SellTicketsPage />} />
-                <Route path="/tickets" element={<TicketsPage />} />
-                <Route path="/validate-qr" element={<ValidateQRPage />} />
-                <Route path="/copy-event" element={<CopyEventPage />} />
-                <Route path="/dashboard" element={<DashboardPage />} />
-                {/* Catch-all route - redirect any unmatched paths to home */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+              <Suspense fallback={<div style={{ padding: 24, textAlign: "center" }}>Loading…</div>}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/create-event" element={<CreateEventPage />} />
+                  <Route path="/edit-event" element={<EditEventPage />} />
+                  <Route path="/sell-tickets" element={<SellTicketsPage />} />
+                  <Route path="/tickets" element={<TicketsPage />} />
+                  <Route path="/validate-qr" element={<ValidateQRPage />} />
+                  <Route path="/copy-event" element={<CopyEventPage />} />
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  {/* Catch-all route - redirect any unmatched paths to home */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
             </Layout>
           </BrowserRouter>
         </TicketProvider>

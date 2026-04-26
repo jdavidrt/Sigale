@@ -142,7 +142,7 @@ async function getValidCachedIndex() {
       await cache.delete('/index.html');
       return null;
     }
-  } catch (e) {
+  } catch {
     // If we cannot read the body, treat as invalid
     console.warn('[SW] Cannot read cached index.html — purging');
     await cache.delete('/index.html');
@@ -291,7 +291,7 @@ async function handleSameOriginAsset(request) {
       cache.put(request, response.clone());
     }
     return response;
-  } catch (err) {
+  } catch {
     console.log('[SW] Asset request failed:', request.url);
     return new Response('Offline — resource not available', {
       status: 503,
@@ -311,7 +311,7 @@ async function handleCrossOrigin(request) {
       cache.put(request, response.clone());
     }
     return response;
-  } catch (err) {
+  } catch {
     const cached = await caches.match(request);
     if (cached) return cached;
     return new Response('Offline — resource not available', {
