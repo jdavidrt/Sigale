@@ -27,7 +27,7 @@ All features complete:
 - QR codes generated on-demand from validation hash (never stored)
 
 ### Context API (3 providers)
-- `EventContext`: Event details, colors, ticket types
+- `EventContext`: Event details, ticket types
 - `TicketContext`: Tickets, check-ins, stats via `getStats()`
 - `LanguageContext`: i18n with `t()` function
 
@@ -80,7 +80,6 @@ src/
     "venue": "Venue",
     "address": "Address",
     "entranceTime": "19:00",
-    "colors": { "base": "#1A1A2E", "emphasis": "#FF6B6B" },
     "ticketTypes": { "preventa": 50000, "vip": 100000 }
   },
   "tickets": [{

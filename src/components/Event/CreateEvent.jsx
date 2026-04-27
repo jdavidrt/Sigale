@@ -4,7 +4,7 @@ import { useEvent } from "../../context/EventContext";
 import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faWandMagicSparkles, faFloppyDisk, faTriangleExclamation, faTrash, faPaste, faPalette, faCalendarDay, faTicket, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faWandMagicSparkles, faFloppyDisk, faTriangleExclamation, faTrash, faPaste, faCalendarDay, faTicket, faPlus } from "@fortawesome/free-solid-svg-icons";
 import s from "./CreateEvent.module.css";
 import btn from "../Common/Button.module.css";
 
@@ -23,7 +23,6 @@ export const CreateEvent = ({ isEditing = false }) => {
     venue: "",
     address: "",
     entranceTime: "",
-    colors: { base: "#030312", emphasis: "#758BFD" },
     ticketTypes: { preventa: 0, taquilla: 0 },
   });
 
@@ -37,7 +36,6 @@ export const CreateEvent = ({ isEditing = false }) => {
         venue: event.venue || "",
         address: event.address || "",
         entranceTime: event.entranceTime || "",
-        colors: event.colors || { base: "#030312", emphasis: "#758BFD" },
         ticketTypes: event.ticketTypes || { preventa: 0, taquilla: 0 },
       });
     }
@@ -219,38 +217,6 @@ export const CreateEvent = ({ isEditing = false }) => {
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     placeholder={t("addressPlaceholder")}
                   />
-                </div>
-              </div>
-            </div>
-
-            {/* Colors Section */}
-            <div className={`${s.section} glass-clean`}>
-              <div className={s.sectionHeader}>
-                <FontAwesomeIcon icon={faPalette} className="label-icon" />
-                <h2 className={s.sectionTitle}>{t("colorTheme")}</h2>
-              </div>
-              <div className={s.fieldRow}>
-                <div className={s.colorPickerBox}>
-                  <input
-                    type="color" value={formData.colors.base}
-                    onChange={(e) => setFormData({ ...formData, colors: { ...formData.colors, base: e.target.value } })}
-                    style={{ width: "40px", height: "40px", borderRadius: "50%", border: "none", background: "transparent", minHeight: "auto" }}
-                  />
-                  <div>
-                    <span className={s.colorHexLabel}>{t("baseColor")}</span>
-                    <span className={s.colorHex}>{formData.colors.base}</span>
-                  </div>
-                </div>
-                <div className={s.colorPickerBox}>
-                  <input
-                    type="color" value={formData.colors.emphasis}
-                    onChange={(e) => setFormData({ ...formData, colors: { ...formData.colors, emphasis: e.target.value } })}
-                    style={{ width: "40px", height: "40px", borderRadius: "50%", border: "none", background: "transparent", minHeight: "auto" }}
-                  />
-                  <div>
-                    <span className={s.colorHexLabel}>{t("accentColor")}</span>
-                    <span className={s.colorHex}>{formData.colors.emphasis}</span>
-                  </div>
                 </div>
               </div>
             </div>

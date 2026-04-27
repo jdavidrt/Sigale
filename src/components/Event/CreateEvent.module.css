@@ -154,32 +154,6 @@
 }
 
 
-/* ── Color picker row ───────────────────────────────────── */
-.colorPickerBox {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  background: var(--color-tint-white-md);
-  padding: var(--space-2);
-  border-radius: var(--radius-lg);
-}
-
-.colorHex {
-  font-size: var(--text-base);
-  color: var(--color-text-heading);
-  font-family: var(--font-mono);
-}
-
-.colorHexLabel {
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-  display: block;
-}
-
-
 /* ── Ticket types table ─────────────────────────────────── */
 .tableHeader {
   display: grid;

@@ -12,7 +12,8 @@ export const Home = () => {
   const navigate = useNavigate();
   const { event, hasEvent } = useEvent();
   const { tickets } = useTickets();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const dateLocale = language === "es" ? "es-CO" : "en-US";
 
   useEffect(() => {
     if (!hasEvent()) navigate("/create-event");
@@ -49,23 +50,23 @@ export const Home = () => {
         <div className={s.detailsGrid}>
           {/* Location */}
           <div>
-            <p className={s.detailLabel}>Ubicación</p>
+            <p className={s.detailLabel}>{t("location")}</p>
             <div className={s.detailRow}>
               <FontAwesomeIcon icon={faLocationDot} className={s.detailIcon} />
               <div>
                 <p className={s.detailVenue}>{event.venue}</p>
-                <p className={s.detailAddress}>{event.address || "Sin dirección"}</p>
+                <p className={s.detailAddress}>{event.address || t("noAddress")}</p>
               </div>
             </div>
           </div>
 
           {/* Date & Time */}
           <div>
-            <p className={s.detailLabel}>Fecha y Hora</p>
+            <p className={s.detailLabel}>{t("dateAndTime")}</p>
             <div className={s.detailRow}>
               <FontAwesomeIcon icon={faCalendarDays} className={s.detailIcon} />
               <p className={s.detailVenue}>
-                {parseLocalDate(event.date).toLocaleDateString("en-US", {
+                {parseLocalDate(event.date).toLocaleDateString(dateLocale, {
                   weekday: "short",
                   month: "short",
                   day: "numeric",
@@ -84,11 +85,11 @@ export const Home = () => {
         <div className={`${s.quickStats} glass-clean`}>
           <div className={s.statsGrid}>
             <div>
-              <p className={s.statLabel}>Vendidas</p>
+              <p className={s.statLabel}>{t("sold")}</p>
               <p className={s.statValue}>{totalTicketsSold}</p>
             </div>
             <div>
-              <p className={s.statLabel}>Ingresos</p>
+              <p className={s.statLabel}>{t("revenue")}</p>
               <p className={s.statValue}>${totalRevenue.toLocaleString()}</p>
             </div>
           </div>

@@ -74,9 +74,8 @@ export const Navbar = () => {
                 );
               })}
 
-              <div className={s.navDivider} />
-
               <button
+                type="button"
                 className={s.navItem}
                 onClick={toggleLanguage}
               >
