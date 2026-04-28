@@ -1,15 +1,6 @@
 # Stage 2: Ticket Sales, QR Generation & Validation
 
-## ⏳ STATUS: NOT IMPLEMENTED
-
-**This stage has NOT been built yet.** All code examples below are templates to be implemented.
-
-### Required Steps to Complete:
-1. Install dependencies (already done): `qrcode.react`, `html5-qrcode`
-2. Create TicketContext for ticket state management
-3. Build QR utilities (qrGenerator.js, qrCopy.js)
-4. Create ticket form and list components
-5. Implement QR scanner with camera
+> **Historical document. Status: ✅ shipped.** This file is the original implementation plan from before Stage 2 was built. Kept for context only — for current state see [`docs/architecture/PROJECT_OVERVIEW.md`](../architecture/PROJECT_OVERVIEW.md). The ticket system, QR generation/scanning, and check-in flow all shipped; many of the templates below diverged during implementation (notably: 16-char hash instead of 10, sharper duplicate-detection semantics, and a TicketContext public API that grew through the audit work).
 6. Add validation and duplicate detection
 7. Update App.jsx with new routes
 

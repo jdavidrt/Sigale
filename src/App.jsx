@@ -9,6 +9,7 @@ import "./styles/utilities.css";
 import { LanguageProvider } from "./context/LanguageContext";
 import { EventProvider } from "./context/EventContext";
 import { TicketProvider } from "./context/TicketContext";
+import { DialogProvider } from "./context/DialogContext";
 import { Layout } from "./components/Layout/Layout";
 import { Home } from "./pages/Home";
 // M8: split heavier routes out of the main bundle. ValidateQRPage pulls in
@@ -47,24 +48,26 @@ function AppContent() {
     <LanguageProvider>
       <EventProvider>
         <TicketProvider>
-          <BrowserRouter>
-            <Layout>
-              <Suspense fallback={<div style={{ padding: 24, textAlign: "center" }}>Loading…</div>}>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/create-event" element={<CreateEventPage />} />
-                  <Route path="/edit-event" element={<EditEventPage />} />
-                  <Route path="/sell-tickets" element={<SellTicketsPage />} />
-                  <Route path="/tickets" element={<TicketsPage />} />
-                  <Route path="/validate-qr" element={<ValidateQRPage />} />
-                  <Route path="/copy-event" element={<CopyEventPage />} />
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  {/* Catch-all route - redirect any unmatched paths to home */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </Suspense>
-            </Layout>
-          </BrowserRouter>
+          <DialogProvider>
+            <BrowserRouter>
+              <Layout>
+                <Suspense fallback={<div style={{ padding: 24, textAlign: "center" }}>Loading…</div>}>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/create-event" element={<CreateEventPage />} />
+                    <Route path="/edit-event" element={<EditEventPage />} />
+                    <Route path="/sell-tickets" element={<SellTicketsPage />} />
+                    <Route path="/tickets" element={<TicketsPage />} />
+                    <Route path="/validate-qr" element={<ValidateQRPage />} />
+                    <Route path="/copy-event" element={<CopyEventPage />} />
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    {/* Catch-all route - redirect any unmatched paths to home */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </Suspense>
+              </Layout>
+            </BrowserRouter>
+          </DialogProvider>
         </TicketProvider>
       </EventProvider>
     </LanguageProvider>

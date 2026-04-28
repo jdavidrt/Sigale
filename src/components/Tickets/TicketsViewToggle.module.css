@@ -1,0 +1,39 @@
+/*
+ * SÍGALE — TicketsViewToggle
+ * Two-option segment control for switching between cards and table view.
+ */
+
+.segment {
+  display: inline-flex;
+  background: var(--color-input-bg-solid);
+  border: 1px solid var(--color-border-primary-xl);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+  gap: 4px;
+}
+
+.option {
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: var(--transition-base);
+  min-height: 36px;
+}
+
+.option:hover {
+  color: var(--color-text-primary);
+}
+
+.option[aria-pressed="true"] {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-btn-sm);
+}

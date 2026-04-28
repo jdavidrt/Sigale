@@ -1,18 +1,6 @@
 # Stage 3: Dashboards, Import/Export & Refinement
 
-## ⏳ STATUS: NOT IMPLEMENTED
-
-**This stage has NOT been built yet.** All code examples below are templates to be implemented.
-
-### Prerequisites:
-- ✅ Stage 1 must be complete (DONE)
-- ❌ Stage 2 must be complete (NOT DONE - implement first!)
-
-### Required Steps to Complete:
-1. Complete Stage 2 first (ticket system & QR)
-2. Create dashboard components (Sales, Check-in)
-3. Build database export/import utilities
-4. Add validator.js for JSON validation
+> **Historical document. Status: ✅ shipped.** This file is the original implementation plan from before Stage 3 was built. Kept for context only — for current state see [`docs/architecture/PROJECT_OVERVIEW.md`](../architecture/PROJECT_OVERVIEW.md). The dashboards, JSON/CSV/PDF export, and JSON import all shipped; many of the templates below diverged during implementation.
 5. Implement ticket viewer modal
 6. Add storage warnings
 7. Final polish and testing

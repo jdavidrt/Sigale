@@ -3,6 +3,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import { useTickets } from "../../context/TicketContext";
 import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { useDialog } from "../../context/DialogContext";
 import { parseQRData } from "../../utils/qrGenerator";
 import { checkInWindowStatus } from "../../utils/timeFormat";
 import { ValidationResult } from "./ValidationResult";
@@ -20,6 +21,7 @@ export const QRScanner = ({ autoStart = false }) => {
   const { tickets, checkInTicket } = useTickets();
   const { event, eventId } = useEvent();
   const { t } = useLanguage();
+  const { confirm } = useDialog();
   const [scanResult, setScanResult]             = useState(null);
   const [isScanning, setIsScanning]             = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
@@ -100,7 +102,7 @@ export const QRScanner = ({ autoStart = false }) => {
   }, []);
 
   // ── Scan result handlers ───────────────────────────────────────
-  function onScanSuccess(decodedText) {
+  async function onScanSuccess(decodedText) {
     stopScanner();
 
     const qrData = parseQRData(decodedText);
@@ -128,8 +130,13 @@ export const QRScanner = ({ autoStart = false }) => {
     if (windowStatus.status === "early" || windowStatus.status === "late") {
       const days = String(Math.abs(windowStatus.daysDiff));
       const key = windowStatus.status === "early" ? "checkInEarlyWarning" : "checkInLateWarning";
-      const label = t(key).replace("{days}", days);
-      if (!globalThis.confirm(label)) {
+      const proceed = await confirm({
+        title: t("confirm"),
+        message: t(key).replace("{days}", days),
+        confirmLabel: t("yes"),
+        cancelLabel: t("no"),
+      });
+      if (!proceed) {
         setScanResult({
           success: false,
           message: t("checkInCancelledOutsideWindow"),

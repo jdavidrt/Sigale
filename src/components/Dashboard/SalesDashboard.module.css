@@ -2,35 +2,13 @@
  * ============================================================
  * SÍGALE — SalesDashboard Module
  * Summary stats bar + per-type revenue breakdown cards.
+ * Layout primitives are composed from Dashboard.shared.module.css.
  * ============================================================
  */
 
-/* ── Root stack ─────────────────────────────────────────── */
+/* ── Root stack (shared) ────────────────────────────────── */
 .root {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-/* ── No-event placeholder ───────────────────────────────── */
-.noEvent {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-10) 0;
-}
-
-.noEventCard {
-  border-radius: var(--radius-lg);
-  padding: var(--space-8);
-  text-align: center;
-  max-width: 400px;
-}
-
-.noEventEmoji {
-  font-size: 60px;
-  display: block;
-  margin-bottom: var(--space-7);
+  composes: root from './Dashboard.shared.module.css';
 }
 
 /* ── Summary card outer ─────────────────────────────────── */
@@ -40,66 +18,17 @@
   margin: var(--space-3);
 }
 
-/* ── Tinted inner wrapper ───────────────────────────────── */
+/* ── Tinted inner wrapper (shared) ──────────────────────── */
 .statsWrapper {
-  background: var(--color-section-tint);
-  border-radius: var(--radius-3xl);
-  padding: var(--space-1);
+  composes: statsWrapper from './Dashboard.shared.module.css';
 }
 
-/* ── Stats grid ─────────────────────────────────────────── */
+/* ── Stats grid (StatCell primitives live in src/components/ui) ── */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-1);
 }
-
-.statCell {
-  padding: var(--space-4) var(--space-2);
-  text-align: center;
-}
-
-/* Right border divider between cells (except last) */
-.statCell:not(:last-child) {
-  border-right: 1px solid var(--color-border-divider);
-}
-
-.statIconRow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-1);
-}
-
-.statIcon {
-  font-size: var(--icon-sm);
-}
-
-.statIcon--primary  { color: var(--color-primary); }
-.statIcon--success  { color: var(--color-success); }
-.statIcon--secondary{ color: var(--color-secondary); }
-
-.statLabel {
-  font-size: 11px;
-  font-weight: var(--weight-semibold);
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-  opacity: 0.60;
-  margin: 0;
-}
-
-.statValue {
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-semibold);
-  line-height: var(--leading-tight);
-  margin: 0;
-}
-
-.statValue--primary   { color: var(--color-primary); }
-.statValue--success   { color: var(--color-success); }
-.statValue--secondary { color: var(--color-secondary); }
 
 
 /* ── Sales by type card ─────────────────────────────────── */
@@ -110,10 +39,7 @@
 }
 
 .sectionHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-6) var(--space-1) var(--space-6);
+  composes: sectionHeader from './Dashboard.shared.module.css';
 }
 
 .sectionTitle {

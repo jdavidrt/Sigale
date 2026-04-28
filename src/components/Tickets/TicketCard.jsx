@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import { generateQRData } from "../../utils/qrGenerator";
 import { copyPNGToClipboard, shareQR } from "../../utils/qrCopy";
+import { formatCurrency } from "../../utils/timeFormat";
 import { useEvent } from "../../context/EventContext";
 import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { useDialog } from "../../context/DialogContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faTrash, faImage, faShareNodes, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import s from "./TicketCard.module.css";
@@ -15,6 +17,7 @@ export const TicketCard = ({ ticket }) => {
   const { event, eventId } = useEvent();
   const { deleteTicket } = useTickets();
   const { t, language } = useLanguage();
+  const { confirm, notify } = useDialog();
   const qrRef = useRef(null);
   const [copyStatus, setCopyStatus] = useState("");
   const qrData = generateQRData(ticket, event, eventId);
@@ -34,14 +37,19 @@ export const TicketCard = ({ ticket }) => {
     navigate("/sell-tickets", { state: { editTicket: ticket } });
   };
 
-  const handleDelete = () => {
-    // L2: route through t() so the confirm dialog follows the app language.
-    const msg = t("confirmDeleteTicket")
-      .replace("{buyer}", ticket.buyerName)
-      .replace("{id}", ticket.ticketId);
-    if (window.confirm(msg)) {
-      deleteTicket(ticket.ticketId);
-    }
+  const handleDelete = async () => {
+    const ok = await confirm({
+      title: t("deleteTicketTitle"),
+      message: t("deleteTicketBody")
+        .replace("{buyer}", ticket.buyerName)
+        .replace("{id}", ticket.ticketId),
+      confirmLabel: t("delete"),
+      cancelLabel: t("cancel"),
+      danger: true,
+    });
+    if (!ok) return;
+    deleteTicket(ticket.ticketId);
+    notify({ message: t("ticketDeletedToast"), tone: "info" });
   };
 
   const copyAsPNG = useCallback(async () => {
@@ -91,7 +99,7 @@ export const TicketCard = ({ ticket }) => {
 
             <div className={s.detailRow}>
               <p className={s.ticketType}>{ticket.ticketType}</p>
-              <p className={s.price}>${(event.ticketTypes[ticket.ticketType] || 0).toLocaleString()}</p>
+              <p className={s.price}>{formatCurrency(event.ticketTypes[ticket.ticketType])}</p>
             </div>
 
             {ticket.buyerPhone !== "000" && (

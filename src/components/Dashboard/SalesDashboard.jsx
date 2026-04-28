@@ -1,8 +1,10 @@
 import { useTickets } from "../../context/TicketContext";
 import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTicket, faDollarSign } from "@fortawesome/free-solid-svg-icons";
+import { StatCell } from "../ui/StatCell";
+import { EmptyStateCard } from "../ui/EmptyStateCard";
+import { formatCurrency } from "../../utils/timeFormat";
 import s from "./SalesDashboard.module.css";
 
 export const SalesDashboard = () => {
@@ -12,15 +14,7 @@ export const SalesDashboard = () => {
   const stats = getStats();
 
   if (!event) {
-    return (
-      <div className={s.noEvent}>
-        <div className={`glass-elevated shadow-floating ${s.noEventCard}`}>
-          <span className={s.noEventEmoji}>📊</span>
-          <h2 className="text-heading">{t("noEvent")}</h2>
-          <p className="text-body">{t("noEventDesc")}</p>
-        </div>
-      </div>
-    );
+    return <EmptyStateCard icon="📊" title={t("noEvent")} description={t("noEventDesc")} />;
   }
 
   return (
@@ -29,25 +23,13 @@ export const SalesDashboard = () => {
       <div className={`glass-elevated shadow-floating ${s.summaryCard}`}>
         <div className={s.statsWrapper}>
           <div className={s.statsGrid}>
-            {/* Total Sold */}
-            <div className={s.statCell}>
-              <div className={s.statIconRow}>
-                <FontAwesomeIcon icon={faTicket} className={s["statIcon--primary"]} />
-                <p className={s.statLabel}>{t("totalSold")}</p>
-              </div>
-              <p className={`${s.statValue} ${s["statValue--primary"]}`}>{stats.totalSold}</p>
-            </div>
-
-            {/* Total Revenue */}
-            <div className={s.statCell}>
-              <div className={s.statIconRow}>
-                <FontAwesomeIcon icon={faDollarSign} className={s["statIcon--success"]} />
-                <p className={s.statLabel}>{t("totalRevenue")}</p>
-              </div>
-              <p className={`${s.statValue} ${s["statValue--success"]}`}>
-                ${stats.revenue.total.toLocaleString()}
-              </p>
-            </div>
+            <StatCell icon={faTicket} variant="primary" label={t("totalSold")} value={stats.totalSold} />
+            <StatCell
+              icon={faDollarSign}
+              variant="success"
+              label={t("totalRevenue")}
+              value={formatCurrency(stats.revenue.total)}
+            />
           </div>
         </div>
       </div>
@@ -68,10 +50,10 @@ export const SalesDashboard = () => {
                   <div className={s.typeRowInner}>
                     <div className={s.typeRowLeft}>
                       <p className={s.typeName}>{type}</p>
-                      <p className={s.typeUnitPrice}>${event.ticketTypes[type]?.toLocaleString()} c/u</p>
+                      <p className={s.typeUnitPrice}>{formatCurrency(event.ticketTypes[type])} c/u</p>
                     </div>
                     <div className={s.typeRowRight}>
-                      <p className={s.typeRevenue}>${stats.revenue.byType[type]?.toLocaleString()}</p>
+                      <p className={s.typeRevenue}>{formatCurrency(stats.revenue.byType[type])}</p>
                       <p className={s.typeSold}>{data.sold} {t("sold")}</p>
                     </div>
                   </div>

@@ -1,4 +1,4 @@
-import { formatTo12Hour, parseLocalDate } from './timeFormat';
+import { formatTo12Hour, parseLocalDate, formatCurrency } from './timeFormat';
 import { cleanBase64 } from './base64Cleaner';
 
 // Charly's illustration base64 - imported at build time
@@ -272,7 +272,7 @@ const generateRightColumn = (ticket, ticketPrice, buyerNameLines, buyerNameFontS
   // Price - Only show if price > 0 (10pt)
   if (ticketPrice > 0) {
     content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="10" fill="#000">
-      <tspan x="230" y="${currentY}">$${ticketPrice.toLocaleString()}</tspan>
+      <tspan x="230" y="${currentY}">${formatCurrency(ticketPrice)}</tspan>
     </text>`;
     currentY += 13;
   } else {

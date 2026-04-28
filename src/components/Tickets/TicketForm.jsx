@@ -3,7 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTickets } from "../../context/TicketContext";
 import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { useDialog } from "../../context/DialogContext";
+import { formatCurrency } from "../../utils/timeFormat";
+import { parseSingleNameAndId } from "../../utils/ticketPasteParser";
 import { QRDisplay } from "./QRDisplay";
+import { FieldLabel } from "../ui/FieldLabel";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTicketSimple, faPenToSquare, faUser, faIdCard, faPhone, faChevronDown, faPlusCircle, faCheckCircle, faPaste } from "@fortawesome/free-solid-svg-icons";
 import s from "./TicketForm.module.css";
@@ -15,6 +19,7 @@ export const TicketForm = () => {
   const { addTicket, updateTicket } = useTickets();
   const { event } = useEvent();
   const { t } = useLanguage();
+  const { notify } = useDialog();
 
   const editTicket = location.state?.editTicket;
   const isEditMode = !!editTicket;
@@ -35,7 +40,7 @@ export const TicketForm = () => {
     try {
       if (isEditMode) {
         await updateTicket(editTicket.ticketId, formData);
-        alert(t("ticketUpdated"));
+        notify({ message: t("ticketUpdatedFromForm"), tone: "success" });
         navigate("/validate-qr");
       } else {
         const ticket = await addTicket(formData);
@@ -45,7 +50,7 @@ export const TicketForm = () => {
       }
     } catch (error) {
       console.error("Save error:", error);
-      alert(t("failedToCreateTicket"));
+      notify({ message: t("failedToCreateToast"), tone: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -54,40 +59,7 @@ export const TicketForm = () => {
   const handlePasteInfo = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      const lines = text.trim().split(/[\n\t]+/).map((l) => l.trim()).filter(Boolean);
-      let name = "";
-      let id = "";
-
-      const idPrefixPattern = /^(?:C\.?C\.?|T\.?I\.?|NIT|CE|P\.?P\.?|Cédula|Cedula|Identificaci[oó]n|ID|Doc(?:umento)?)\s*[:.\-#]?\s*/i;
-      const namePrefixPattern = /^(?:Nombre|Name|Cliente|Client)\s*[:.\-#]?\s*/i;
-      const extractId = (str) => { const cleaned = str.replace(idPrefixPattern, ""); const match = cleaned.match(/[\d][\d.]*[\d]|[\d]+/); return match ? match[0].replace(/\./g, "") : ""; };
-      const hasId = (str) => { const num = extractId(str); return num.length >= 6 ? num : ""; };
-      const cleanName = (str) => str.replace(namePrefixPattern, "").replace(idPrefixPattern, "").trim();
-
-      if (lines.length >= 2) {
-        const id1 = hasId(lines[0]); const id2 = hasId(lines[1]);
-        if (id2 && !id1) { name = cleanName(lines[0]); id = id2; }
-        else if (id1 && !id2) { name = cleanName(lines[1]); id = id1; }
-        else if (id1 && id2) {
-          const h1 = idPrefixPattern.test(lines[0]); const h2 = idPrefixPattern.test(lines[1]);
-          if (h2) { name = cleanName(lines[0]); id = id2; } else if (h1) { name = cleanName(lines[1]); id = id1; } else { name = cleanName(lines[0]); id = id2; }
-        }
-      } else if (lines.length === 1) {
-        const line = lines[0]; const idRegex = /(?:[\d][\d.]*[\d]|[\d]{6,})/g;
-        let match; let bestMatch = null;
-        while ((match = idRegex.exec(line)) !== null) { const digits = match[0].replace(/\./g, ""); if (digits.length >= 6) { bestMatch = { raw: match[0], digits, index: match.index }; break; } }
-        if (bestMatch) {
-          id = bestMatch.digits;
-          const cleanPart = (str) => str.replace(idPrefixPattern, "").replace(/[-,|/]\s*$/, "").replace(/^\s*[-,|/]/, "").trim();
-          name = cleanPart(line.substring(0, bestMatch.index)) || cleanPart(line.substring(bestMatch.index + bestMatch.raw.length));
-        }
-      }
-
-      id = id.replace(/[^\d]/g, "");
-      // L6: use Unicode property escapes so non-Latin names (Cyrillic,
-      // Arabic, CJK, Hebrew, etc.) aren't stripped. \p{L} = letter,
-      // \p{M} = combining mark (accents, etc.).
-      name = name.replace(/[^\p{L}\p{M}\s'-]/gu, "").replace(/\s+/g, " ").trim();
+      const { name, id } = parseSingleNameAndId(text);
       if (name && id) setFormData((prev) => ({ ...prev, buyerName: name, buyerId: id }));
     } catch { /* Clipboard access denied */ }
   };
@@ -134,7 +106,7 @@ export const TicketForm = () => {
                     </div>
                     <div className={s.detailsGridRight}>
                       <p className={s.detailKey}>{t("detailPrice")}</p>
-                      <p className={s.detailValueHeading}>${event.ticketTypes[createdTicket.ticketType]?.toLocaleString()}</p>
+                      <p className={s.detailValueHeading}>{formatCurrency(event.ticketTypes[createdTicket.ticketType])}</p>
                     </div>
                   </div>
                   <div className={s.detailsDivider} />
@@ -175,41 +147,37 @@ export const TicketForm = () => {
                 <div className={`glass-clean ${s.fieldsSection}`}>
                   {/* Name */}
                   <div>
-                    <div className={s.fieldLabelRow}>
-                      <FontAwesomeIcon icon={faUser} className="label-icon" />
-                      <label className={s.fieldLabelText}>{t("buyerName")}</label>
-                    </div>
+                    <FieldLabel icon={faUser} rowClass={s.fieldLabelRow} textClass={s.fieldLabelText}>
+                      {t("buyerName")}
+                    </FieldLabel>
                     <input type="text" required maxLength={100} value={formData.buyerName} onChange={(e) => setFormData({ ...formData, buyerName: e.target.value })} placeholder={t("enterFullName")} />
                   </div>
 
                   {/* ID + Phone two-col */}
                   <div className={s.twoCol}>
                     <div>
-                      <div className={s.fieldLabelRow}>
-                        <FontAwesomeIcon icon={faIdCard} className="label-icon" />
-                        <label className={s.fieldLabelText}>{t("idNumber")}</label>
-                      </div>
+                      <FieldLabel icon={faIdCard} rowClass={s.fieldLabelRow} textClass={s.fieldLabelText}>
+                        {t("idNumber")}
+                      </FieldLabel>
                       <input type="tel" required maxLength={30} value={formData.buyerId} onChange={(e) => setFormData({ ...formData, buyerId: e.target.value })} placeholder="ID..." className="text-mono" />
                     </div>
                     <div>
-                      <div className={s.fieldLabelRow}>
-                        <FontAwesomeIcon icon={faPhone} className="label-icon" />
-                        <label className={s.fieldLabelText}>{t("phoneNumber")}</label>
-                      </div>
+                      <FieldLabel icon={faPhone} rowClass={s.fieldLabelRow} textClass={s.fieldLabelText}>
+                        {t("phoneNumber")}
+                      </FieldLabel>
                       <input type="tel" required maxLength={30} value={formData.buyerPhone} onChange={(e) => setFormData({ ...formData, buyerPhone: e.target.value })} onFocus={(e) => e.target.select()} placeholder="Phone..." className="text-mono" />
                     </div>
                   </div>
 
                   {/* Ticket Type */}
                   <div className={s.selectWrapper}>
-                    <div className={s.fieldLabelRow}>
-                      <FontAwesomeIcon icon={faTicketSimple} className="label-icon" />
-                      <label className={s.fieldLabelText}>{t("ticketType")}</label>
-                    </div>
+                    <FieldLabel icon={faTicketSimple} rowClass={s.fieldLabelRow} textClass={s.fieldLabelText}>
+                      {t("ticketType")}
+                    </FieldLabel>
                     <select required value={formData.ticketType} onChange={(e) => setFormData({ ...formData, ticketType: e.target.value })}>
                       <option value="" style={{ background: "#1a1152" }}>{t("selectTicketType")}</option>
                       {Object.entries(event.ticketTypes).map(([type, price]) => (
-                        <option key={type} value={type} style={{ background: "#1a1152" }}>{type.toUpperCase()} - ${price.toLocaleString()}</option>
+                        <option key={type} value={type} style={{ background: "#1a1152" }}>{type.toUpperCase()} - {formatCurrency(price)}</option>
                       ))}
                     </select>
                     <FontAwesomeIcon icon={faChevronDown} className={s.selectChevron} />

@@ -15,22 +15,6 @@
   margin: 0 auto;
 }
 
-/* ── No-event placeholder ───────────────────────────────── */
-.noEvent {
-  min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-7) var(--space-7);
-}
-
-.noEventCard {
-  border-radius: var(--radius-lg);
-  padding: var(--space-8);
-  text-align: center;
-  max-width: 400px;
-}
-
 /* ── Header row ──────────────────────────────────────────── */
 .headerRow {
   display: flex;
@@ -67,8 +51,8 @@
 
 /* ── Filters row ─────────────────────────────────────────── */
 .filtersRow {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-4);
   margin: var(--space-3);
   margin-bottom: var(--space-6);
@@ -76,7 +60,14 @@
 
 @media (min-width: 768px) {
   .filtersRow {
-    grid-template-columns: 1fr 1fr;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  /* Search + filter share the available width 50/50; toggle hugs its content */
+  .filtersRow > .searchWrapper,
+  .filtersRow > .filterWrapper {
+    flex: 1 1 240px;
   }
 }
 

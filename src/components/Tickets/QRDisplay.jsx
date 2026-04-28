@@ -96,18 +96,16 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
       {showActions && (
         <div>
           <div className={s.actionsRow}>
-            <button onClick={copyAsSVG} className={s.actionBtn}>
-              <FontAwesomeIcon icon={faFile} />
-              Copy SVG
-            </button>
-            <button onClick={copyAsPNG} className={s.actionBtn}>
-              <FontAwesomeIcon icon={faImage} />
-              Copy PNG
-            </button>
-            <button onClick={handleShare} className={s.actionBtn}>
-              <FontAwesomeIcon icon={faShareNodes} />
-              {t("share")}
-            </button>
+            {[
+              { icon: faFile, label: "Copy SVG", onClick: copyAsSVG },
+              { icon: faImage, label: "Copy PNG", onClick: copyAsPNG },
+              { icon: faShareNodes, label: t("share"), onClick: handleShare },
+            ].map(({ icon, label, onClick }) => (
+              <button key={label} onClick={onClick} className={s.actionBtn}>
+                <FontAwesomeIcon icon={icon} />
+                {label}
+              </button>
+            ))}
           </div>
 
           {copyStatus && <p className={s.copyStatus}>{copyStatus}</p>}

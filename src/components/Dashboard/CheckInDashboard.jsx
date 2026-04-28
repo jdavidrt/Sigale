@@ -2,6 +2,7 @@ import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUsers, faChartLine, faClock, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
+import { StatCell } from "../ui/StatCell";
 import s from "./CheckInDashboard.module.css";
 
 export const CheckInDashboard = () => {
@@ -23,35 +24,25 @@ export const CheckInDashboard = () => {
       <div className={`glass-elevated shadow-floating ${s.summaryCard}`}>
         <div className={s.statsWrapper}>
           <div className={s.statsGrid}>
-            {/* Attendees */}
-            <div className={s.statCell}>
-              <div className={s.statIconRow}>
-                <FontAwesomeIcon icon={faUsers} className={s["statIcon--success"]} />
-                <p className={s.statLabel}>{t("attendees")}</p>
-              </div>
-              <p className={`${s.statValue} ${s["statValue--success"]}`}>{stats.totalCheckedIn}</p>
-              <p className={s.statSubtext}>{t("ofTickets")} {stats.totalSold}</p>
-            </div>
-
-            {/* Attendance Rate */}
-            <div className={s.statCell}>
-              <div className={s.statIconRow}>
-                <FontAwesomeIcon icon={faChartLine} className={s["statIcon--secondary"]} />
-                <p className={s.statLabel}>{t("attendanceRate")}</p>
-              </div>
-              <p className={`${s.statValue} ${s["statValue--secondary"]}`}>{attendancePercentage}%</p>
-            </div>
-
-            {/* Remaining */}
-            <div className={s.statCell}>
-              <div className={s.statIconRow}>
-                <FontAwesomeIcon icon={faClock} className={s["statIcon--primary"]} />
-                <p className={s.statLabel}>{t("remaining")}</p>
-              </div>
-              <p className={`${s.statValue} ${s["statValue--primary"]}`}>
-                {stats.totalSold - stats.totalCheckedIn}
-              </p>
-            </div>
+            <StatCell
+              icon={faUsers}
+              variant="success"
+              label={t("attendees")}
+              value={stats.totalCheckedIn}
+              subtext={`${t("ofTickets")} ${stats.totalSold}`}
+            />
+            <StatCell
+              icon={faChartLine}
+              variant="secondary"
+              label={t("attendanceRate")}
+              value={`${attendancePercentage}%`}
+            />
+            <StatCell
+              icon={faClock}
+              variant="primary"
+              label={t("remaining")}
+              value={stats.totalSold - stats.totalCheckedIn}
+            />
           </div>
         </div>
       </div>

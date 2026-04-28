@@ -5,7 +5,7 @@ import { faLocationDot, faCalendarDays, faClock, faTicket, faPenToSquare } from 
 import { useEvent } from "../context/EventContext";
 import { useTickets } from "../context/TicketContext";
 import { useLanguage } from "../context/LanguageContext";
-import { formatTo12Hour, parseLocalDate } from "../utils/timeFormat";
+import { formatTo12Hour, parseLocalDate, formatCurrency } from "../utils/timeFormat";
 import s from "./Home.module.css";
 
 export const Home = () => {
@@ -90,7 +90,7 @@ export const Home = () => {
             </div>
             <div>
               <p className={s.statLabel}>{t("revenue")}</p>
-              <p className={s.statValue}>${totalRevenue.toLocaleString()}</p>
+              <p className={s.statValue}>{formatCurrency(totalRevenue)}</p>
             </div>
           </div>
         </div>
@@ -119,7 +119,7 @@ export const Home = () => {
                 >
                   <div className={s.typeCardLeft}>
                     <p className={s.typeCardName}>{type}</p>
-                    <p className={s.typeCardPrice}>${price.toLocaleString()}</p>
+                    <p className={s.typeCardPrice}>{formatCurrency(price)}</p>
                   </div>
                   <div className={s.typeBadge}>{ticketCount}</div>
                 </div>

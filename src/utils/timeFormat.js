@@ -17,26 +17,6 @@ export const formatTo12Hour = (time24) => {
 };
 
 /**
- * Format a timestamp to 12-hour time format
- * @param {string|Date} timestamp - ISO timestamp or Date object
- * @returns {string} Time in 12-hour format
- */
-export const formatTimestampTo12Hour = (timestamp) => {
-  if (!timestamp) return '';
-
-  const date = new Date(timestamp);
-
-  if (isNaN(date.getTime())) return '';
-
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const hours12 = hours % 12 || 12;
-
-  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
-};
-
-/**
  * Parse date string (YYYY-MM-DD) without timezone issues
  * This prevents dates from being shifted by timezone offset when creating Date objects
  * @param {string} dateString - Date string in YYYY-MM-DD format
@@ -68,6 +48,24 @@ export const toLocalDateString = (date = new Date()) => {
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
+};
+
+/**
+ * Format a number as a $-prefixed currency string with locale-aware
+ * thousands separators. Co-located here while there's only one formatter;
+ * split to a dedicated `formatters.js` when a second one shows up.
+ *
+ * Falsy or non-numeric input renders as "$0" rather than the legacy
+ * "$undefined" the optional-chaining call sites used to emit.
+ *
+ * @param {number|string|null|undefined} n - Numeric value to format
+ * @param {string} [locale] - BCP-47 locale (defaults to the browser's)
+ * @returns {string}
+ */
+export const formatCurrency = (n, locale) => {
+  const num = Number(n);
+  if (!Number.isFinite(num)) return '$0';
+  return '$' + num.toLocaleString(locale);
 };
 
 /**

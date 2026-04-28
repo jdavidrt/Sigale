@@ -1,0 +1,82 @@
+/*
+ * SÍGALE — Toast / inline notification
+ * Stack of dismissible status messages. Lives at the page level via
+ * DialogProvider; auto-dismisses unless duration=0.
+ */
+
+.stack {
+  position: fixed;
+  bottom: var(--space-7);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  z-index: 1100;
+  width: calc(100% - var(--space-8));
+  max-width: 420px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-primary-xl);
+  background: var(--color-section-bg, #1a1152);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-floating);
+  font-size: var(--text-base);
+  animation: toastIn var(--duration-base) var(--ease-standard);
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.toast[data-tone="success"] {
+  background: var(--color-tint-success);
+  border-color: var(--color-border-success-sm);
+  color: var(--color-success);
+}
+
+.toast[data-tone="error"] {
+  background: var(--color-tint-error-sm);
+  border-color: var(--color-border-error);
+  color: var(--color-error);
+}
+
+.toast[data-tone="info"] {
+  background: var(--color-tint-primary);
+  border-color: var(--color-border-primary-sm);
+  color: var(--color-primary);
+}
+
+.message {
+  flex: 1;
+  margin: 0;
+}
+
+.dismissBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  transition: var(--transition-base);
+  flex-shrink: 0;
+}
+
+.dismissBtn:hover {
+  opacity: 1;
+}

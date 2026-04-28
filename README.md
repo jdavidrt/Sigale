@@ -1,252 +1,106 @@
 <p align="center">
   <img src="public/ticket-icon.svg" width="100" alt="Sígale Ticket Icon">
-  <h1 align="center">Sígale</h1>
-  <p align="center">
-    <strong>Offline-first ticket management for events of any size</strong>
-  </p>
-  <p align="center">
-    <a href="#features">Features</a> &bull;
-    <a href="#quick-start">Quick Start</a> &bull;
-    <a href="#how-it-works">How It Works</a> &bull;
-    <a href="#documentation">Docs</a>
-  </p>
 </p>
 
+<h1 align="center">Sígale</h1>
+
+<p align="center"><strong>Offline-first ticket management for events of any size.</strong></p>
+
 ---
 
-> **Project Status**: ✅ **Fully Implemented & Production Ready**
-> All core features complete. Ready for deployment and real-world event management.
-
----
+> **Status: production-ready.** All originally-scoped features ship; see [`docs/architecture/PROJECT_OVERVIEW.md`](docs/architecture/PROJECT_OVERVIEW.md#recent-additions) for the post-launch additions.
 
 ## Why Sígale?
 
-Most ticketing systems require servers, monthly fees, and constant internet. **Sígale works differently.**
+Most ticketing systems require servers, monthly fees, and constant internet. Sígale doesn't.
 
-- **100% Offline** — No internet required. Your browser is the database.
-- **Zero Costs** — No servers, no subscriptions, no vendor lock-in.
-- **Portable** — Export your entire event as JSON. Import anywhere.
-- **Scalable** — Hold 10,000+ tickets in localStorage.
-
----
+- **100 % offline** — your browser is the database.
+- **Zero recurring cost** — no servers, no subscriptions, no vendor lock-in.
+- **Portable** — export the whole event as JSON; import on any device.
+- **Scalable enough** — ~10 k tickets in localStorage (≈ 300–400 B each, since QR codes are regenerated on demand from a 16-char SHA-256 hash rather than stored).
 
 ## Features
 
-| Status | Feature | Description |
-|--------|---------|-------------|
-| ✅ | **Event Setup** | Custom branding, unlimited ticket types, dynamic pricing |
-| ✅ | **Ticket Sales** | Auto-generated IDs, SHA-256 validation hashes, instant QR |
-| ✅ | **PNG Templates** | Professional tickets with custom Charly illustration |
-| ✅ | **QR Scanning** | Real-time camera validation with duplicate detection |
-| ✅ | **Check-in** | Color-coded results (green/red/orange), attendance tracking |
-| ✅ | **Bilingual** | Spanish/English with browser auto-detection |
-| ✅ | **Dashboard** | Sales analytics, revenue by type, check-in stats |
-| ✅ | **Data Export** | Copy to clipboard, download JSON, full backup/restore |
-| ✅ | **CSV Import/Export** | Bulk ticket management via CSV files |
-| ✅ | **PWA Ready** | Installable, works offline, service worker support |
-| ✅ | **iOS Optimized** | Enhanced persistence and background state handling |
+- Event setup with custom ticket types and per-type pricing
+- Ticket sales with auto-generated IDs, validation hashes, and on-demand QR
+- PNG ticket templates with a custom mascot illustration
+- Camera-based QR check-in with duplicate / wrong-event / out-of-window detection
+- Bilingual UI (Spanish / English, browser auto-detected)
+- Editable ticket table with paste-from-spreadsheet bulk add
+- Sales + check-in dashboards
+- JSON / CSV / PDF export, JSON import for backup & device handoff
+- PWA-installable with offline shell
 
----
-
-## Quick Start
+## Quick start
 
 ```bash
 git clone https://github.com/your-username/sigale.git
-cd sigale && npm install
+cd sigale
+npm install
 npm run dev
 ```
 
-Open **http://localhost:5173** — Create your first event.
-
----
-
-## How It Works
-
-```
-CREATE EVENT ──────────> SELL TICKETS ──────────> VALIDATE
-     │                        │                       │
-     ▼                        ▼                       ▼
- Name, date              Buyer info              Camera scan
- Venue, time             Ticket ID               Hash lookup
- Colors, types           SHA-256 hash            Duplicate check
-                         QR on-demand            Check-in mark
-                         PNG template
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │  localStorage   │
-                    │  (JSON ~400B    │
-                    │   per ticket)   │
-                    └─────────────────┘
-```
-
-**Key insight**: QR codes are never stored—they're generated on-demand from validation hashes, reducing storage by ~95%.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| **Framework** | React 19 |
-| **Build** | Vite |
-| **Styling** | Tailwind CSS v4 |
-| **QR Gen** | qrcode.react |
-| **QR Scan** | html5-qrcode |
-| **Crypto** | Web Crypto API (SHA-256) |
-| **Storage** | localStorage |
-| **Routing** | React Router v6 |
-
----
-
-## Project Structure
-
-```
-src/
-├── components/
-│   ├── Dashboard/       # Sales & check-in analytics
-│   ├── Event/           # Event creation/editing
-│   ├── Layout/          # Navbar, main wrapper
-│   ├── Scanner/         # Camera QR validation
-│   ├── Tickets/         # Form, card, list, QR display
-│   └── Common/          # Shared components
-├── context/
-│   ├── EventContext     # Event state + CRUD
-│   ├── TicketContext    # Tickets + getStats()
-│   └── LanguageContext  # i18n (ES/EN)
-├── hooks/               # useLocalStorage, usePageVisibility, usePWAInstall
-├── pages/               # Route components
-└── utils/               # hashGenerator, qrCopy, translations, timeFormat
-```
-
----
-
-## Routes
-
-| Path | Purpose |
-|------|---------|
-| `/` | Home |
-| `/create-event` | New event setup |
-| `/edit-event` | Modify event |
-| `/sell-tickets` | Register sales |
-| `/tickets` | View all tickets |
-| `/validate-qr` | Scan & validate |
-| `/copy-event` | Export/import |
-| `/dashboard` | Analytics |
-
----
-
-## Data Format
-
-```json
-{
-  "event": {
-    "name": "Summer Festival 2025",
-    "date": "2025-12-15",
-    "venue": "National Stadium",
-    "address": "123 Main St",
-    "entranceTime": "19:00",
-    "colors": { "base": "#1A1A2E", "emphasis": "#FF6B6B" },
-    "ticketTypes": { "general": 50000, "vip": 100000 }
-  },
-  "tickets": [{
-    "ticketId": "TKT-847-1728234567",
-    "buyerName": "John Doe",
-    "validationHash": "a7f3c2e1b9",
-    "checkedIn": false
-  }]
-}
-```
-
----
-
-## Browser Support
-
-| Browser | Version |
-|---------|---------|
-| Chrome/Edge | 90+ |
-| Firefox | 88+ |
-| Safari | 14+ |
-
-**Required**: Web Crypto, localStorage, Clipboard API, MediaDevices (camera)
-
-**Note**: HTTPS required for camera access in production.
-
----
-
-## Deployment
+Open <http://localhost:5173> and create your first event.
 
 ```bash
-npm run build
+npm run build    # Production build → dist/
+npm test         # vitest test suite
+npm run lint     # ESLint
 ```
 
-Deploy `dist/` to any static host:
+Deploy the `dist/` folder to any static host (Netlify, Vercel, GitHub Pages, etc.). HTTPS is required in production for camera access.
 
-- **Netlify** — Drag & drop
-- **Vercel** — `vercel --prod`
-- **GitHub Pages** — Push to `gh-pages`
+## How it works
 
----
+```
+CREATE EVENT ───────► SELL TICKETS ───────► VALIDATE
+     │                     │                    │
+     ▼                     ▼                    ▼
+ Name, date          Buyer info            Camera scan
+ Venue, time         Auto ticket ID        Hash lookup
+ Ticket types        16-char hash          Duplicate check
+                     QR on demand          Check-in mark
+                          │
+                          ▼
+                  ┌───────────────┐
+                  │  localStorage │
+                  │  (~400 B/tkt) │
+                  └───────────────┘
+```
+
+QR codes are never stored — they're regenerated from each ticket's validation hash, which is what makes ~10 k tickets fit in a localStorage budget.
+
+## Tech stack
+
+React 19 · Vite · Tailwind CSS v4 · React Router v7 · `qrcode.react` · `html5-qrcode` · `jspdf` · Web Crypto API.
+
+Browser support: Chrome/Edge 90+, Firefox 88+, Safari 14+.
 
 ## Documentation
 
-Comprehensive documentation is available in the `/docs` folder, organized by topic:
-
-### Quick Links
-
-- **[CLAUDE.md](CLAUDE.md)** — AI development guide and system architecture
-- **[Architecture Overview](docs/architecture/PROJECT_OVERVIEW.md)** — System design and technical details
-- **[Style Guide](docs/design/STYLE_GUIDE.md)** — Design system and component specifications
-- **[Mobile Testing](docs/guides/MOBILE_TESTING.md)** — Testing procedures and device compatibility
-- **[CSV Feature Guide](docs/features/CSV_FEATURE_GUIDE.md)** — Bulk import/export documentation
-- **[iOS Persistence](docs/guides/ios-persistence-guide.md)** — iOS Safari storage optimization
-
-### Documentation Structure
-
-```
-docs/
-├── architecture/     # System architecture and project overview
-├── design/          # UI/UX design, style guides, visual specs
-├── features/        # Feature-specific documentation
-├── guides/          # Platform compatibility and development guides
-└── implementation/  # Development stage documentation (completed)
-```
-
-See [docs/README.md](docs/README.md) for the complete documentation index.
-
----
+| Audience | Start here |
+|----------|-----------|
+| Working on the codebase (or having Claude do it) | [`CLAUDE.md`](CLAUDE.md) |
+| Reading the technical design | [`docs/architecture/PROJECT_OVERVIEW.md`](docs/architecture/PROJECT_OVERVIEW.md) |
+| Picking visuals / tokens | [`docs/design/STYLE_GUIDE.md`](docs/design/STYLE_GUIDE.md) |
+| All other guides (CSV, mobile testing, iOS persistence, audit lessons) | [`docs/README.md`](docs/README.md) |
 
 ## Contributing
 
-Before contributing, please review:
+Before contributing, scan `CLAUDE.md` for the rules — particularly:
 
-1. **[CLAUDE.md](CLAUDE.md)** — Development guidelines and architecture
-2. **[Style Guide](docs/design/STYLE_GUIDE.md)** — Design system and coding standards
-3. **[Implementation Stages](docs/implementation/)** — Historical development context
-
-**Key Guidelines:**
-- Mobile-first approach (44x44px minimum touch targets)
-- Tailwind CSS v4 (no `@apply` directive)
-- All code and comments in English
-- Test on iOS Safari and Chrome/Edge
-- Bilingual support (Spanish/English)
-
----
+- mobile-first, 44×44 px touch targets, 16 px base font;
+- Tailwind v4 (no `@apply`);
+- all native `alert` / `confirm` / `prompt` go through `useDialog()`;
+- dates always through `parseLocalDate` / `toLocalDateString`;
+- code and comments in English; UI strings in `src/utils/translations.js` (ES + EN).
 
 ## License
 
-**© 2025 David Ramírez T.**
+© 2025 David Ramírez T. — Bogotá, Colombia.
 
-This project was created by **David Ramírez T.** in **Bogotá, Colombia**.
+Free for personal, educational, and non-profit community events. **Commercial use is not permitted** without explicit permission.
 
-**Commercial use is not permitted.**
-- You may use this software for personal, educational, or non-profit community events.
-- You may **not** use this software to charge for ticketing services or sell it as a product without explicit permission.
+For commercial inquiries: <jdramirezt@unal.edu.co>.
 
-For commercial inquiries, please contact the author jdramirezt@unal.edu.co 
-
----
-
-<p align="center">
-  <sub>Built with ❤️ in Bogotá, Colombia.</sub>
-</p>
+<p align="center"><sub>Built with ❤️ in Bogotá.</sub></p>

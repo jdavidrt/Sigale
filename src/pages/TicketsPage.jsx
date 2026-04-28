@@ -5,19 +5,83 @@ import { faTicketSimple, faTriangleExclamation, faSearch, faFilter } from "@fort
 import { useEvent } from "../context/EventContext";
 import { useTickets } from "../context/TicketContext";
 import { useLanguage } from "../context/LanguageContext";
+import { useDialog } from "../context/DialogContext";
+import { useLocalStorageValue } from "../hooks/useLocalStorageValue";
 import { TicketCard } from "../components/Tickets/TicketCard";
+import { TicketTable } from "../components/Tickets/TicketTable";
+import { TicketsViewToggle } from "../components/Tickets/TicketsViewToggle";
 import { CSVPanel } from "../components/Tickets/CSVPanel";
+import { EmptyStateCard } from "../components/ui/EmptyStateCard";
 import s from "./TicketsPage.module.css";
 import btn from "../components/Common/Button.module.css";
+
+/**
+ * "Type DELETE to confirm" body for the destructive bulk-delete modal.
+ * Lives here (not in src/components/ui) because it's the only consumer
+ * and the typed-confirm pattern hasn't earned a generic primitive yet.
+ */
+const TypedConfirmBody = ({ count, requiredWord, t, onConfirm, onCancel }) => {
+  const [typed, setTyped] = useState("");
+  const matches = typed.trim().toUpperCase() === requiredWord;
+
+  return (
+    <>
+      <h2 style={{ margin: "0 0 var(--space-3) 0", fontSize: "var(--text-lg)", fontWeight: "var(--weight-semibold)", color: "var(--color-text-heading)" }}>
+        {t("deleteAllTitle")}
+      </h2>
+      <p style={{ margin: "0 0 var(--space-4) 0" }}>
+        {t("deleteAllBody").replace("{count}", count)}
+      </p>
+      <input
+        type="text"
+        autoFocus
+        value={typed}
+        onChange={(e) => setTyped(e.target.value)}
+        placeholder={t("deleteAllInputPlaceholder")}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && matches) onConfirm();
+          if (e.key === "Escape") onCancel();
+        }}
+        style={{
+          width: "100%",
+          padding: "var(--space-3) var(--space-4)",
+          borderRadius: "var(--radius-sm)",
+          border: "1px solid var(--color-border-primary-xl)",
+          background: "var(--color-input-bg-solid)",
+          color: "var(--color-text-primary)",
+          fontFamily: "var(--font-mono)",
+          fontSize: "var(--text-md)",
+        }}
+      />
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-3)", marginTop: "var(--space-6)" }}>
+        <button type="button" className={`${btn.btn} ${btn.secondary} ${btn.md}`} onClick={onCancel}>
+          {t("cancel")}
+        </button>
+        <button
+          type="button"
+          className={`${btn.btn} ${btn.danger} ${btn.md}`}
+          onClick={onConfirm}
+          disabled={!matches}
+        >
+          {t("delete")}
+        </button>
+      </div>
+    </>
+  );
+};
 
 export const TicketsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { event } = useEvent();
   const { tickets, searchTickets, clearAllTickets } = useTickets();
   const { t } = useLanguage();
+  const { openCustom, notify } = useDialog();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState(searchParams.get("type") || "all");
+  // Persisted view preference: "cards" (default) or "table". One key per device,
+  // stored under "sigale-tickets-view" via the small useLocalStorageValue hook.
+  const [view, setView] = useLocalStorageValue("sigale-tickets-view", "cards");
 
   useEffect(() => {
     const typeFromUrl = searchParams.get("type");
@@ -36,39 +100,33 @@ export const TicketsPage = () => {
     else setSearchParams({ type: newType });
   };
 
-  // H1: A hard-coded password in a static bundle is not access control — anyone
-  // can read it with DevTools. Removing the password theater; rely on an
-  // explicit two-step confirmation instead. Operators who need real access
-  // control should deploy the app behind an auth'd reverse proxy.
+  // H1: a hard-coded password in a static bundle is not access control — anyone
+  // can read it with DevTools. Two-step typed-DELETE confirmation instead.
+  // Operators needing real access control should deploy behind an auth'd proxy.
   const handleClearAllTickets = () => {
     if (tickets.length === 0) return;
-    const firstPrompt = window.confirm(
-      t("confirmResetCheckIns") ||
-        `Delete all ${tickets.length} tickets?\n\nThis cannot be undone.`
-    );
-    if (!firstPrompt) return;
-    const typed = window.prompt(
-      t("confirmResetCheckInsRetype") ||
-        `Type DELETE to confirm deleting all ${tickets.length} tickets:`
-    );
-    if (typed === null) return;
-    if (typed.trim().toUpperCase() !== "DELETE") {
-      alert(t("deletionCancelled") || "Deletion cancelled.");
-      return;
-    }
-    clearAllTickets();
-    alert(t("checkInsReset") || "All tickets have been deleted.");
+    openCustom((close) => (
+      <TypedConfirmBody
+        count={tickets.length}
+        requiredWord={t("deleteAllConfirmWord")}
+        t={t}
+        onCancel={close}
+        onConfirm={() => {
+          close();
+          clearAllTickets();
+          notify({ message: t("deleteAllSuccess"), tone: "success" });
+        }}
+      />
+    ));
   };
 
   if (!event) {
     return (
-      <div className={s.noEvent}>
-        <div className={`glass-elevated shadow-floating ${s.noEventCard}`}>
-          <FontAwesomeIcon icon={faTriangleExclamation} className="color-primary" style={{ fontSize: "60px", marginBottom: "var(--space-7)" }} />
-          <h2 className="text-heading" style={{ margin: "0 0 var(--space-4) 0" }}>{t("noEvent")}</h2>
-          <p className="text-body" style={{ margin: 0 }}>{t("noEventDesc")}</p>
-        </div>
-      </div>
+      <EmptyStateCard
+        icon={<FontAwesomeIcon icon={faTriangleExclamation} className="color-primary" />}
+        title={t("noEvent")}
+        description={t("noEventDesc")}
+      />
     );
   }
 
@@ -88,7 +146,7 @@ export const TicketsPage = () => {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Filters + view toggle */}
         <div className={s.filtersRow}>
           <div className={s.searchWrapper}>
             <FontAwesomeIcon icon={faSearch} className={s.searchIcon} />
@@ -115,10 +173,23 @@ export const TicketsPage = () => {
               ))}
             </select>
           </div>
+          <TicketsViewToggle value={view} onChange={setView} />
         </div>
 
-        {/* Tickets */}
-        {filteredTickets.length === 0 ? (
+        {/* Tickets — table view always renders (it owns the paste toolbar even
+            with zero matches); cards view shows an empty state when no matches. */}
+        {view === "table" ? (
+          <>
+            <TicketTable tickets={filteredTickets} />
+            {tickets.length > 0 && (
+              <div className={s.resetRow}>
+                <button onClick={handleClearAllTickets} className={`${btn.btn} ${btn.primary} ${btn.lg}`}>
+                  🗑️ {t("clearAllTickets") || "Delete All Tickets"}
+                </button>
+              </div>
+            )}
+          </>
+        ) : filteredTickets.length === 0 ? (
           <div className={`glass-elevated ${s.emptyState}`}>
             <FontAwesomeIcon icon={faTicketSimple} className="color-primary" style={{ fontSize: "60px", opacity: 0.20, marginBottom: "var(--space-7)" }} />
             <h2 className="text-heading" style={{ marginBottom: "var(--space-4)" }}>{t("noTickets")}</h2>

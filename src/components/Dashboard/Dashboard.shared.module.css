@@ -1,0 +1,27 @@
+/*
+ * ============================================================
+ * SÍGALE — Dashboard shared module
+ * Layout primitives shared by SalesDashboard and CheckInDashboard.
+ * Per-dashboard modules pull these in via `composes:` so the JSX
+ * keeps using `s.root` / `s.statsWrapper` / `s.sectionHeader`.
+ * ============================================================
+ */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.statsWrapper {
+  background: var(--color-section-tint);
+  border-radius: var(--radius-3xl);
+  padding: var(--space-1);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-6) var(--space-1) var(--space-6);
+}

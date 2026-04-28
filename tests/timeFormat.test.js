@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   formatTo12Hour,
-  formatTimestampTo12Hour,
   parseLocalDate,
   toLocalDateString,
   checkInWindowStatus,
@@ -35,20 +34,6 @@ describe('formatTo12Hour', () => {
 
   it('returns the raw input for malformed time strings', () => {
     expect(formatTo12Hour('not-a-time')).toBe('not-a-time');
-  });
-});
-
-describe('formatTimestampTo12Hour', () => {
-  it('formats an ISO timestamp to the 12h display format', () => {
-    // Use a local-constructed date so we are timezone-agnostic.
-    const d = new Date();
-    d.setHours(14, 7, 0, 0);
-    expect(formatTimestampTo12Hour(d.toISOString())).toBe('2:07 PM');
-  });
-
-  it('returns empty string for invalid input', () => {
-    expect(formatTimestampTo12Hour('')).toBe('');
-    expect(formatTimestampTo12Hour('garbage')).toBe('');
   });
 });
 

@@ -1,0 +1,111 @@
+/*
+ * ============================================================
+ * SÍGALE — Modal primitive
+ * Backdrop + glassy card. Used by DialogProvider for confirm
+ * dialogs, custom modals, and the table's edit-confirm flow.
+ * ============================================================
+ */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+  animation: fadeIn var(--duration-fast) var(--ease-standard);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.card {
+  background: var(--color-section-bg, #1a1152);
+  border: 1px solid var(--color-border-primary-xl);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-floating);
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100dvh - var(--space-8));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn var(--duration-base) var(--ease-standard);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-heading);
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.closeBtn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: var(--transition-base);
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: var(--color-input-bg-hover);
+  color: var(--color-text-primary);
+}
+
+/* ── Body ───────────────────────────────────────────────── */
+.body {
+  padding: var(--space-6);
+  overflow-y: auto;
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  line-height: var(--leading-snug);
+}
+
+.body p {
+  margin: 0 0 var(--space-3) 0;
+}
+
+.body p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Footer ─────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-section-tint, transparent);
+}

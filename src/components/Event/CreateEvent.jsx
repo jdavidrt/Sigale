@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useEvent } from "../../context/EventContext";
 import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { useDialog } from "../../context/DialogContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faWandMagicSparkles, faFloppyDisk, faTriangleExclamation, faTrash, faPaste, faCalendarDay, faTicket, faPlus } from "@fortawesome/free-solid-svg-icons";
 import s from "./CreateEvent.module.css";
@@ -13,6 +14,7 @@ export const CreateEvent = ({ isEditing = false }) => {
   const { createEvent, updateEvent, event } = useEvent();
   const { importData, tickets } = useTickets();
   const { t } = useLanguage();
+  const { notify } = useDialog();
 
   const [showDangerZone, setShowDangerZone] = useState(false);
   const [deleteConfirmChecked, setDeleteConfirmChecked] = useState(false);
@@ -44,14 +46,14 @@ export const CreateEvent = ({ isEditing = false }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (Object.keys(formData.ticketTypes).length === 0) {
-      alert(t("atLeastOneTicketType"));
+      notify({ message: t("atLeastOneTicketType"), tone: "error" });
       return;
     }
     const hasInvalidPrice = Object.values(formData.ticketTypes).some(
       (price) => price === null || price === undefined || price === "" || Number(price) < 0
     );
     if (hasInvalidPrice) {
-      alert(t("allTicketTypesMustHavePrice") || "All ticket types must have a valid price (0 or positive).");
+      notify({ message: t("allTicketTypesMustHavePrice") || "All ticket types must have a valid price (0 or positive).", tone: "error" });
       return;
     }
     if (isEditing) {
@@ -64,9 +66,9 @@ export const CreateEvent = ({ isEditing = false }) => {
   };
 
   const addTicketType = () => {
-    if (!newTicketType.name.trim()) { alert(t("enterTicketTypeName")); return; }
+    if (!newTicketType.name.trim()) { notify({ message: t("enterTicketTypeName"), tone: "error" }); return; }
     const ticketTypeName = newTicketType.name.toLowerCase().trim();
-    if (formData.ticketTypes[ticketTypeName]) { alert(t("ticketTypeExists")); return; }
+    if (formData.ticketTypes[ticketTypeName]) { notify({ message: t("ticketTypeExists"), tone: "error" }); return; }
     setFormData({
       ...formData,
       ticketTypes: { ...formData.ticketTypes, [ticketTypeName]: Number(newTicketType.price) || 0 },
@@ -75,7 +77,7 @@ export const CreateEvent = ({ isEditing = false }) => {
   };
 
   const removeTicketType = (typeToRemove) => {
-    if (Object.keys(formData.ticketTypes).length <= 1) { alert(t("mustHaveOneTicketType")); return; }
+    if (Object.keys(formData.ticketTypes).length <= 1) { notify({ message: t("mustHaveOneTicketType"), tone: "error" }); return; }
     // M5: removing a type that still has sold tickets would orphan those
     // tickets (they'd disappear from "total sold" because getStats gates on
     // a non-zero price for the type). Block the removal instead.
@@ -83,11 +85,13 @@ export const CreateEvent = ({ isEditing = false }) => {
       ? tickets.filter((tk) => tk.ticketType === typeToRemove).length
       : 0;
     if (orphanCount > 0) {
-      alert(
-        (t("cannotRemoveTicketTypeInUse") ||
+      notify({
+        message: (t("cannotRemoveTicketTypeInUse") ||
           "Cannot remove ticket type — {count} ticket(s) of this type already exist. Re-assign or delete those tickets first.")
-          .replace("{count}", String(orphanCount))
-      );
+          .replace("{count}", String(orphanCount)),
+        tone: "error",
+        duration: 6000,
+      });
       return;
     }
     const updatedTypes = { ...formData.ticketTypes };
@@ -104,8 +108,8 @@ export const CreateEvent = ({ isEditing = false }) => {
 
   const updateTicketTypeName = (oldName, newName) => {
     const trimmedName = newName.toLowerCase().trim();
-    if (!trimmedName) { alert(t("ticketTypeNameEmpty")); return; }
-    if (trimmedName !== oldName && formData.ticketTypes[trimmedName]) { alert(t("ticketTypeNameExists")); return; }
+    if (!trimmedName) { notify({ message: t("ticketTypeNameEmpty"), tone: "error" }); return; }
+    if (trimmedName !== oldName && formData.ticketTypes[trimmedName]) { notify({ message: t("ticketTypeNameExists"), tone: "error" }); return; }
     if (trimmedName === oldName) return;
     const updatedTypes = {};
     Object.entries(formData.ticketTypes).forEach(([key, value]) => {
@@ -119,20 +123,20 @@ export const CreateEvent = ({ isEditing = false }) => {
     try {
       const clipboardText = await navigator.clipboard.readText();
       const parsedData = JSON.parse(clipboardText);
-      if (!parsedData.event) { alert(t("jsonImportInvalid")); return; }
+      if (!parsedData.event) { notify({ message: t("jsonImportInvalid"), tone: "error" }); return; }
       importData(parsedData);
-      alert(t("eventImported"));
+      notify({ message: t("eventImported"), tone: "success" });
       window.location.href = "/";
     } catch (error) {
       console.error("Paste error:", error);
-      alert(t("eventImportError"));
+      notify({ message: t("eventImportError"), tone: "error" });
     }
   };
 
   const handleDeleteEvent = () => {
     if (!deleteConfirmChecked) return;
     localStorage.removeItem("sigale-event-data");
-    alert(t("eventDeleted"));
+    notify({ message: t("eventDeleted"), tone: "success" });
     window.location.href = "/";
   };
 

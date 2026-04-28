@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { translations, detectBrowserLanguage } from "../utils/translations";
+import { useLocalStorageValue } from "../hooks/useLocalStorageValue";
 
 const LanguageContext = createContext();
 
@@ -12,16 +13,13 @@ export const useLanguage = () => {
 };
 
 export const LanguageProvider = ({ children }) => {
-  // Initialize language from localStorage or browser detection
-  const [language, setLanguage] = useState(() => {
-    const savedLang = localStorage.getItem("sigale-language");
-    return savedLang || detectBrowserLanguage();
-  });
+  // Persist language preference under "sigale-language"; lazy init falls
+  // back to browser locale detection on first run. The hook handles the
+  // try/catch so private mode / quota errors don't crash the provider.
+  const [language, setLanguage] = useLocalStorageValue("sigale-language", detectBrowserLanguage);
 
-  // Save language preference to localStorage
+  // Mirror the active language onto <html lang="…"> for accessibility tools.
   useEffect(() => {
-    localStorage.setItem("sigale-language", language);
-    // Update HTML lang attribute for accessibility
     document.documentElement.lang = language;
   }, [language]);
 

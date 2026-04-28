@@ -1,6 +1,6 @@
 /**
- * Utility for cleaning and validating base64 data
- * Handles data URIs, whitespace, and validation
+ * Utility for cleaning base64 data
+ * Strips data URI prefixes and whitespace from raw base64 input.
  */
 
 /**
@@ -20,46 +20,4 @@ export const cleanBase64 = (rawData) => {
   cleaned = cleaned.replace(/\s/g, '');
 
   return cleaned;
-};
-
-/**
- * Validates if a string is valid base64
- * @param {string} str - String to validate
- * @returns {boolean} True if valid base64
- */
-export const isValidBase64 = (str) => {
-  if (!str || typeof str !== 'string') {
-    return false;
-  }
-
-  // Base64 alphabet: A-Z, a-z, 0-9, +, /, and = for padding
-  const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
-  return base64Regex.test(str);
-};
-
-/**
- * Cleans and validates base64 data
- * @param {string} rawData - Raw base64 string
- * @returns {string} Cleaned and validated base64 string
- * @throws {Error} If the cleaned data is not valid base64
- */
-export const cleanAndValidateBase64 = (rawData) => {
-  const cleaned = cleanBase64(rawData);
-
-  if (!isValidBase64(cleaned)) {
-    throw new Error('Invalid base64 data after cleaning. Contains invalid characters.');
-  }
-
-  return cleaned;
-};
-
-/**
- * Converts base64 string to a data URI
- * @param {string} base64Data - Clean base64 string
- * @param {string} mimeType - MIME type (e.g., 'image/png', 'image/jpeg')
- * @returns {string} Data URI string
- */
-export const toDataURI = (base64Data, mimeType = 'image/png') => {
-  const cleaned = cleanBase64(base64Data);
-  return `data:${mimeType};base64,${cleaned}`;
 };
