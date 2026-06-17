@@ -59,3 +59,18 @@
   font-style: italic;
   opacity: 0.6;
 }
+
+/* ── Modal title + actions row ───────────────────────────── */
+.confirmTitle {
+  margin: 0 0 var(--space-3) 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-heading);
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}

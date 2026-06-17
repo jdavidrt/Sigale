@@ -1,5 +1,7 @@
 # Sígale Project - Style Audit Report
 
+> **Historical (2026-02-05) — Tailwind has since been removed.** This audit describes a Tailwind-based setup that no longer exists: the project now styles entirely with plain CSS (design tokens + `global.css`/`utilities.css` + CSS Modules; PostCSS runs autoprefixer only). Do not act on the Tailwind config/recommendations below. See `../../CLAUDE.md` and `../guides/css-architecture-guide.md`.
+
 > Comprehensive analysis of current styling architecture and design system
 > Generated: 2026-02-05
 

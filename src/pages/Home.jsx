@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLocationDot, faCalendarDays, faClock, faTicket, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
+import { faLocationDot, faCalendarDays, faClock, faTicket, faPenToSquare, faEye } from "@fortawesome/free-solid-svg-icons";
 import { useEvent } from "../context/EventContext";
 import { useTickets } from "../context/TicketContext";
 import { useLanguage } from "../context/LanguageContext";
@@ -94,6 +94,12 @@ export const Home = () => {
             </div>
           </div>
         </div>
+
+        {/* Preview the public 2.0 landing (Astromelias) */}
+        <Link to={`/evento/${event.id || "actual"}`} className={s.editLink} style={{ marginTop: "var(--space-6)" }}>
+          <FontAwesomeIcon icon={faEye} className="link-icon" />
+          <span>{t("viewPublicPage") || "Ver página pública"}</span>
+        </Link>
       </div>
 
       {/* Ticket Types Section */}
@@ -102,7 +108,7 @@ export const Home = () => {
           {/* Section header */}
           <div className={s.typesSectionHeader}>
             <div className="icon-box">
-              <FontAwesomeIcon icon={faTicket} style={{ color: "white", fontSize: "14px" }} />
+              <FontAwesomeIcon icon={faTicket} className="icon-box-icon" />
             </div>
             <h2 className={s.typesSectionTitle}>{t("ticketTypes")}</h2>
           </div>
@@ -128,7 +134,7 @@ export const Home = () => {
 
             {/* Edit link */}
             <Link to="/edit-event" className={s.editLink}>
-              <FontAwesomeIcon icon={faPenToSquare} style={{ fontSize: "14px" }} />
+              <FontAwesomeIcon icon={faPenToSquare} className="link-icon" />
               <span>{t("editEvent")}</span>
             </Link>
           </div>

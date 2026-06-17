@@ -1,0 +1,35 @@
+/*
+ * SÍGALE — CreateEventPage
+ * Page header above the CreateEvent form. All values reference tokens.
+ */
+
+.header {
+  text-align: center;
+  margin-bottom: var(--space-9);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text-heading);
+}
+
+/* Larger display size on tablet and up */
+@media (min-width: 768px) {
+  .title {
+    font-size: var(--text-5xl);
+  }
+}
+
+.subtitle {
+  margin: 0;
+  font-size: var(--text-lg);
+  color: var(--color-text-secondary);
+}

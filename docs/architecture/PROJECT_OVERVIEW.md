@@ -2,7 +2,7 @@
 
 The deep-dive technical document. For the agent quick-reference, see `/CLAUDE.md`.
 
-> **Status: production-ready.** All originally-scoped features (event setup, ticket sales, QR generation/scanning, dashboards, export/import, PWA) shipped, plus the post-launch additions described under [Recent additions](#recent-additions).
+> **Status: 1.0 production-ready; 2.0 in progress.** This document describes the shipped **1.0** architecture (static PWA, localStorage, no backend). The **2.0** migration to MySQL + Express and the Astromelias identity is specified in [`SIGALE_2.0_IMPLEMENTATION_PLAN.md`](../SIGALE_2.0_IMPLEMENTATION_PLAN.md) and [`ADR-0001`](ADR-0001-migracion-sql-express.md); treat the storage model, "no backend", and "no access control" notes below as 1.0 until that lands. All originally-scoped features (event setup, ticket sales, QR generation/scanning, dashboards, export/import, PWA) shipped, plus the post-launch additions described under [Recent additions](#recent-additions).
 
 ---
 
@@ -22,7 +22,7 @@ Sígale is a static React PWA with **no backend**. The browser's `localStorage` 
 |-------|---------|-----|
 | Framework | React 19 | useMemo / useCallback discipline for context-value stability |
 | Build | Vite 7 | Fast HMR, native ESM, route-level code splitting |
-| Styling | Tailwind CSS v4 (no `@apply`) + CSS Modules | Tokens via `src/styles/tokens.css`, scoped per-component |
+| Styling | Plain CSS — design tokens + CSS Modules (no Tailwind / no framework) | `tokens.css` → `global.css` → `utilities.css`, then scoped `*.module.css`; PostCSS runs autoprefixer only |
 | Routing | React Router v7 | Lazy-loaded routes; only Home is in the main bundle |
 | QR generation | `qrcode.react` | SVG output rendered into canvas for PNG export |
 | QR scanning | `html5-qrcode` | Lazy-loaded only on `/validate-qr` (~100 KB gz) |

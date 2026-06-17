@@ -1,0 +1,9 @@
+/*
+ * SÍGALE — Layout
+ * App shell wrapper. The body already paints the gradient background and
+ * a min-height; this class guarantees the shell fills the viewport too.
+ */
+
+.app {
+  min-height: 100dvh;
+}

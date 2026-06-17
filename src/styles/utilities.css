@@ -147,6 +147,23 @@
   flex-shrink: 0;
 }
 
+/* Icon sitting INSIDE an .icon-box — white colour, fixed 14 px */
+.icon-box-icon {
+  color: white;
+  font-size: 14px;
+}
+
+/* Larger icon-box variant — 16 px for scanners / camera UI */
+.icon-box-icon-lg {
+  color: white;
+  font-size: 16px;
+}
+
+/* Small icon decorating a text link or inline element */
+.link-icon {
+  font-size: 14px;
+}
+
 
 /* ── Flex Helpers ───────────────────────────────────────── */
 .flex-center {
@@ -249,4 +266,19 @@
   font-size: 48px;
   display: block;
   margin-bottom: var(--space-7);
+}
+
+
+/* ── Visually Hidden ────────────────────────────────────── */
+/* Off-screen render targets (e.g. hidden QR canvases captured to PNG) */
+.hidden {
+  display: none;
+}
+
+
+/* ── Route Fallback ─────────────────────────────────────── */
+/* Suspense placeholder while a lazy route chunk loads */
+.route-fallback {
+  padding: var(--space-8);
+  text-align: center;
 }

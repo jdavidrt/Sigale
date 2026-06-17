@@ -5,9 +5,24 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // `dist` is build output; `server/current-server` is a read-only vendored
+  // copy of BlackCoffe's server kept only for reference -- not ours to lint.
+  globalIgnores(['dist', 'server/current-server']),
   {
-    files: ['**/*.{js,jsx}'],
+    // Sigale backend (server/) is a separate Node app, not browser code.
+    files: ['server/**/*.js'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      globals: globals.node,
+      sourceType: 'module',
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
+    },
+  },
+  {
+    files: ['src/**/*.{js,jsx}'],
     extends: [
       js.configs.recommended,
       reactHooks.configs['recommended-latest'],
@@ -28,7 +43,7 @@ export default defineConfig([
   },
   {
     // Context files co-locate a Provider component with its use<X> hook by
-    // design — the react-refresh/only-export-components rule fires on this
+    // design -- the react-refresh/only-export-components rule fires on this
     // pattern but it's intentional. Splitting would cost more than it saves.
     files: ['src/context/*.jsx'],
     rules: {

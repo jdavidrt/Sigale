@@ -1,0 +1,41 @@
+/*
+ * SÍGALE — StorageErrorBanner
+ * Sticky error strip shown when a localStorage write has silently failed.
+ *
+ * Intentional high-contrast red (#b91c1c) — this is a critical data-loss
+ * alert that must break through the dark app UI regardless of theme.
+ * The color is not part of the design-token system by design.
+ */
+
+.banner {
+  background: #b91c1c;
+  color: white;
+  padding: var(--space-5) var(--space-7);
+  margin: 0;
+  font-size: var(--text-base);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-5);
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+}
+
+.dismissBtn {
+  background: rgba(255, 255, 255, 0.20);
+  color: white;
+  border: 1px solid white;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  min-height: 32px;
+  font-size: var(--text-base);
+  transition: var(--transition-base);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dismissBtn:hover {
+  background: rgba(255, 255, 255, 0.35);
+}

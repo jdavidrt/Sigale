@@ -12,7 +12,21 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   user-select: none;
-  /* Background color is set dynamically via inline style (progress-based) */
+  /*
+   * Background fades from translucent to solid danger-red as the drag
+   * progresses. JS only supplies the 0..1 progress through the --p custom
+   * property; the colours stay tokenised here. Alpha = 0.3 + p * 0.7.
+   */
+  --p: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--color-danger-rgb), calc(0.3 + var(--p) * 0.7)),
+    rgba(var(--color-danger-dark-rgb), calc(0.3 + var(--p) * 0.7))
+  );
+}
+
+.track.confirmed {
+  background: var(--gradient-danger-confirm);
 }
 
 .track.disabled {

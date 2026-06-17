@@ -26,10 +26,10 @@ const TypedConfirmBody = ({ count, requiredWord, t, onConfirm, onCancel }) => {
 
   return (
     <>
-      <h2 style={{ margin: "0 0 var(--space-3) 0", fontSize: "var(--text-lg)", fontWeight: "var(--weight-semibold)", color: "var(--color-text-heading)" }}>
+      <h2 className={s.confirmTitle}>
         {t("deleteAllTitle")}
       </h2>
-      <p style={{ margin: "0 0 var(--space-4) 0" }}>
+      <p className={s.confirmBody}>
         {t("deleteAllBody").replace("{count}", count)}
       </p>
       <input
@@ -38,22 +38,13 @@ const TypedConfirmBody = ({ count, requiredWord, t, onConfirm, onCancel }) => {
         value={typed}
         onChange={(e) => setTyped(e.target.value)}
         placeholder={t("deleteAllInputPlaceholder")}
+        className={s.confirmInput}
         onKeyDown={(e) => {
           if (e.key === "Enter" && matches) onConfirm();
           if (e.key === "Escape") onCancel();
         }}
-        style={{
-          width: "100%",
-          padding: "var(--space-3) var(--space-4)",
-          borderRadius: "var(--radius-sm)",
-          border: "1px solid var(--color-border-primary-xl)",
-          background: "var(--color-input-bg-solid)",
-          color: "var(--color-text-primary)",
-          fontFamily: "var(--font-mono)",
-          fontSize: "var(--text-md)",
-        }}
       />
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-3)", marginTop: "var(--space-6)" }}>
+      <div className={s.confirmActions}>
         <button type="button" className={`${btn.btn} ${btn.secondary} ${btn.md}`} onClick={onCancel}>
           {t("cancel")}
         </button>
@@ -137,7 +128,7 @@ export const TicketsPage = () => {
         <div className={`glass-elevated ${s.headerRow}`}>
           <div className={s.headerLeft}>
             <div className="icon-box">
-              <FontAwesomeIcon icon={faTicketSimple} style={{ color: "white", fontSize: "14px" }} />
+              <FontAwesomeIcon icon={faTicketSimple} className="icon-box-icon" />
             </div>
             <h1 className={s.pageTitle}>{t("allTickets")}</h1>
           </div>
@@ -165,9 +156,9 @@ export const TicketsPage = () => {
               onChange={handleTypeChange}
               className={`glass-clean ${s.filterSelect}`}
             >
-              <option value="all" style={{ background: "#1a1152" }}>{t("ticketType")}: {t("filterAll")}</option>
+              <option value="all">{t("ticketType")}: {t("filterAll")}</option>
               {event.ticketTypes && Object.keys(event.ticketTypes).map((type) => (
-                <option key={type} value={type} style={{ background: "#1a1152" }}>
+                <option key={type} value={type}>
                   {type.toUpperCase()}
                 </option>
               ))}
@@ -191,8 +182,8 @@ export const TicketsPage = () => {
           </>
         ) : filteredTickets.length === 0 ? (
           <div className={`glass-elevated ${s.emptyState}`}>
-            <FontAwesomeIcon icon={faTicketSimple} className="color-primary" style={{ fontSize: "60px", opacity: 0.20, marginBottom: "var(--space-7)" }} />
-            <h2 className="text-heading" style={{ marginBottom: "var(--space-4)" }}>{t("noTickets")}</h2>
+            <FontAwesomeIcon icon={faTicketSimple} className={`color-primary ${s.emptyStateIcon}`} />
+            <h2 className={`text-heading ${s.emptyStateHeading}`}>{t("noTickets")}</h2>
             <p className="text-body">{t("noTicketsDesc")}</p>
           </div>
         ) : (

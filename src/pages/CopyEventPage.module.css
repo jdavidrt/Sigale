@@ -237,3 +237,13 @@
   opacity: 0.80;
   margin: 0;
 }
+
+/* ── Bold variant for primary summary value ──────────────── */
+.summaryValueBold {
+  font-weight: var(--weight-bold);
+}
+
+/* ── Tip info icon vertical offset ──────────────────────── */
+.tipIcon {
+  margin-top: 3px;
+}

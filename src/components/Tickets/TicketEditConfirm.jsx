@@ -42,7 +42,7 @@ export const TicketEditConfirm = ({ ticket, draft, onConfirm, onCancel }) => {
 
   return (
     <>
-      <h2 style={{ margin: "0 0 var(--space-3) 0", fontSize: "var(--text-lg)", fontWeight: "var(--weight-semibold)" }}>
+      <h2 className={s.confirmTitle}>
         {t("editConfirmTitle")}
       </h2>
       <p className={s.subject}>
@@ -67,7 +67,7 @@ export const TicketEditConfirm = ({ ticket, draft, onConfirm, onCancel }) => {
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-3)", marginTop: "var(--space-6)" }}>
+      <div className={s.confirmActions}>
         <button type="button" className={`${btn.btn} ${btn.secondary} ${btn.md}`} onClick={onCancel}>
           {t("cancel")}
         </button>

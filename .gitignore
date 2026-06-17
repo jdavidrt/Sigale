@@ -50,3 +50,14 @@ Thumbs.db
 
 # Vite
 .vite/
+
+# OneDrive sync artifacts (relevant while the repo lives under a synced folder)
+desktop.ini
+*Copia en conflicto*
+*[Cc]onflicted copy*
+
+# temp build-verification output (Cowork sandbox)
+dist_verify/
+
+# Read-only mirror of the live server (do not commit)
+/server/current-server/

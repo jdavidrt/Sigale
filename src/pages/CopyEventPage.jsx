@@ -202,7 +202,7 @@ export const CopyEventPage = () => {
           <div className={s.cardHeader}>
             <div className={s.cardHeaderRow}>
               <div className="icon-box">
-                <FontAwesomeIcon icon={faCopy} style={{ color: "white", fontSize: "14px" }} />
+                <FontAwesomeIcon icon={faCopy} className="icon-box-icon" />
               </div>
               <h1 className={s.cardTitle}>{t("copyEventData")}</h1>
             </div>
@@ -214,7 +214,7 @@ export const CopyEventPage = () => {
             <div className={`glass-clean ${s.summaryGrid}`}>
               <div>
                 <p className={s.summaryLabel}>EVENT</p>
-                <p className={s.summaryValue} style={{ fontWeight: "bold" }}>{event.name}</p>
+                <p className={`${s.summaryValue} ${s.summaryValueBold}`}>{event.name}</p>
               </div>
               <div>
                 <p className={s.summaryLabel}>DATE</p>
@@ -288,7 +288,7 @@ export const CopyEventPage = () => {
             {/* Tip */}
             <div className={s.tipSection}>
               <div className={s.tipRow}>
-                <FontAwesomeIcon icon={faInfoCircle} className="color-primary" style={{ marginTop: "3px" }} />
+                <FontAwesomeIcon icon={faInfoCircle} className={`color-primary ${s.tipIcon}`} />
                 <div className={s.tipContent}>
                   <p className={s.tipTitle}>Expert Tip</p>
                   <p className={s.tipText}>Use the JSON export to clone events on other devices. The CSV is perfect for Excel/Google Sheets analysis.</p>

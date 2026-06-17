@@ -5,118 +5,151 @@ import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useDialog } from "../../context/DialogContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faWandMagicSparkles, faFloppyDisk, faTriangleExclamation, faTrash, faPaste, faCalendarDay, faTicket, faPlus } from "@fortawesome/free-solid-svg-icons";
+import {
+  faWandMagicSparkles, faFloppyDisk, faTriangleExclamation, faTrash, faPaste,
+  faCalendarDay, faPlus, faUsers, faLayerGroup,
+} from "@fortawesome/free-solid-svg-icons";
 import s from "./CreateEvent.module.css";
 import btn from "../Common/Button.module.css";
+
+// One blank stage row for the editor.
+const emptyStage = () => ({ name: "", price: 0, totalQuantity: 0, activatesAt: "" });
 
 export const CreateEvent = ({ isEditing = false }) => {
   const navigate = useNavigate();
   const { createEvent, updateEvent, event } = useEvent();
-  const { importData, tickets } = useTickets();
+  const { importData } = useTickets();
   const { t } = useLanguage();
   const { notify } = useDialog();
 
   const [showDangerZone, setShowDangerZone] = useState(false);
   const [deleteConfirmChecked, setDeleteConfirmChecked] = useState(false);
 
+  // 2.0 canonical form shape (richer than the 1.0 event). On save we hand this
+  // to EventContext, which normalizes stages -> ticketTypes for back-compat.
   const [formData, setFormData] = useState({
     name: "",
+    description: "",
     date: "",
+    entranceTime: "",
     venue: "",
     address: "",
-    entranceTime: "",
-    ticketTypes: { preventa: 0, taquilla: 0 },
+    venueCapacity: "",
+    artists: "", // comma-separated in the input; split to array on save
+    whatsappNumber: "",
+    flyerImageUrl: "",
+    bankQrImageUrl: "",
+    stages: [emptyStage()],
   });
-
-  const [newTicketType, setNewTicketType] = useState({ name: "", price: 0 });
 
   useEffect(() => {
     if (isEditing && event) {
+      const stages =
+        Array.isArray(event.stages) && event.stages.length > 0
+          ? event.stages.map((st) => ({
+              name: st.name || "",
+              price: st.price ?? 0,
+              totalQuantity: st.totalQuantity ?? 0,
+              activatesAt: st.activatesAt || "",
+            }))
+          : [emptyStage()];
       setFormData({
         name: event.name || "",
+        description: event.description || "",
         date: event.date || "",
+        entranceTime: event.entranceTime || "",
         venue: event.venue || "",
         address: event.address || "",
-        entranceTime: event.entranceTime || "",
-        ticketTypes: event.ticketTypes || { preventa: 0, taquilla: 0 },
+        venueCapacity: event.venueCapacity || "",
+        artists: Array.isArray(event.artists) ? event.artists.join(", ") : "",
+        whatsappNumber: event.whatsappNumber || "",
+        flyerImageUrl: event.flyerImageUrl || "",
+        bankQrImageUrl: event.bankQrImageUrl || "",
+        stages,
       });
     }
   }, [isEditing, event]);
 
+  // ── Capacity meter — Σ stage quotas vs aforo ──────────────────────────────────
+  const assignedCupos = formData.stages.reduce(
+    (sum, st) => sum + (Number(st.totalQuantity) || 0),
+    0
+  );
+  const capacity = Number(formData.venueCapacity) || 0;
+  const overCapacity = capacity > 0 && assignedCupos > capacity;
+  const capacityPct = capacity > 0 ? Math.min(100, Math.round((assignedCupos / capacity) * 100)) : 0;
+
+  // ── Stage editor handlers ─────────────────────────────────────────────────────
+  const addStage = () => setFormData((f) => ({ ...f, stages: [...f.stages, emptyStage()] }));
+
+  const removeStage = (index) => {
+    if (formData.stages.length <= 1) {
+      notify({ message: t("mustHaveOneTicketType"), tone: "error" });
+      return;
+    }
+    setFormData((f) => ({ ...f, stages: f.stages.filter((_, i) => i !== index) }));
+  };
+
+  const updateStage = (index, field, value) => {
+    setFormData((f) => ({
+      ...f,
+      stages: f.stages.map((st, i) => (i === index ? { ...st, [field]: value } : st)),
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (Object.keys(formData.ticketTypes).length === 0) {
+
+    const named = formData.stages.filter((st) => st.name.trim() !== "");
+    if (named.length === 0) {
       notify({ message: t("atLeastOneTicketType"), tone: "error" });
       return;
     }
-    const hasInvalidPrice = Object.values(formData.ticketTypes).some(
-      (price) => price === null || price === undefined || price === "" || Number(price) < 0
-    );
+    const hasInvalidPrice = named.some((st) => st.price === "" || Number(st.price) < 0);
     if (hasInvalidPrice) {
-      notify({ message: t("allTicketTypesMustHavePrice") || "All ticket types must have a valid price (0 or positive).", tone: "error" });
+      notify({ message: t("allTicketTypesMustHavePrice") || "Cada etapa necesita un precio válido (0 o mayor).", tone: "error" });
       return;
     }
+    if (capacity <= 0) {
+      notify({ message: t("setCapacityFirst"), tone: "error" });
+      return;
+    }
+    if (overCapacity) {
+      notify({ message: t("overCapacity"), tone: "error" });
+      return;
+    }
+
+    const stages = named.map((st, i) => ({
+      name: st.name.trim(),
+      price: Number(st.price) || 0,
+      totalQuantity: Number(st.totalQuantity) || 0,
+      sortOrder: i,
+      activatesAt: st.activatesAt || null,
+      status: i === 0 ? "active" : "upcoming",
+    }));
+
+    const eventObj = {
+      name: formData.name,
+      description: formData.description,
+      date: formData.date,
+      entranceTime: formData.entranceTime,
+      venue: formData.venue,
+      address: formData.address,
+      venueCapacity: capacity,
+      artists: formData.artists.split(",").map((a) => a.trim()).filter(Boolean),
+      whatsappNumber: formData.whatsappNumber,
+      flyerImageUrl: formData.flyerImageUrl,
+      bankQrImageUrl: formData.bankQrImageUrl,
+      stages,
+    };
+
     if (isEditing) {
-      updateEvent(formData);
+      updateEvent(eventObj);
     } else {
-      createEvent(formData);
+      createEvent(eventObj);
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
-    navigate("/");
-  };
-
-  const addTicketType = () => {
-    if (!newTicketType.name.trim()) { notify({ message: t("enterTicketTypeName"), tone: "error" }); return; }
-    const ticketTypeName = newTicketType.name.toLowerCase().trim();
-    if (formData.ticketTypes[ticketTypeName]) { notify({ message: t("ticketTypeExists"), tone: "error" }); return; }
-    setFormData({
-      ...formData,
-      ticketTypes: { ...formData.ticketTypes, [ticketTypeName]: Number(newTicketType.price) || 0 },
-    });
-    setNewTicketType({ name: "", price: 0 });
-  };
-
-  const removeTicketType = (typeToRemove) => {
-    if (Object.keys(formData.ticketTypes).length <= 1) { notify({ message: t("mustHaveOneTicketType"), tone: "error" }); return; }
-    // M5: removing a type that still has sold tickets would orphan those
-    // tickets (they'd disappear from "total sold" because getStats gates on
-    // a non-zero price for the type). Block the removal instead.
-    const orphanCount = isEditing
-      ? tickets.filter((tk) => tk.ticketType === typeToRemove).length
-      : 0;
-    if (orphanCount > 0) {
-      notify({
-        message: (t("cannotRemoveTicketTypeInUse") ||
-          "Cannot remove ticket type — {count} ticket(s) of this type already exist. Re-assign or delete those tickets first.")
-          .replace("{count}", String(orphanCount)),
-        tone: "error",
-        duration: 6000,
-      });
-      return;
-    }
-    const updatedTypes = { ...formData.ticketTypes };
-    delete updatedTypes[typeToRemove];
-    setFormData({ ...formData, ticketTypes: updatedTypes });
-  };
-
-  const updateTicketPrice = (type, price) => {
-    setFormData({
-      ...formData,
-      ticketTypes: { ...formData.ticketTypes, [type]: Number(price) || 0 },
-    });
-  };
-
-  const updateTicketTypeName = (oldName, newName) => {
-    const trimmedName = newName.toLowerCase().trim();
-    if (!trimmedName) { notify({ message: t("ticketTypeNameEmpty"), tone: "error" }); return; }
-    if (trimmedName !== oldName && formData.ticketTypes[trimmedName]) { notify({ message: t("ticketTypeNameExists"), tone: "error" }); return; }
-    if (trimmedName === oldName) return;
-    const updatedTypes = {};
-    Object.entries(formData.ticketTypes).forEach(([key, value]) => {
-      if (key === oldName) updatedTypes[trimmedName] = value;
-      else updatedTypes[key] = value;
-    });
-    setFormData({ ...formData, ticketTypes: updatedTypes });
+    navigate("/admin/create");
   };
 
   const handlePasteFromClipboard = async () => {
@@ -140,16 +173,15 @@ export const CreateEvent = ({ isEditing = false }) => {
     window.location.href = "/";
   };
 
+  // Block submit while over capacity so the meter is a hard guardrail, not advice.
+  const submitDisabled = overCapacity;
+
   return (
     <div className={s.page}>
       <form onSubmit={handleSubmit} className={s.form}>
 
         {/* Paste button */}
-        <button
-          type="button"
-          onClick={handlePasteFromClipboard}
-          className={`${btn.btn} ${btn.success} ${s.pasteBtn}`}
-        >
+        <button type="button" onClick={handlePasteFromClipboard} className={`${btn.btn} ${btn.success} ${s.pasteBtn}`}>
           <FontAwesomeIcon icon={faPaste} />
           <span>{t("pasteEventData")}</span>
         </button>
@@ -160,11 +192,9 @@ export const CreateEvent = ({ isEditing = false }) => {
           <div className={s.cardHeader}>
             <div className={s.cardHeaderRow}>
               <div className="icon-box">
-                <FontAwesomeIcon icon={faWandMagicSparkles} style={{ color: "white", fontSize: "14px" }} />
+                <FontAwesomeIcon icon={faWandMagicSparkles} className="icon-box-icon" />
               </div>
-              <h1 className={s.cardTitle}>
-                {isEditing ? t("editEventTitle") : t("createNewEvent")}
-              </h1>
+              <h1 className={s.cardTitle}>{isEditing ? t("editEventTitle") : t("createNewEvent")}</h1>
             </div>
             <p className={s.cardSubtitle}>{t("setupEventDetails")}</p>
           </div>
@@ -182,9 +212,18 @@ export const CreateEvent = ({ isEditing = false }) => {
                 <div className={s.field}>
                   <label className={s.fieldLabel}>{t("eventName")}</label>
                   <input
-                    type="text" required maxLength={100} value={formData.name}
+                    type="text" required maxLength={160} value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder={t("eventNamePlaceholder")}
+                  />
+                </div>
+
+                <div className={s.field}>
+                  <label className={s.fieldLabel}>{t("description")}</label>
+                  <textarea
+                    rows={3} maxLength={1000} value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder={t("descriptionPlaceholder")}
                   />
                 </div>
 
@@ -208,7 +247,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                 <div className={s.field}>
                   <label className={s.fieldLabel}>{t("venueName")}</label>
                   <input
-                    type="text" required maxLength={100} value={formData.venue}
+                    type="text" required maxLength={200} value={formData.venue}
                     onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                     placeholder={t("venuePlaceholder")}
                   />
@@ -225,81 +264,148 @@ export const CreateEvent = ({ isEditing = false }) => {
               </div>
             </div>
 
-            {/* Ticket Types Section */}
+            {/* Additional Details Section (2.0) */}
             <div className={`${s.section} glass-clean`}>
               <div className={s.sectionHeader}>
-                <div className="icon-box">
-                  <FontAwesomeIcon icon={faTicket} style={{ color: "white", fontSize: "14px" }} />
+                <FontAwesomeIcon icon={faUsers} className="label-icon" />
+                <h2 className={s.sectionTitle}>{t("additionalDetails")}</h2>
+              </div>
+
+              <div className={s.fieldStack}>
+                <div className={s.field}>
+                  <label className={s.fieldLabel}>{t("venueCapacity")}</label>
+                  <input
+                    type="number" min={1} required value={formData.venueCapacity}
+                    onChange={(e) => setFormData({ ...formData, venueCapacity: e.target.value })}
+                    placeholder={t("venueCapacityPlaceholder")}
+                  />
                 </div>
-                <h2 className={s.sectionTitle}>{t("ticketTypes")}</h2>
+
+                <div className={s.field}>
+                  <label className={s.fieldLabel}>{t("artists")}</label>
+                  <input
+                    type="text" value={formData.artists}
+                    onChange={(e) => setFormData({ ...formData, artists: e.target.value })}
+                    placeholder={t("artistsPlaceholder")}
+                  />
+                </div>
+
+                <div className={s.field}>
+                  <label className={s.fieldLabel}>{t("whatsappNumber")}</label>
+                  <input
+                    type="text" inputMode="numeric" value={formData.whatsappNumber}
+                    onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
+                    placeholder={t("whatsappPlaceholder")}
+                  />
+                </div>
+
+                <div className={s.field}>
+                  <label className={s.fieldLabel}>{t("flyerImageUrl")}</label>
+                  <input
+                    type="url" value={formData.flyerImageUrl}
+                    onChange={(e) => setFormData({ ...formData, flyerImageUrl: e.target.value })}
+                    placeholder="https://…"
+                  />
+                </div>
+
+                <div className={s.field}>
+                  <label className={s.fieldLabel}>{t("bankQrImageUrl")}</label>
+                  <input
+                    type="url" value={formData.bankQrImageUrl}
+                    onChange={(e) => setFormData({ ...formData, bankQrImageUrl: e.target.value })}
+                    placeholder="https://…"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Stages Section (2.0) — replaces the flat ticket-types map */}
+            <div className={`${s.section} glass-clean`}>
+              <div className={s.sectionHeader}>
+                <FontAwesomeIcon icon={faLayerGroup} className="label-icon" />
+                <h2 className={s.sectionTitle}>{t("stages")}</h2>
               </div>
 
-              {/* Table header */}
-              <div className={s.tableHeader}>
-                <p className={s.tableHeaderCell}>{t("type") || "Tipo"}</p>
-                <p className={`${s.tableHeaderCell} ${s.tableHeaderCellRight}`}>{t("price") || "Precio"}</p>
-                <p className={s.tableHeaderCell}></p>
+              {/* Live capacity meter — blocks submit when over aforo */}
+              <div className={s.capWrap}>
+                <div className={`capmeter ${overCapacity ? "over" : ""}`}>
+                  <div className="capmeter-head">
+                    <span>{t("capacityUsed")}</span>
+                    <span className="v">
+                      {assignedCupos}{capacity > 0 ? ` / ${capacity}` : ""}
+                    </span>
+                  </div>
+                  <div className="capmeter-track">
+                    <div className="capmeter-fill" style={{ width: `${capacityPct}%` }} />
+                  </div>
+                  {overCapacity && <p className="capmeter-note">{t("overCapacity")}</p>}
+                  {capacity <= 0 && <p className="capmeter-note" style={{ color: "var(--color-text-muted)" }}>{t("setCapacityFirst")}</p>}
+                </div>
               </div>
 
-              <div className={s.typesList}>
-                {Object.entries(formData.ticketTypes).map(([type, price]) => (
-                  <div key={type} className={`${s.typeRow} glass-clean`}>
-                    <input
-                      type="text" value={type}
-                      onChange={(e) => updateTicketTypeName(type, e.target.value)}
-                      className={s.typeNameInput}
-                    />
-                    <div className={s.typePriceWrapper}>
-                      <span className={s.typePriceCurrency}>$</span>
+              <div className={s.stageList}>
+                {formData.stages.map((stage, i) => (
+                  <div key={i} className={`${s.stageCard} glass-clean`}>
+                    <div className={s.stageCardHead}>
+                      <div className={s.field}>
+                        <label className={s.fieldLabel}>{t("stageName")}</label>
+                        <input
+                          type="text" value={stage.name}
+                          onChange={(e) => updateStage(i, "name", e.target.value)}
+                          placeholder={t("newType") || "Preventa…"}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeStage(i)}
+                        className={s.stageRemove}
+                        aria-label={t("removeType")}
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </div>
+
+                    <div className={s.stageGrid}>
+                      <div className={s.field}>
+                        <label className={s.fieldLabel}>{t("price")}</label>
+                        <input
+                          type="number" min={0} value={stage.price}
+                          onChange={(e) => updateStage(i, "price", e.target.value)}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div className={s.field}>
+                        <label className={s.fieldLabel}>{t("quantity")}</label>
+                        <input
+                          type="number" min={0} value={stage.totalQuantity}
+                          onChange={(e) => updateStage(i, "totalQuantity", e.target.value)}
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+
+                    <div className={s.field}>
+                      <label className={s.fieldLabel}>{t("activatesAt")}</label>
                       <input
-                        type="number" value={price || ""}
-                        onChange={(e) => updateTicketPrice(type, e.target.value)}
-                        className={s.typePriceInput}
+                        type="datetime-local" value={stage.activatesAt}
+                        onChange={(e) => updateStage(i, "activatesAt", e.target.value)}
                       />
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => removeTicketType(type)}
-                      className={`${s.iconBtn} ${s.iconBtnDelete}`}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
                   </div>
                 ))}
 
-                {/* Add new type row */}
-                <div className={s.newTypeRow}>
-                  <input
-                    type="text" value={newTicketType.name}
-                    onChange={(e) => setNewTicketType({ ...newTicketType, name: e.target.value })}
-                    className={s.newTypeNameInput}
-                    placeholder={t("newType") || "New Type..."}
-                  />
-                  <div className={s.typePriceWrapper}>
-                    <span className={s.newTypePriceCurrency}>$</span>
-                    <input
-                      type="number" value={newTicketType.price || ""}
-                      onChange={(e) => setNewTicketType({ ...newTicketType, price: e.target.value })}
-                      className={s.newTypePriceInput}
-                      placeholder="0"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={addTicketType}
-                    className={`${s.iconBtn} ${s.iconBtnAdd}`}
-                  >
-                    <FontAwesomeIcon icon={faPlus} />
-                  </button>
-                </div>
+                <button type="button" onClick={addStage} className={s.addStageBtn}>
+                  <FontAwesomeIcon icon={faPlus} />
+                  <span>{t("addStage")}</span>
+                </button>
               </div>
             </div>
 
             {/* Save Button */}
             <button
               type="submit"
-              className={`${btn.btn} ${btn.primary} ${btn.lg}`}
-              style={{ marginTop: "8px" }}
+              disabled={submitDisabled}
+              className={`${btn.btn} ${btn.primary} ${btn.lg} ${s.saveBtn}`}
             >
               <FontAwesomeIcon icon={isEditing ? faFloppyDisk : faWandMagicSparkles} />
               <span>{isEditing ? t("updateEvent") : t("createEvent")}</span>
@@ -309,11 +415,7 @@ export const CreateEvent = ({ isEditing = false }) => {
 
         {/* Danger Zone trigger */}
         {isEditing && !showDangerZone && (
-          <button
-            type="button"
-            onClick={() => setShowDangerZone(true)}
-            className={`${btn.btn} ${btn.danger} ${btn.lg}`}
-          >
+          <button type="button" onClick={() => setShowDangerZone(true)} className={`${btn.btn} ${btn.danger} ${btn.lg}`}>
             <FontAwesomeIcon icon={faTrash} />
             {t("deleteEvent")}
           </button>
@@ -332,26 +434,15 @@ export const CreateEvent = ({ isEditing = false }) => {
                 type="checkbox"
                 checked={deleteConfirmChecked}
                 onChange={(e) => setDeleteConfirmChecked(e.target.checked)}
-                style={{ minHeight: "auto", width: "16px" }}
+                className={s.dangerCheckboxInput}
               />
               <span className={s.dangerCheckboxText}>{t("confirmDeleteMessage")}</span>
             </label>
             <div className={s.dangerActions}>
-              <button
-                type="button"
-                onClick={() => setShowDangerZone(false)}
-                className={`${btn.btn} ${btn.ghost} ${btn.md}`}
-                style={{ flex: 1 }}
-              >
+              <button type="button" onClick={() => setShowDangerZone(false)} className={`${btn.btn} ${btn.ghost} ${btn.md} ${s.dangerActionsBtn}`}>
                 {t("cancel").toUpperCase()}
               </button>
-              <button
-                type="button"
-                onClick={handleDeleteEvent}
-                disabled={!deleteConfirmChecked}
-                className={`${btn.btn} ${btn.dangerConfirm} ${btn.md}`}
-                style={{ flex: 1 }}
-              >
+              <button type="button" onClick={handleDeleteEvent} disabled={!deleteConfirmChecked} className={`${btn.btn} ${btn.dangerConfirm} ${btn.md} ${s.dangerActionsBtn}`}>
                 {t("delete").toUpperCase()}
               </button>
             </div>

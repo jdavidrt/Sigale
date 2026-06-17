@@ -112,7 +112,7 @@ export const TicketTable = ({ tickets }) => {
                 <option value="">—</option>
               )}
               {ticketTypes.map((type) => (
-                <option key={type} value={type} style={{ background: "#1a1152" }}>
+                <option key={type} value={type}>
                   {type.toUpperCase()}
                 </option>
               ))}

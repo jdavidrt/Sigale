@@ -104,3 +104,8 @@
 .content {
   animation: fadeIn var(--duration-slower) var(--ease-out);
 }
+
+/* ── Storage icon ────────────────────────────────────────── */
+.storageIcon {
+  font-size: var(--icon-sm);
+}

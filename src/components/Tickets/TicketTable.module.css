@@ -329,3 +329,11 @@
   color: var(--color-text-secondary);
   opacity: 0.6;
 }
+
+/* ── Native <option> background fix ─────────────────────── */
+/* className cannot target <option> — browser-native element. */
+.typeSelect option,
+.typeCellSelect option {
+  background: var(--color-card-start);
+  color: var(--color-text-primary);
+}

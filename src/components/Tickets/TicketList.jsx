@@ -77,12 +77,6 @@ export const TicketList = () => {
               type="button"
               onClick={() => setVisibleCount((c) => c + PAGE_INCREMENT)}
               className={s.showMoreBtn}
-              style={{
-                marginTop: 16, padding: "10px 16px", width: "100%",
-                borderRadius: 12, border: "1px solid rgba(255,255,255,0.15)",
-                background: "rgba(255,255,255,0.06)", color: "inherit",
-                cursor: "pointer",
-              }}
             >
               Show more ({filteredTickets.length - visibleCount} remaining)
             </button>

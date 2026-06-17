@@ -7,14 +7,10 @@
  * ============================================================
  */
 
-/* ── Font Face ──────────────────────────────────────────── */
-@font-face {
-  font-family: 'D-DIN Condensed';
-  src: url('/fonts/D-DINCondensed.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
+/* ── Fonts ──────────────────────────────────────────────── */
+/* Astromelias type (Barlow Semi Condensed + DM Serif Display) is loaded
+   from Google Fonts in index.html and referenced via --font-base /
+   --font-display in tokens.css. */
 
 
 /* ── Box Model Reset ────────────────────────────────────── */

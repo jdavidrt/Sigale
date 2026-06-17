@@ -108,6 +108,11 @@
   padding: var(--space-6);
 }
 
+/* Centred variant — applied to the success-indicator tile */
+.detailsSectionCenter {
+  text-align: center;
+}
+
 .detailsGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -155,6 +160,12 @@
 .qrSection {
   border-radius: var(--radius-2xl);
   padding: var(--space-6);
+}
+
+/* Centred meta row that sits below the QR preview */
+.qrMeta {
+  margin-top: var(--space-5);
+  text-align: center;
 }
 
 .qrEventName {
@@ -244,6 +255,13 @@
 /* ── Select wrapper (positions chevron icon) ─────────────── */
 .selectWrapper {
   position: relative;
+}
+
+/* Native option elements need their background set here because
+   CSS Modules can't target them via inline style in JSX */
+.selectWrapper select option {
+  background: var(--color-card-start);
+  color: var(--color-text-primary);
 }
 
 .selectChevron {

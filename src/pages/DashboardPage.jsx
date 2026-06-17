@@ -23,12 +23,12 @@ export const DashboardPage = () => {
         <div className={`glass-elevated ${s.headerRow}`}>
           <div className={s.headerLeft}>
             <div className="icon-box">
-              <FontAwesomeIcon icon={faChartLine} style={{ color: "white", fontSize: "14px" }} />
+              <FontAwesomeIcon icon={faChartLine} className="icon-box-icon" />
             </div>
             <h1 className={s.pageTitle}>{t("dashboard")}</h1>
           </div>
           <div className={`glass-clean ${s.storageChip}`}>
-            <FontAwesomeIcon icon={faDatabase} className="color-primary" style={{ fontSize: "var(--icon-sm)" }} />
+            <FontAwesomeIcon icon={faDatabase} className={`color-primary ${s.storageIcon}`} />
             <div>
               <span className={s.storageLabel}>{t("storage")}:</span>
               <span className={s.storageValue}>{getStorageSizeInMB()} MB</span>

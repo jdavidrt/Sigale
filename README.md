@@ -8,7 +8,7 @@
 
 ---
 
-> **Status: production-ready.** All originally-scoped features ship; see [`docs/architecture/PROJECT_OVERVIEW.md`](docs/architecture/PROJECT_OVERVIEW.md#recent-additions) for the post-launch additions.
+> **Status: 1.0 shipped; migrating to 2.0.** The 1.0 app described below is offline-only and production-ready — see [`docs/architecture/PROJECT_OVERVIEW.md`](docs/architecture/PROJECT_OVERVIEW.md#recent-additions) for the post-launch additions. **2.0** turns Sígale outward — public ticket sales over MySQL + Express, with the new **Astromelias** identity. Start with [`docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md`](docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md).
 
 ## Why Sígale?
 
@@ -72,7 +72,7 @@ QR codes are never stored — they're regenerated from each ticket's validation 
 
 ## Tech stack
 
-React 19 · Vite · Tailwind CSS v4 · React Router v7 · `qrcode.react` · `html5-qrcode` · `jspdf` · Web Crypto API.
+React 19 · Vite · plain CSS (design tokens + CSS Modules, no Tailwind) · React Router v7 · `qrcode.react` · `html5-qrcode` · `jspdf` · Web Crypto API.
 
 Browser support: Chrome/Edge 90+, Firefox 88+, Safari 14+.
 
@@ -90,7 +90,7 @@ Browser support: Chrome/Edge 90+, Firefox 88+, Safari 14+.
 Before contributing, scan `CLAUDE.md` for the rules — particularly:
 
 - mobile-first, 44×44 px touch targets, 16 px base font;
-- Tailwind v4 (no `@apply`);
+- plain CSS only — design tokens + CSS Modules, no Tailwind / no CSS framework;
 - all native `alert` / `confirm` / `prompt` go through `useDialog()`;
 - dates always through `parseLocalDate` / `toLocalDateString`;
 - code and comments in English; UI strings in `src/utils/translations.js` (ES + EN).

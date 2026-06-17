@@ -65,16 +65,13 @@ export const SlideToConfirm = ({ onConfirm, label, disabled = false }) => {
   const maxPos = getMaxPosition();
   const progress = maxPos > 0 ? position / maxPos : 0;
 
-  // Dynamic background based on drag progress — kept as inline style (computed value)
-  const trackBg = confirmed
-    ? "linear-gradient(90deg, #dc2626, #b91c1c)"
-    : `linear-gradient(90deg, rgba(220, 38, 38, ${0.3 + progress * 0.7}), rgba(185, 28, 28, ${0.3 + progress * 0.7}))`;
-
+  // The track's red fill is computed in CSS from the --p custom property,
+  // keeping every colour value inside the design-token layer.
   return (
     <div
       ref={containerRef}
-      className={`${s.track} ${disabled ? s.disabled : ""}`}
-      style={{ background: trackBg }}
+      className={`${s.track} ${disabled ? s.disabled : ""} ${confirmed ? s.confirmed : ""}`}
+      style={{ "--p": progress }}
     >
       {/* Background label */}
       <div className={s.labelRow}>

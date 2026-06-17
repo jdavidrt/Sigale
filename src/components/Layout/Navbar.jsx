@@ -13,7 +13,7 @@ export const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   const navLinks = [
-    { path: "/", label: t("home"), icon: faHouse, iconClass: s.iconHome },
+    { path: "/admin/create", label: t("home"), icon: faHouse, iconClass: s.iconHome },
     { path: "/sell-tickets", label: t("sell"), icon: faTicket, iconClass: s.iconSell },
     { path: "/tickets", label: t("navTickets"), icon: faTicketSimple, iconClass: s.iconTickets },
     { path: "/validate-qr", label: t("validate"), icon: faCircleCheck, iconClass: s.iconScan },
@@ -28,7 +28,7 @@ export const Navbar = () => {
       {/* Sticky Top Bar */}
       <nav className={s.navbar}>
         <div className={s.navbarInner}>
-          <Link to="/" className={s.homeChip}>
+          <Link to="/admin/create" className={s.homeChip}>
             <FontAwesomeIcon icon={faHouse} className={s.homeIcon} />
           </Link>
 

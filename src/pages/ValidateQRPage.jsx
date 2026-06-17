@@ -15,7 +15,7 @@ export const ValidateQRPage = () => {
           <div className={s.cardHeader}>
             <div className={s.cardHeaderRow}>
               <div className="icon-box">
-                <FontAwesomeIcon icon={faQrcode} style={{ color: "white", fontSize: "16px" }} />
+                <FontAwesomeIcon icon={faQrcode} className="icon-box-icon-lg" />
               </div>
               <h1 className={s.cardTitle}>{t("checkInValidation")}</h1>
             </div>

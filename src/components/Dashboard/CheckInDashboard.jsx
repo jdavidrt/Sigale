@@ -50,7 +50,7 @@ export const CheckInDashboard = () => {
       {/* Recent check-ins */}
       <div className={`glass-elevated ${s.recentCard}`}>
         <div className={s.sectionHeader}>
-          <div className="accent-bar" style={{ background: "var(--color-success)" }} />
+          <div className="accent-bar accent-bar--success" />
           <h3 className={s.sectionTitle}>{t("recentCheckIns")}</h3>
         </div>
 

@@ -98,3 +98,25 @@
   flex-direction: column;
   gap: var(--space-5);
 }
+
+
+/* ── Show more button ───────────────────────────────────── */
+/* Appears below the rendered batch when more tickets exist */
+.showMoreBtn {
+  margin-top: var(--space-6);
+  padding: var(--space-5) var(--space-7);
+  width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-glass-clean);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  transition: var(--transition-base);
+}
+
+.showMoreBtn:hover {
+  background: var(--color-glass-elevated);
+  border-color: var(--color-border-medium);
+}

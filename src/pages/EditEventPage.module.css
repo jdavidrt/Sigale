@@ -1,0 +1,48 @@
+/*
+ * SÍGALE — EditEventPage
+ * Thin page shell wrapping CreateEvent (isEditing mode)
+ * plus the debug-mode toggle card at the bottom.
+ */
+
+.page {
+  min-height: 100dvh;
+  padding: 2px var(--space-4);
+}
+
+.container {
+  max-width: 672px;
+  margin: 0 auto;
+}
+
+/* ── Debug mode toggle card ──────────────────────────────── */
+.debugCard {
+  margin-top: var(--space-8);
+  padding: var(--space-7);
+  border-radius: var(--radius-2xl);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.debugLabel h3 {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-heading);
+  margin: 0;
+}
+
+.debugLabel p {
+  font-size: var(--text-base);
+  opacity: 0.70;
+  color: var(--color-text-secondary);
+  margin: var(--space-1) 0 0 0;
+}
+
+/* Native checkbox — accent-color tints the thumb via the OS renderer. */
+.debugCheckbox {
+  width: 44px;
+  height: 24px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+  min-height: auto;
+}

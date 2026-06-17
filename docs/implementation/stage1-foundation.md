@@ -4,6 +4,8 @@
 
 This stage has been fully implemented with all core features working.
 
+> **Historical note — Tailwind was later removed.** The `npm install … tailwindcss`, `tailwind.config.js`, and `@tailwind` steps below reflect how the foundation was *originally* scaffolded. The project has since migrated to **plain CSS only** (design tokens + CSS Modules; PostCSS runs autoprefixer only). Do not re-run the Tailwind setup — see `/CLAUDE.md` and `docs/guides/css-architecture-guide.md`.
+
 ## Overview
 This stage establishes the project foundation, creates the event system, and sets up the basic application structure.
 

@@ -79,7 +79,7 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
   return (
     <div className={s.root}>
       {/* Hidden QR for processing */}
-      <div ref={qrRef} style={{ display: "none" }}>
+      <div ref={qrRef} className="hidden">
         <QRCodeSVG value={qrData} size={200} level="L" marginSize={2} />
       </div>
 

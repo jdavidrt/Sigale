@@ -1,6 +1,8 @@
 # Sígale — Claude Agent Guide
 
-Mobile-first React 19 + Vite + Tailwind v4 ticket-management PWA. Offline-only, localStorage-backed (no server). Bilingual ES/EN. Status: production-ready.
+> **Status: migrating to 2.0.** This file documents the shipped **1.0** (offline, localStorage-only, no server). For 2.0 work — public ticket sales over MySQL + Express and the new visual identity — start with [`docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md`](docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md), then the [ADR](docs/architecture/ADR-0001-migracion-sql-express.md), [Design Brief](docs/design/DESIGN_BRIEF_2.0.md), and [Astromelias Implementation Guide](docs/design2.0/IMPLEMENTATION_GUIDE.md). The 2.0 skin (Astromelias) supersedes the violet palette; `validationHash` becomes a server-side random secret. Treat the rules below as 1.0 until that lands.
+
+Mobile-first React 19 + Vite ticket-management PWA, styled with **plain CSS only** (design tokens + CSS Modules, no Tailwind / no CSS framework). Offline-only, localStorage-backed (no server). Bilingual ES/EN. Status: production-ready.
 
 For depth, read `docs/architecture/PROJECT_OVERVIEW.md`. This file is the agent quick-reference.
 
@@ -8,8 +10,8 @@ For depth, read `docs/architecture/PROJECT_OVERVIEW.md`. This file is the agent 
 
 ## Critical rules (do/don't)
 
-- **Tailwind v4**: never use `@apply`. Plain CSS with hex colors or CSS custom properties from `src/styles/tokens.css`.
-- **Mobile-first**: write base styles for mobile, layer `md:` / `lg:` modifiers. Touch targets ≥ 44×44px. Base font 16px (prevents iOS zoom).
+- **No Tailwind / no CSS framework**: style only with plain CSS — design tokens from `src/styles/tokens.css`, then `global.css`, `utilities.css`, and co-located `*.module.css`. No `@apply`, no utility-class framework. PostCSS runs autoprefixer only (`postcss.config.js`).
+- **Mobile-first**: write base styles for mobile, layer tablet/desktop rules with `min-width` media queries. Touch targets ≥ 44×44px. Base font 16px (prevents iOS zoom).
 - **Dates**: always use `parseLocalDate()` / `toLocalDateString()` from `src/utils/timeFormat.js`. Never `new Date('YYYY-MM-DD')` (UTC bug at the day boundary).
 - **No native `alert` / `confirm` / `prompt`**: use `useDialog()` from `src/context/DialogContext.jsx` → `confirm()`, `notify()`, `openCustom()`. The codebase is fully migrated; don't reintroduce them.
 - **Currency**: use `formatCurrency()` from `timeFormat.js`. Don't roll inline `${n.toLocaleString()}`.

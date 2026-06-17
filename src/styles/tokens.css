@@ -9,89 +9,125 @@
 
 :root {
 
+  /* ── Astromelias raw palette (flyer-abstracted) ──────── */
+  /* Single source of the 2.0 skin. Semantic tokens below point here. */
+  --am-black:       #09060A;  /* page night field (warm near-black) */
+  --am-black-2:     #120C14;  /* raised surface */
+  --am-black-3:     #1B1320;  /* higher surface */
+  --am-cream:       #F3E8D6;  /* primary text */
+  --am-cream-dim:   rgba(243, 232, 214, 0.60);
+  --am-cream-faint: rgba(243, 232, 214, 0.34);
+  --am-yellow:      #E7AE3F;  /* daffodil — highlight / price */
+  --am-yellow-soft: #F2C766;
+  --am-lilac:       #CBB7DA;  /* pale petal — secondary */
+  --am-lilac-deep:  #A98FC0;
+  --am-purple:      #8B4A91;  /* plum flower — brand */
+  --am-purple-2:    #B468BC;
+  --am-purple-deep: #46294C;
+  --am-orange:      #D5582E;  /* red-orange — CTA / attention */
+  --am-orange-soft: #E87A4F;
+  --am-green:       #5FBE7B;  /* success */
+  --am-red:         #DB5340;  /* error / rejected */
+  --am-blue:        #79A6E8;  /* pago enviado */
+  --am-frame:       rgba(203, 183, 218, 0.42); /* flyer's pale border */
+  --am-hair:        rgba(243, 232, 214, 0.13);
+  --am-hair-2:      rgba(243, 232, 214, 0.08);
+  /* Raw channel triplets for alpha interpolation against the new palette */
+  --am-purple-rgb:  139, 74, 145;
+  --am-orange-rgb:  213, 88, 46;
+  --am-green-rgb:   95, 190, 123;
+  --am-red-rgb:     219, 83, 64;
+
   /* ── Backgrounds ─────────────────────────────────────── */
-  --color-bg-start:           #27187E;
-  --color-bg-end:             #030312;
-  --color-card-start:         #1a1152;
-  --color-card-end:           #0a0620;
+  --color-bg-start:           var(--am-black-2);
+  --color-bg-end:             var(--am-black);
+  --color-card-start:         var(--am-black-2);
+  --color-card-end:           var(--am-black);
   --color-input-bg:           rgba(255, 255, 255, 0.05);
-  --color-input-bg-solid:     #4a3d8f;
-  --color-input-bg-hover:     #5a4d9f;
-  --color-section-tint:       rgba(117, 139, 253, 0.08);
+  --color-input-bg-solid:     var(--am-black-3);
+  --color-input-bg-hover:     var(--am-purple-deep);
+  --color-section-tint:       rgba(var(--am-purple-rgb), 0.08);
   --color-dark-card:          #2a2a2a;
   --color-dark-card-darker:   #1a1a1a;
 
   /* ── Brand Accents ───────────────────────────────────── */
-  --color-primary:            #758BFD;
-  --color-secondary:          #BEADFF;
-  --color-accent-blue:        #60a5fa;
-  --color-accent-orange:      #FF8C00;
+  --color-primary:            var(--am-purple);
+  --color-secondary:          var(--am-lilac);
+  --color-accent-blue:        var(--am-blue);
+  --color-accent-orange:      var(--am-orange);
+
+  /* ── Price / Highlight (Astromelias daffodil) ────────── */
+  --color-price:              var(--am-yellow);
+  --color-highlight:          var(--am-yellow);
 
   /* ── Semantic Status ─────────────────────────────────── */
-  --color-success:            #4ade80;
+  --color-success:            var(--am-green);
   --color-success-dark:       #22c55e;
-  --color-error:              #ef4444;
-  --color-danger:             #dc2626;
+  --color-error:              var(--am-red);
+  --color-danger:             var(--am-red);
   --color-danger-dark:        #b91c1c;
-  --color-warning:            #f59e0b;
+  /* Raw channels for alpha interpolation (e.g. SlideToConfirm drag fill) */
+  --color-danger-rgb:         219, 83, 64;
+  --color-danger-dark-rgb:    185, 28, 28;
+  --color-warning:            var(--am-yellow);
   --color-warning-vivid:      #f97316;
   --color-error-text-light:   #fca5a5;
 
   /* ── Text ────────────────────────────────────────────── */
-  --color-text-primary:       #FFEDD8;
-  --color-text-heading:       #E2D1B9;
-  --color-text-secondary:     #BEADFF;
-  --color-text-muted:         rgba(190, 173, 255, 0.60);
+  --color-text-primary:       var(--am-cream);
+  --color-text-heading:       var(--am-cream);
+  --color-text-secondary:     var(--am-lilac);
+  --color-text-muted:         var(--am-cream-dim);
   --color-text-on-primary:    rgba(0, 0, 0, 0.75);
 
   /* ── Borders ─────────────────────────────────────────── */
-  --color-border-subtle:      rgba(255, 255, 255, 0.10);
-  --color-border-medium:      rgba(255, 255, 255, 0.12);
-  --color-border-divider:     rgba(255, 255, 255, 0.05);
-  --color-border-primary:     rgba(117, 139, 253, 0.12);
-  --color-border-primary-sm:  rgba(117, 139, 253, 0.10);
-  --color-border-primary-md:  rgba(117, 139, 253, 0.15);
-  --color-border-primary-lg:  rgba(117, 139, 253, 0.20);
-  --color-border-primary-xl:  rgba(117, 139, 253, 0.30);
-  --color-border-primary-focus: rgba(117, 139, 253, 0.50);
-  --color-border-primary-dashed: rgba(117, 139, 253, 0.35);
-  --color-border-success:     rgba(74, 222, 128, 0.30);
-  --color-border-error:       rgba(239, 68, 68, 0.30);
-  --color-border-danger-sm:   rgba(239, 68, 68, 0.20);
-  --color-border-warning:     rgba(249, 115, 22, 0.30);
+  --color-border-subtle:      var(--am-hair);
+  --color-border-medium:      var(--am-frame);
+  --color-border-divider:     var(--am-hair-2);
+  --color-border-primary:     rgba(var(--am-purple-rgb), 0.12);
+  --color-border-primary-sm:  rgba(var(--am-purple-rgb), 0.10);
+  --color-border-primary-md:  rgba(var(--am-purple-rgb), 0.15);
+  --color-border-primary-lg:  rgba(var(--am-purple-rgb), 0.20);
+  --color-border-primary-xl:  rgba(var(--am-purple-rgb), 0.30);
+  --color-border-primary-focus: rgba(var(--am-purple-rgb), 0.50);
+  --color-border-primary-dashed: rgba(var(--am-purple-rgb), 0.35);
+  --color-border-success:     rgba(var(--am-green-rgb), 0.30);
+  --color-border-error:       rgba(var(--am-red-rgb), 0.30);
+  --color-border-danger-sm:   rgba(var(--am-red-rgb), 0.20);
+  --color-border-warning:     rgba(231, 174, 63, 0.30);
 
   /* ── Glass Fills ─────────────────────────────────────── */
   --color-glass-clean:        rgba(255, 255, 255, 0.05);
   --color-glass-elevated:     rgba(255, 255, 255, 0.08);
-  --color-glass-nav:          rgba(3, 3, 18, 0.85);
+  --color-glass-nav:          rgba(9, 6, 10, 0.85);
   --color-glass-overlay:      rgba(0, 0, 0, 0.60);
 
   /* ── Color Tints (bg overlays) ───────────────────────── */
-  --color-tint-primary:       rgba(117, 139, 253, 0.10);
-  --color-tint-primary-md:    rgba(117, 139, 253, 0.12);
-  --color-tint-primary-lg:    rgba(117, 139, 253, 0.20);
-  --color-tint-success:       rgba(74, 222, 128, 0.10);
-  --color-tint-success-md:    rgba(74, 222, 128, 0.15);
-  --color-tint-success-lg:    rgba(74, 222, 128, 0.20);
-  --color-tint-error:         rgba(239, 68, 68, 0.05);
-  --color-tint-error-sm:      rgba(239, 68, 68, 0.10);
-  --color-tint-error-md:      rgba(239, 68, 68, 0.20);
+  --color-tint-primary:       rgba(var(--am-purple-rgb), 0.10);
+  --color-tint-primary-md:    rgba(var(--am-purple-rgb), 0.12);
+  --color-tint-primary-lg:    rgba(var(--am-purple-rgb), 0.20);
+  --color-tint-success:       rgba(var(--am-green-rgb), 0.10);
+  --color-tint-success-md:    rgba(var(--am-green-rgb), 0.15);
+  --color-tint-success-lg:    rgba(var(--am-green-rgb), 0.20);
+  --color-tint-error:         rgba(var(--am-red-rgb), 0.05);
+  --color-tint-error-sm:      rgba(var(--am-red-rgb), 0.10);
+  --color-tint-error-md:      rgba(var(--am-red-rgb), 0.20);
   --color-tint-danger-dark:   rgba(127, 29, 29, 0.20);
   --color-tint-white:         rgba(255, 255, 255, 0.03);
   --color-tint-white-md:      rgba(255, 255, 255, 0.05);
   --color-tint-white-lg:      rgba(255, 255, 255, 0.10);
-  --color-tint-accent-blue:   rgba(96, 165, 250, 0.10);
+  --color-tint-accent-blue:   rgba(121, 166, 232, 0.10);
 
   /* ── Gradients ───────────────────────────────────────── */
   --gradient-bg:              linear-gradient(180deg, var(--color-bg-start) 0%, var(--color-bg-end) 100%);
   --gradient-card:            linear-gradient(180deg, var(--color-card-start) 0%, var(--color-card-end) 100%);
-  --gradient-primary:         linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-  --gradient-primary-hover:   linear-gradient(135deg, var(--color-secondary), var(--color-primary));
+  --gradient-primary:         linear-gradient(135deg, var(--am-purple), var(--am-purple-2));
+  --gradient-primary-hover:   linear-gradient(135deg, var(--am-purple-2), var(--am-purple));
   --gradient-success:         linear-gradient(135deg, var(--color-success), var(--color-success-dark));
   --gradient-danger:          linear-gradient(135deg, var(--color-error), var(--color-danger));
   --gradient-danger-confirm:  linear-gradient(90deg, var(--color-danger), var(--color-danger-dark));
-  --gradient-progress:        linear-gradient(90deg, var(--color-primary), var(--color-secondary));
-  --gradient-menu:            linear-gradient(180deg, rgba(26, 17, 82, 0.98) 0%, rgba(10, 6, 32, 0.99) 100%);
+  --gradient-progress:        linear-gradient(90deg, var(--am-purple), var(--am-purple-2));
+  --gradient-menu:            linear-gradient(180deg, rgba(18, 12, 20, 0.98) 0%, rgba(9, 6, 10, 0.99) 100%);
 
   /* ── Debug Panel (Terminal) ──────────────────────────── */
   --color-debug-bg:           rgba(0, 0, 0, 0.95);
@@ -139,9 +175,10 @@
   --radius-full: 9999px;
 
 
-  /* ── Font Families ───────────────────────────────────── */
-  --font-base:  'D-DIN Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono:  ui-monospace, 'Courier New', 'Lucida Console', monospace;
+  /* ── Font Families (Astromelias) ─────────────────────── */
+  --font-base:    'Barlow Semi Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'DM Serif Display', Georgia, serif;     /* headings, prices, wordmark */
+  --font-mono:    ui-monospace, 'Courier New', monospace; /* folio numbers, placeholders */
 
   /* ── Font Sizes ──────────────────────────────────────── */
   --text-xs:    10px;
@@ -178,14 +215,14 @@
   --shadow-soft:       0 4px 16px rgba(0, 0, 0, 0.12);
   --shadow-elevated:   0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
   --shadow-floating:   0 12px 32px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.10);
-  --shadow-btn:        0 4px 12px rgba(117, 139, 253, 0.30);
-  --shadow-btn-hover:  0 4px 12px rgba(117, 139, 253, 0.40);
-  --shadow-btn-sm:     0 2px 8px rgba(117, 139, 253, 0.30);
-  --shadow-btn-success: 0 4px 12px rgba(74, 222, 128, 0.30);
-  --shadow-btn-error:  0 4px 12px rgba(239, 68, 68, 0.30);
-  --shadow-focus:      0 0 0 3px rgba(117, 139, 253, 0.30);
-  --shadow-hover-card: 0 8px 24px rgba(117, 139, 253, 0.25);
-  --shadow-sell-btn:   0 0 10px rgba(74, 222, 128, 0.15), 0 6px 20px rgba(0, 0, 0, 0.40), 0 2px 6px rgba(0, 0, 0, 0.30);
+  --shadow-btn:        0 4px 12px rgba(var(--am-orange-rgb), 0.34);
+  --shadow-btn-hover:  0 4px 12px rgba(var(--am-orange-rgb), 0.44);
+  --shadow-btn-sm:     0 2px 8px rgba(var(--am-orange-rgb), 0.30);
+  --shadow-btn-success: 0 4px 12px rgba(var(--am-green-rgb), 0.30);
+  --shadow-btn-error:  0 4px 12px rgba(var(--am-red-rgb), 0.30);
+  --shadow-focus:      0 0 0 3px rgba(var(--am-purple-rgb), 0.30);
+  --shadow-hover-card: 0 8px 24px rgba(var(--am-purple-rgb), 0.25);
+  --shadow-sell-btn:   0 0 10px rgba(var(--am-green-rgb), 0.15), 0 6px 20px rgba(0, 0, 0, 0.40), 0 2px 6px rgba(0, 0, 0, 0.30);
   --shadow-debug:      0 4px 20px rgba(0, 0, 0, 0.50);
 
 

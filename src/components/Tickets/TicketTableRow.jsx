@@ -227,7 +227,7 @@ export const TicketTableRow = ({ ticket }) => {
             onKeyDown={handleKeyDown}
           >
             {Object.keys(event.ticketTypes).map((type) => (
-              <option key={type} value={type} style={{ background: "#1a1152" }}>
+              <option key={type} value={type}>
                 {type.toUpperCase()}
               </option>
             ))}

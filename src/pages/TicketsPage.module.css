@@ -143,3 +143,52 @@
   display: flex;
   justify-content: center;
 }
+
+/* ── TypedConfirmBody modal classes ──────────────────────── */
+.confirmTitle {
+  margin: 0 0 var(--space-3) 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-heading);
+}
+
+.confirmBody {
+  margin: 0 0 var(--space-4) 0;
+}
+
+.confirmInput {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-primary-xl);
+  background: var(--color-input-bg-solid);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  min-height: auto;
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+/* ── Native <option> background fix ─────────────────────── */
+/* className cannot target <option> — browser-native element. */
+.filterSelect option {
+  background: var(--color-card-start);
+  color: var(--color-text-primary);
+}
+
+/* ── Empty state icon + heading ──────────────────────────── */
+.emptyStateIcon {
+  font-size: 60px;
+  opacity: 0.20;
+  margin-bottom: var(--space-7);
+}
+
+.emptyStateHeading {
+  margin-bottom: var(--space-4);
+}

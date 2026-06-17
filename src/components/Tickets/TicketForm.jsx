@@ -74,7 +74,7 @@ export const TicketForm = () => {
           <div className={s.cardHeader}>
             <div className={s.cardHeaderRow}>
               <div className="icon-box">
-                <FontAwesomeIcon icon={faTicketSimple} style={{ color: "white", fontSize: "14px" }} />
+                <FontAwesomeIcon icon={faTicketSimple} className="icon-box-icon" />
               </div>
               <h1 className={s.cardTitle}>
                 {createdTicket ? t("ticketCreated") : (isEditMode ? t("updateTicket") : t("sellTicketsTitle"))}
@@ -89,7 +89,7 @@ export const TicketForm = () => {
             {createdTicket ? (
               <div className={s.successStack}>
                 {/* Success indicator */}
-                <div className={`glass-clean ${s.detailsSection}`} style={{ textAlign: "center" }}>
+                <div className={`glass-clean ${s.detailsSection} ${s.detailsSectionCenter}`}>
                   <div className={s.successCircle}>
                     <FontAwesomeIcon icon={faCheckCircle} size="2x" />
                   </div>
@@ -125,7 +125,7 @@ export const TicketForm = () => {
                 {/* QR */}
                 <div className={`glass-clean ${s.qrSection}`}>
                   <QRDisplay ticket={createdTicket} event={event} />
-                  <div style={{ marginTop: "12px", textAlign: "center" }}>
+                  <div className={s.qrMeta}>
                     <p className={s.qrEventName}>{event.name}</p>
                     <p className={s.qrTicketId}>ID: {createdTicket.ticketId}</p>
                   </div>
@@ -175,9 +175,9 @@ export const TicketForm = () => {
                       {t("ticketType")}
                     </FieldLabel>
                     <select required value={formData.ticketType} onChange={(e) => setFormData({ ...formData, ticketType: e.target.value })}>
-                      <option value="" style={{ background: "#1a1152" }}>{t("selectTicketType")}</option>
+                      <option value="">{t("selectTicketType")}</option>
                       {Object.entries(event.ticketTypes).map(([type, price]) => (
-                        <option key={type} value={type} style={{ background: "#1a1152" }}>{type.toUpperCase()} - {formatCurrency(price)}</option>
+                        <option key={type} value={type}>{type.toUpperCase()} - {formatCurrency(price)}</option>
                       ))}
                     </select>
                     <FontAwesomeIcon icon={faChevronDown} className={s.selectChevron} />
