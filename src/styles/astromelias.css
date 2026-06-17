@@ -926,3 +926,80 @@
     animation: spin 1.1s linear infinite;
   }
 }
+
+/* ============================================================
+   COPY KEY BUTTON — "Copiar Llave" (step 4 · Pago)
+   Prominent call-to-action with a glow-pulse animation that
+   draws the user's eye right below the QR code.
+   ============================================================ */
+.copy-key-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 18px 24px;
+  border: 2px solid rgba(231, 174, 63, 0.5);
+  border-radius: var(--r-lg);
+  background: linear-gradient(135deg, rgba(231, 174, 63, 0.18), rgba(213, 88, 46, 0.14));
+  color: var(--yellow);
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s ease, border-color 0.2s ease, background 0.3s ease;
+  animation: copy-key-pulse 2s ease-in-out infinite;
+}
+.copy-key-btn:hover {
+  transform: scale(1.03);
+  border-color: var(--yellow);
+  background: linear-gradient(135deg, rgba(231, 174, 63, 0.28), rgba(213, 88, 46, 0.22));
+}
+.copy-key-btn:active {
+  transform: scale(0.97);
+}
+.copy-key-btn .copy-key-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.copy-key-btn .copy-key-number {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+/* ── Copied (success) state ── */
+.copy-key-btn.copied {
+  animation: none;
+  border-color: var(--green);
+  background: linear-gradient(135deg, rgba(95, 190, 123, 0.22), rgba(95, 190, 123, 0.10));
+  color: var(--green);
+  pointer-events: none;
+}
+.copy-key-btn.copied .copy-key-icon {
+  font-size: 26px;
+}
+
+/* ── Pulse keyframes ── */
+@keyframes copy-key-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 rgba(231, 174, 63, 0.45),
+      0 4px 18px rgba(231, 174, 63, 0.10);
+  }
+  50% {
+    box-shadow:
+      0 0 0 10px rgba(231, 174, 63, 0),
+      0 4px 24px rgba(231, 174, 63, 0.25);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .copy-key-btn {
+    animation: none;
+  }
+}

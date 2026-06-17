@@ -42,8 +42,29 @@ export function PurchaseFlow() {
   const [orderId, setOrderId] = useState(null);
   const [reserving, setReserving] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
+  const [keyCopied, setKeyCopied] = useState(false);
 
   const total = (Number(stage?.price) || 0) * qty;
+
+  const handleCopyKey = async () => {
+    try {
+      await navigator.clipboard.writeText('3212619103');
+      setKeyCopied(true);
+      setTimeout(() => setKeyCopied(false), 2000);
+    } catch {
+      /* fallback for older browsers */
+      const ta = document.createElement('textarea');
+      ta.value = '3212619103';
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setKeyCopied(true);
+      setTimeout(() => setKeyCopied(false), 2000);
+    }
+  };
 
   // Keep one holder card per ticket.
   const setQuantity = (next) => {
@@ -228,6 +249,18 @@ export function PurchaseFlow() {
           {event.bankQrImageUrl
             ? <img src={event.bankQrImageUrl} alt="QR de pago" style={{ width: 350, height: 'auto', marginTop: 14, borderRadius: 'var(--r-md)', background: '#fff', padding: 10 }} />
             : <div className="qr" style={{ marginTop: 14 }} />}
+
+          {/* ── Copy Key Button ── */}
+          <button
+            type="button"
+            onClick={handleCopyKey}
+            className={`copy-key-btn${keyCopied ? ' copied' : ''}`}
+          >
+            {keyCopied
+              ? <><span className="copy-key-icon">✓</span> ¡Copiada!</>
+              : <><span className="copy-key-icon">📋</span> Copiar Llave <span className="copy-key-number">3212619103</span></>}
+          </button>
+
           <div className="muted" style={{ fontSize: 13, marginTop: 10 }}>Transfiere y guarda el comprobante</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '8px 14px', borderRadius: 'var(--r-full)', background: 'var(--black-3)' }}>
             <span className="label" style={{ color: 'var(--cream-dim)' }}>Orden</span>
