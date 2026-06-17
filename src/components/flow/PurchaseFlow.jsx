@@ -226,7 +226,7 @@ export function PurchaseFlow() {
           <div className="label" style={{ color: 'var(--cream-dim)', whiteSpace: 'nowrap' }}>Total a transferir</div>
           <div className="serif" style={{ fontSize: 40, color: 'var(--yellow)', lineHeight: 1 }}>{formatCurrency(total)}</div>
           {event.bankQrImageUrl
-            ? <img src={event.bankQrImageUrl} alt="QR de pago" style={{ width: 190, maxWidth: '72%', height: 'auto', marginTop: 14, borderRadius: 'var(--r-md)', background: '#fff', padding: 10 }} />
+            ? <img src={event.bankQrImageUrl} alt="QR de pago" style={{ width: 350, height: 'auto', marginTop: 14, borderRadius: 'var(--r-md)', background: '#fff', padding: 10 }} />
             : <div className="qr" style={{ marginTop: 14 }} />}
           <div className="muted" style={{ fontSize: 13, marginTop: 10 }}>Transfiere y guarda el comprobante</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '8px 14px', borderRadius: 'var(--r-full)', background: 'var(--black-3)' }}>
