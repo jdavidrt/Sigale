@@ -45,7 +45,7 @@ The effort runs as three tracks that touch disjoint files early, so they paralle
 
 ```mermaid
 flowchart TD
-  P0[Phase 0 · Foundations<br/>A: server scaffold + DDL · B: API client · C: token remap]
+  P0[Phase 0 · Foundations A: server scaffold + DDL · B: API client · C: token remap]
   P1[Phase 1 · Model + primitives + event form]
   P2[Phase 2 · Public purchase flow end-to-end]
   P3[Phase 3 · Organizer panel /admin]
