@@ -24,9 +24,7 @@
 
 import pool from '../db.js';
 import { sendErrorEmail } from '../utils/emailNotifier.js';
-
-const BOGOTA = '-05:00';
-const UTC = '+00:00';
+import { BOGOTA, UTC, toSqlUtc } from '../utils/time.js';
 
 /**
  * GET /api/admin/scan/manifest?eventId=  (organizer)
@@ -134,11 +132,6 @@ async function markUsed(hash, clientUsedAt) {
   } finally {
     conn.release();
   }
-}
-
-/** ISO-8601 -> 'YYYY-MM-DD HH:mm:ss' in UTC (dateStrings pool stores wall-clock). */
-function toSqlUtc(iso) {
-  return new Date(iso).toISOString().slice(0, 19).replace('T', ' ');
 }
 
 /**

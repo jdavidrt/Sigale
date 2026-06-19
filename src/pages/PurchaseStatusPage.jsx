@@ -10,6 +10,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Screen } from '../components/ui/Screen';
 import { Ic } from '../components/ui/Ic';
+import { AsyncState } from '../components/ui/AsyncState';
 import { purchases, statusMeta, PURCHASE_STATUS } from '../api/purchases';
 import { formatCurrency } from '../utils/timeFormat';
 
@@ -25,20 +26,47 @@ export function PurchaseStatusPage() {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [purchase, setPurchase] = useState(undefined); // undefined = loading, null = not found
+  const [error, setError] = useState(false);
+  const [reload, setReload] = useState(0); // bump to retry the fetch
 
   useEffect(() => {
     let cancelled = false;
-    Promise.resolve(purchases.get(orderId)).then((p) => {
-      if (!cancelled) setPurchase(p);
-    });
+    setError(false);
+    setPurchase(undefined);
+    Promise.resolve(purchases.get(orderId))
+      .then((p) => {
+        if (!cancelled) setPurchase(p);
+      })
+      .catch(() => {
+        if (!cancelled) setError(true);
+      });
     return () => { cancelled = true; };
-  }, [orderId]);
+  }, [orderId, reload]);
+
+  if (error) {
+    return (
+      <Screen seed={42}>
+        <div className="flow-wrap">
+          <div className="scr-body pad" style={{ zIndex: 1 }}>
+            <AsyncState
+              status="error"
+              errorTitle="No pudimos cargar tu compra"
+              errorMessage="Revisa tu conexión e intenta de nuevo."
+              onRetry={() => setReload((n) => n + 1)}
+            />
+          </div>
+        </div>
+      </Screen>
+    );
+  }
 
   if (purchase === undefined) {
     return (
       <Screen seed={42}>
-        <div className="scr-body pad" style={{ display: 'grid', placeItems: 'center', zIndex: 1 }}>
-          <div className="muted">Cargando tu compra…</div>
+        <div className="flow-wrap">
+          <div className="scr-body pad" style={{ zIndex: 1 }}>
+            <AsyncState status="loading" loadingLabel="Cargando tu compra…" />
+          </div>
         </div>
       </Screen>
     );
@@ -47,11 +75,13 @@ export function PurchaseStatusPage() {
   if (purchase === null) {
     return (
       <Screen seed={42}>
-        <div className="scr-body pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12, zIndex: 1 }}>
-          <div className="charly" style={{ width: 64, height: 64, fontSize: 28 }}>✦</div>
-          <div className="serif" style={{ fontSize: 24 }}>No encontramos esa orden</div>
-          <p className="muted" style={{ maxWidth: 280 }}>Revisa el número de orden (#{orderId}) o vuelve al inicio.</p>
-          <button className="btn ghost sm" onClick={() => navigate('/evento/sample')}>Volver</button>
+        <div className="flow-wrap">
+          <div className="scr-body pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12, zIndex: 1 }}>
+            <div className="charly" style={{ width: 64, height: 64, fontSize: 28 }}>✦</div>
+            <div className="serif" style={{ fontSize: 24 }}>No encontramos esa orden</div>
+            <p className="muted" style={{ maxWidth: 280 }}>Revisa el número de orden (#{orderId}) o vuelve al inicio.</p>
+            <button className="btn ghost sm" onClick={() => navigate('/evento/sample')}>Volver</button>
+          </div>
         </div>
       </Screen>
     );
@@ -71,6 +101,7 @@ export function PurchaseStatusPage() {
         <div style={{ width: 44 }} />
       </div>
 
+      <div className="flow-wrap">
       <div className="scr-body pad" style={{ zIndex: 1, overflowY: 'auto' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 8 }}>
           <div className="label" style={{ color: 'var(--cream-dim)' }}>Orden</div>
@@ -107,6 +138,7 @@ export function PurchaseStatusPage() {
           </div>
           <div className="serif" style={{ fontSize: 24, color: 'var(--yellow)' }}>{formatCurrency(purchase.totalAmount)}</div>
         </div>
+      </div>
       </div>
     </Screen>
   );

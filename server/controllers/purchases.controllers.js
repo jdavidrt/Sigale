@@ -23,9 +23,8 @@
 
 import pool from '../db.js';
 import { sendErrorEmail } from '../utils/emailNotifier.js';
+import { BOGOTA, UTC } from '../utils/time.js';
 
-const BOGOTA = '-05:00';
-const UTC = '+00:00';
 const MAX_TICKETS_PER_PURCHASE = 6;
 const ORDER_ID_RETRIES = 25; // 3-digit space is 900 values; ample for aforo ~200
 

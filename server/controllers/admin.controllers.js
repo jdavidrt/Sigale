@@ -11,20 +11,19 @@
  */
 
 import crypto from 'node:crypto';
-import bcrypt from 'bcryptjs';
 import pool from '../db.js';
 import { sendErrorEmail } from '../utils/emailNotifier.js';
-
-const BOGOTA = '-05:00';
-const UTC = '+00:00';
+import { verifyOrganizer } from '../middleware/requireOrganizer.js';
+import { BOGOTA, UTC } from '../utils/time.js';
 
 /** 128-bit random entry secret -> 32 hex chars (CHAR(64) reserved). */
 const randomValidationHash = () => crypto.randomBytes(16).toString('hex');
 
 /**
  * POST /api/login  (public, rate-limited at the route)
- * Validates username + bcrypt password. Returns ok only (no token):
- * the client re-sends Basic creds on each /api/admin/* call.
+ * Validates username + bcrypt password via the shared verifyOrganizer
+ * (constant-time against username enumeration, plan §6). Returns ok only
+ * (no token): the client re-sends Basic creds on each /api/admin/* call.
  */
 export const login = async (req, res) => {
   try {
@@ -32,11 +31,8 @@ export const login = async (req, res) => {
     if (!username || !password) {
       return res.status(400).json({ message: 'Usuario y contraseña requeridos' });
     }
-    const [[organizer]] = await pool.query(
-      'SELECT id, username, passwordHash FROM organizers WHERE username = ? LIMIT 1',
-      [username],
-    );
-    if (!organizer || !(await bcrypt.compare(password, organizer.passwordHash))) {
+    const organizer = await verifyOrganizer(username, password);
+    if (!organizer) {
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
     res.json({ ok: true, username: organizer.username });

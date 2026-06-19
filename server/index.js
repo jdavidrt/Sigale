@@ -18,6 +18,7 @@ import helmet from 'helmet';
 import { PORT } from './config.js';
 import { sendErrorEmail } from './utils/emailNotifier.js';
 import { runMigrations } from './migrations/runMigrations.js';
+import { startScheduler } from './jobs/scheduler.js';
 
 import healthRoutes from './routes/health.routes.js';
 import eventsRoutes from './routes/events.routes.js';
@@ -42,7 +43,9 @@ app.use(
   }),
 );
 
-app.use(express.json());
+// Cap request bodies (plan §6): no endpoint needs more than a small JSON
+// payload, so an oversized body is rejected (413) before it reaches a handler.
+app.use(express.json({ limit: '64kb' }));
 
 // ── Routes ─────────────────────────────────────────────────────────────────────
 app.use(healthRoutes);
@@ -66,6 +69,8 @@ runMigrations()
   .then(() => {
     app.listen(PORT);
     console.log(`[${new Date().toISOString()}] [sigale] Server running on port ${PORT}`);
+    // Recurring jobs (Phase 5): auto-activate stages + sweep abandoned holds.
+    startScheduler();
   })
   .catch((err) => {
     console.error(`[${new Date().toISOString()}] [sigale] Migrations failed, server not started:`, err.message);

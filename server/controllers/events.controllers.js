@@ -13,17 +13,15 @@
  *   - Aforo invariant (Σ stage.totalQuantity ≤ venueCapacity) validated
  *     in the app; 409 on violation.
  *
- * Organizer-only routes are marked below. The requireOrganizer
- * middleware lands in Phase 3 (POST /api/login + per-request bcrypt
- * check); until then these handlers run unguarded in local dev.
+ * Organizer-only writes (create/edit) sit behind requireOrganizer at
+ * the route layer (per-request bcrypt check, plan §6); the read routes
+ * (active / by id) stay public.
  * ============================================================
  */
 
 import pool from '../db.js';
 import { sendErrorEmail } from '../utils/emailNotifier.js';
-
-const BOGOTA = '-05:00';
-const UTC = '+00:00';
+import { BOGOTA, UTC } from '../utils/time.js';
 
 // Columns we expose to the public, with datetimes converted to Bogotá time.
 const EVENT_SELECT = `
@@ -171,7 +169,7 @@ async function insertStages(conn, eventId, stages) {
 }
 
 /**
- * POST /api/events  (organizer)  // TODO Phase 3: requireOrganizer
+ * POST /api/events  (organizer — requireOrganizer at the route)
  * Creates the event + its stages in one transaction and marks it the
  * single active event (clears isActive on all others).
  */
@@ -228,7 +226,7 @@ export const createEvent = async (req, res) => {
 };
 
 /**
- * PUT /api/events/:id  (organizer)  // TODO Phase 3: requireOrganizer
+ * PUT /api/events/:id  (organizer — requireOrganizer at the route)
  * Edits the event's fields and replaces its stages, in one transaction.
  *
  * NOTE (Phase 2+): replacing stages wholesale is safe only while no

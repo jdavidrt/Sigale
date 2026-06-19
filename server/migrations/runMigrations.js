@@ -1,15 +1,15 @@
 /*
  * ============================================================
- * SÍGALE — MIGRATION RUNNER
+ * SIGALE - MIGRATION RUNNER
  * Same boot mechanic as BlackCoffe (current-server runs
- * runMigrations() before app.listen), but Sígale's own:
+ * runMigrations() before app.listen), but Sigale's own:
  * it applies every *.sql file in this folder, in name order.
  *
- * Idempotent by construction — the DDL uses CREATE TABLE IF
- * NOT EXISTS — so re-running on every boot is safe, and a
+ * Idempotent by construction - the DDL uses CREATE TABLE IF
+ * NOT EXISTS - so re-running on every boot is safe, and a
  * shared-server redeploy can never run destructive DDL.
  *
- * GUARDRAIL (SIGALE_2.0_IMPLEMENTATION_PLAN §3.1): refuses to
+ * GUARDRAIL (SIGALE_2.0_IMPLEMENTATION_PLAN 3.1): refuses to
  * run unless DB_NAME=sigale. db.js enforces the same on the
  * pool; this is defense in depth.
  * ============================================================
@@ -24,14 +24,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Strip SQL comments and split a file into individual statements.
- * The Sígale DDL has no semicolons inside statement bodies, so a
- * naive split on ';' is correct here (and the pool intentionally
- * does NOT enable multipleStatements).
+ * Inline `-- ...` comments are stripped too (not only full-line ones):
+ * some column comments contain a ';' (e.g. "-- COP; DECIMAL, never FLOAT"),
+ * which would otherwise split a statement in two. The DDL has no string
+ * literals containing '--' or ';', so stripping to end-of-line is safe and
+ * a split on ';' then yields exactly one entry per statement. The pool
+ * intentionally does NOT enable multipleStatements.
  */
 function splitStatements(sql) {
   return sql
     .split('\n')
-    .filter((line) => !line.trim().startsWith('--')) // drop line comments
+    .map((line) => line.replace(/--.*$/, '')) // drop full-line AND inline comments
     .join('\n')
     .split(';')
     .map((s) => s.trim())

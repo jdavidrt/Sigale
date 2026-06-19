@@ -879,12 +879,93 @@
   letter-spacing: 0.3px;
 }
 
+/* ── Buy CTA — pill shape, larger, pulsating glow ───────────────────────── */
+.btn-buy {
+  height: 66px;
+  font-size: 20px;
+  border-radius: var(--r-full);
+  letter-spacing: 1.2px;
+}
+
+@keyframes buy-pulse {
+  0%, 100% {
+    box-shadow:
+      0 8px 28px rgba(213, 88, 46, 0.42),
+      0 0 0 0 rgba(213, 88, 46, 0.48);
+  }
+  55% {
+    box-shadow:
+      0 10px 36px rgba(213, 88, 46, 0.58),
+      0 0 0 16px rgba(213, 88, 46, 0);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .lhero-hint {
     animation: bob 1.8s ease-in-out infinite;
   }
   .floatel {
     animation: twinkle 4.5s ease-in-out infinite;
+  }
+  .btn-buy {
+    animation: buy-pulse 2.2s ease-in-out infinite;
+  }
+}
+
+/* ── Responsive body layout ─────────────────────────────────────────────── */
+
+/* Mobile: single column, original spacing */
+.lbody-inner {
+  position: relative;
+  z-index: 2;
+  padding-bottom: 32px;
+}
+.lbody-col {
+  /* block by default — stacks vertically on mobile */
+}
+.lbody-col--lineup {
+  /* lineupx inside already handles its own padding */
+}
+.lbody-col--tickets {
+  padding: 24px 18px 0;
+}
+
+/* Tablet: body widens, content breathes */
+@media (min-width: 600px) {
+  .lbody-inner {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 32px 32px 40px;
+    zoom: 1.1;
+  }
+  .lbody-col--tickets {
+    padding: 0;
+  }
+  /* lineup ornaments stay contained */
+  .lbody-inner .lineupx {
+    margin-top: 0;
+  }
+}
+
+/* Desktop: two-column grid — lineup left, tickets+venue right */
+@media (min-width: 900px) {
+  .lbody-inner {
+    max-width: 1080px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+    padding: 48px 64px 64px;
+  }
+  /* lineup text scales up on wide screens */
+  .lbody-col--lineup .actbig {
+    font-size: 38px !important;
+  }
+  /* lineupx fills the full left column height */
+  .lbody-col--lineup .lineupx {
+    height: 100%;
+    padding: 40px 0 30px;
+    margin-top: 0;
   }
 }
 
@@ -1001,5 +1082,74 @@
 @media (prefers-reduced-motion: reduce) {
   .copy-key-btn {
     animation: none;
+  }
+}
+.copy-key-btn:hover {
+  transform: scale(1.03);
+  border-color: var(--yellow);
+  background: linear-gradient(135deg, rgba(231, 174, 63, 0.28), rgba(213, 88, 46, 0.22));
+}
+.copy-key-btn:active {
+  transform: scale(0.97);
+}
+.copy-key-btn .copy-key-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.copy-key-btn .copy-key-number {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+/* ── Copied (success) state ── */
+.copy-key-btn.copied {
+  animation: none;
+  border-color: var(--green);
+  background: linear-gradient(135deg, rgba(95, 190, 123, 0.22), rgba(95, 190, 123, 0.10));
+  color: var(--green);
+  pointer-events: none;
+}
+.copy-key-btn.copied .copy-key-icon {
+  font-size: 26px;
+}
+
+/* ── Pulse keyframes ── */
+@keyframes copy-key-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 rgba(231, 174, 63, 0.45),
+      0 4px 18px rgba(231, 174, 63, 0.10);
+  }
+  50% {
+    box-shadow:
+      0 0 0 10px rgba(231, 174, 63, 0),
+      0 4px 24px rgba(231, 174, 63, 0.25);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .copy-key-btn {
+    animation: none;
+  }
+}
+
+
+/* ── Purchase / status flow: desktop centering ──────────── */
+.flow-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (min-width: 600px) {
+  .flow-wrap {
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .flow-wrap .scr-body {
+    zoom: 1.1;
   }
 }

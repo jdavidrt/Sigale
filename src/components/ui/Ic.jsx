@@ -34,6 +34,7 @@ const ICONS = {
   bell: 'M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6ZM10 19a2 2 0 0 0 4 0',
   lock: 'M6 10.5V8a6 6 0 0 1 12 0v2.5M5 10.5h14v9.5H5zM12 14.5v2.5',
   sparkle: 'M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6z',
+  warn: 'M12 4 2.5 20.5h19L12 4ZM12 10v4.5M12 17.5h.01',
 };
 
 export function Ic({ n, s = 22, sw = 1.7, fill = false, style, className }) {

@@ -1,0 +1,49 @@
+/*
+ * AsyncState — layout only. Colour and motion come from the global
+ * Astromelias classes (.spinner, .muted, .btn, .glass-elevated), so the
+ * spinner stays reduced-motion-safe and the palette stays single-sourced.
+ */
+
+.center {
+  display: grid;
+  place-items: center;
+  gap: 16px;
+  min-height: 240px;
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.label {
+  margin: 0;
+  font-size: 15px;
+}
+
+.errorCard {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  max-width: 360px;
+  padding: 28px 24px;
+  border-radius: var(--r-lg, 18px);
+}
+
+.errorIcon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  color: var(--red);
+  background: rgba(219, 83, 64, 0.14);
+}
+
+.errorTitle {
+  margin: 0;
+  font-size: 19px;
+}
+
+.errorMessage {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}

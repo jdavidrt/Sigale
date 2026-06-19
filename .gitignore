@@ -61,3 +61,6 @@ dist_verify/
 
 # Read-only mirror of the live server (do not commit)
 /server/current-server/
+
+# Local dev launcher logs (dev-local.ps1)
+.dev-local-logs/
