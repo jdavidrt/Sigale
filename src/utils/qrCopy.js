@@ -95,7 +95,7 @@ const buildShareMessage = (ticket, event, language) => {
   if (language === 'es') {
     return `${intro}✨ ${event.name} ✨
 
-Hola ${ticket.buyerName},
+Hola ${(ticket.buyerName || '').split(' ')[0]},
 Tu boleta está confirmada y lista.
 
 📅 Detalles del Evento:
@@ -114,7 +114,7 @@ Si tienes alguna pregunta, no dudes en contactarnos.
 
   return `${intro}✨ ${event.name} ✨
 
-Dear ${ticket.buyerName},
+Dear ${(ticket.buyerName || '').split(' ')[0]},
 
 We're thrilled to have you join us for this amazing event! Your ticket is confirmed and ready.
 

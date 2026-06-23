@@ -78,7 +78,7 @@ export const generateTicketSVG = (ticket, event, qrDataURL, opts = {}) => {
     .replace(/[.,]/g, '').toUpperCase();             // "VIE 24 JUL 2026"
   const timeStr = formatTo12Hour(event.entranceTime); // "5:00 PM"
 
-  const holderLines = splitTextIntoLines(ticket.buyerName || '', 16).slice(0, 2);
+  const holderLines = splitTextIntoLines((ticket.buyerName || '').split(' ')[0], 16).slice(0, 2);
   const venueLines  = splitTextIntoLines(event.venue || '', 18).slice(0, 2);
 
   const flyerHref = opts.flyerDataURL
