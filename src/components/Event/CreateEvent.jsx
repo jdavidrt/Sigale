@@ -13,7 +13,7 @@ import s from "./CreateEvent.module.css";
 import btn from "../Common/Button.module.css";
 
 // One blank stage row for the editor.
-const emptyStage = () => ({ name: "", price: 0, totalQuantity: 0, activatesAt: "" });
+const emptyStage = () => ({ id: null, name: "", price: 0, totalQuantity: 0, activatesAt: "" });
 
 export const CreateEvent = ({ isEditing = false }) => {
   const navigate = useNavigate();
@@ -47,6 +47,7 @@ export const CreateEvent = ({ isEditing = false }) => {
       const stages =
         Array.isArray(event.stages) && event.stages.length > 0
           ? event.stages.map((st) => ({
+              id: st.id ?? null,
               name: st.name || "",
               price: st.price ?? 0,
               totalQuantity: st.totalQuantity ?? 0,
