@@ -127,6 +127,19 @@
   transform: scale(1.02);
 }
 
+/* Orange — Astromelias CTA orange. Walk-in / sell actions. */
+.orange {
+  background: var(--orange);
+  color: #fff;
+  box-shadow: 0 10px 26px rgba(213, 88, 46, 0.34);
+}
+
+.orange:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: scale(1.02);
+  box-shadow: 0 14px 32px rgba(213, 88, 46, 0.45);
+}
+
 /* Ghost — transparent with subtle tint. Cancel / dismiss. */
 .ghost {
   background: var(--color-tint-white-md);

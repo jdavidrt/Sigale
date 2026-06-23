@@ -133,7 +133,7 @@ export const Home = () => {
             })}
 
             {/* Edit link */}
-            <Link to="/edit-event" className={s.editLink}>
+            <Link to="/edit" className={s.editLink}>
               <FontAwesomeIcon icon={faPenToSquare} className="link-icon" />
               <span>{t("editEvent")}</span>
             </Link>

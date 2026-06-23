@@ -13,21 +13,25 @@
 import { useState } from 'react';
 import { Screen } from '../components/ui/Screen';
 import { Ic } from '../components/ui/Ic';
+import { OrganizerMenu } from '../components/Layout/OrganizerMenu';
 import { OfflineScanner } from '../components/Scanner/OfflineScanner';
 import { useOfflineScan, SCAN_RESULT } from '../hooks/useOfflineScan';
 import { useEvent } from '../context/EventContext';
-
-const LOG_META = {
-  [SCAN_RESULT.OK]: { pill: 'ok', label: 'Adelante' },
-  [SCAN_RESULT.ALREADY_USED]: { pill: 'no', label: 'Ya ingresó' },
-  [SCAN_RESULT.INVALID]: { pill: 'dead', label: 'No válida' },
-};
+import { useLanguage } from '../context/LanguageContext';
 
 export function ScanPage() {
+  const { t } = useLanguage();
   const { event } = useEvent();
   const { meta, cachedCount, pending, online, syncing, log, download, validate, sync } =
     useOfflineScan();
   const [downloading, setDownloading] = useState(false);
+
+  // Build log verdict labels from translations so they switch with language.
+  const LOG_META = {
+    [SCAN_RESULT.OK]: { pill: 'ok', label: t('scanAdelante') },
+    [SCAN_RESULT.ALREADY_USED]: { pill: 'no', label: t('scanAlreadyIn') },
+    [SCAN_RESULT.INVALID]: { pill: 'dead', label: t('scanNotValid') },
+  };
 
   const doDownload = async () => {
     setDownloading(true);
@@ -43,14 +47,19 @@ export function ScanPage() {
   return (
     <Screen seed={7}>
       <div className="topbar">
-        <div className="serif" style={{ fontSize: 20, color: 'var(--cream)' }}>Puerta</div>
-        <span
-          className={`pill ${online ? 'ok' : 'dead'}`}
-          style={{ height: 28 }}
-          title={online ? 'En línea' : 'Sin conexión'}
-        >
-          <span className="dot" /> {online ? 'En línea' : 'Sin conexión'}
-        </span>
+        <div className="serif" style={{ fontSize: 20, color: 'var(--cream)' }}>{t('doorTitle')}</div>
+        {/* Online/offline pill + the shared organizer nav so the door page is
+            no longer a dead-end. /scan stays public (no logout passed). */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span
+            className={`pill ${online ? 'ok' : 'dead'}`}
+            style={{ height: 28 }}
+            title={online ? t('online') : t('offline')}
+          >
+            <span className="dot" /> {online ? t('online') : t('offline')}
+          </span>
+          <OrganizerMenu />
+        </div>
       </div>
 
       <div
@@ -61,20 +70,19 @@ export function ScanPage() {
         <div className="card" style={{ padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
             <div>
-              <div className="label" style={{ color: 'var(--orange-soft)' }}>Boletas en caché</div>
+              <div className="label" style={{ color: 'var(--orange-soft)' }}>{t('ticketsCached')}</div>
               <div className="serif" style={{ fontSize: 26, color: 'var(--cream)' }}>{cachedCount}</div>
               {lastSync && (
-                <div className="muted" style={{ fontSize: 12 }}>Actualizado: {lastSync}</div>
+                <div className="muted" style={{ fontSize: 12 }}>{t('lastUpdated')} {lastSync}</div>
               )}
             </div>
             <button className="btn sm" onClick={doDownload} disabled={downloading}>
-              <Ic n="share" s={18} /> {downloading ? 'Descargando…' : 'Descargar'}
+              <Ic n="share" s={18} /> {downloading ? t('downloading') : t('download')}
             </button>
           </div>
           {cachedCount === 0 && (
             <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>
-              Descarga la lista de boletas confirmadas antes de abrir puertas. Luego el escáner
-              funciona sin internet.
+              {t('downloadFirstDesc')}
             </p>
           )}
         </div>
@@ -87,14 +95,14 @@ export function ScanPage() {
           >
             <div>
               <div style={{ fontWeight: 600, color: 'var(--cream)' }}>
-                {pending} ingreso{pending > 1 ? 's' : ''} por sincronizar
+                {t('pendingSyncMsg').replace('{n}', pending)}
               </div>
               <div className="muted" style={{ fontSize: 12 }}>
-                {online ? 'Se sincronizan automáticamente' : 'Se enviarán al recuperar conexión'}
+                {online ? t('syncAutomatic') : t('syncOnReconnect')}
               </div>
             </div>
             <button className="btn sm" onClick={() => sync()} disabled={syncing || !online}>
-              <Ic n="check" s={18} /> {syncing ? 'Sincronizando…' : 'Sincronizar'}
+              <Ic n="check" s={18} /> {syncing ? t('synchronizing') : t('synchronize')}
             </button>
           </div>
         )}
@@ -105,7 +113,7 @@ export function ScanPage() {
         {/* Scan log */}
         {log.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div className="label" style={{ color: 'var(--cream-dim)' }}>Registro de ingresos</div>
+            <div className="label" style={{ color: 'var(--cream-dim)' }}>{t('entryLog')}</div>
             {log.map((entry, i) => {
               const m = LOG_META[entry.result] || LOG_META[SCAN_RESULT.INVALID];
               return (
@@ -116,7 +124,7 @@ export function ScanPage() {
                 >
                   <div style={{ minWidth: 0 }}>
                     <div style={{ color: 'var(--cream)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {entry.holderName || 'Boleta'}
+                      {entry.holderName || t('entryDefault')}
                     </div>
                     <div className="muted" style={{ fontSize: 12 }}>
                       {new Date(entry.at).toLocaleTimeString()}

@@ -226,6 +226,23 @@
   gap: var(--space-4);
 }
 
+/* ── Inline validation error message ────────────────────
+   Shown under name/ID inputs ONLY after the user has typed 4+
+   characters that still fail validation. Keeps the form quiet
+   while the user is mid-type. */
+.fieldError {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-danger, #f87171);
+}
+
+.fieldHint {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+
 /* ── Field label row (icon + text) ─────────────────────── */
 .fieldLabelRow {
   display: flex;

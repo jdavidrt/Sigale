@@ -142,6 +142,7 @@ export const translations = {
     cannotRemoveTicketTypeInUse: "No se puede eliminar el tipo de boleta — ya existen {count} boleta(s) de este tipo. Reasigne o elimine esas boletas primero.",
     navTickets: "Boletas",
     navCopy: "Copiar",
+    purchasesPanel: "Compras",
 
     // Home Page
     welcome: "Bienvenido a",
@@ -323,6 +324,59 @@ export const translations = {
     qrDataLabel: "Datos QR",
     continueAction: "Continuar",
     tryAgain: "Intentar de nuevo",
+
+    // TicketForm — inline validation errors + order number label
+    nameInvalid: "Nombre no válido. Solo letras y espacios.",
+    idInvalid: "Documento no válido. Solo números.",
+    stageInvalid: "Selecciona una etapa válida.",
+    orderNumber: "Orden",
+
+    // AdminPage — Login screen
+    organizerPanel: "Panel del organizador",
+    loginSubtitle: "Ingresa para gestionar el evento",
+    username: "Usuario",
+    password: "Contraseña",
+    loggingIn: "Ingresando…",
+    logIn: "Ingresar",
+    invalidCredentials: "Credenciales inválidas",
+
+    // AdminPage — post-login panel
+    loadingEvent: "Cargando evento…",
+    adminPanel: "Panel",
+    noAddressRegistered: "Sin dirección registrada",
+    ticketsSold: "Vendidas",
+    collected: "Recaudado",
+    doorRegistration: "Registro directo · Taquilla",
+    registerSale: "Registrar Venta",
+    searchOrder: "Buscar orden",
+    noOrdersForFilter: "No hay órdenes para este filtro.",
+    filterWaiting: "Esperando",
+    filterConfirmed: "Confirmadas",
+    filterRejected: "Rechazadas",
+    paymentsToReview: "{n} pago(s) por revisar",
+    confirmPayment: "Confirmar pago",
+    ticketsIssued: "Boletas emitidas",
+    noActionsAvailable: "Sin acciones disponibles",
+
+    // ScanPage — door scanner
+    doorTitle: "Puerta",
+    ticketsCached: "Boletas en caché",
+    lastUpdated: "Actualizado:",
+    downloading: "Descargando…",
+    download: "Descargar",
+    downloadFirstDesc: "Descarga la lista de boletas confirmadas antes de abrir puertas. Luego el escáner funciona sin internet.",
+    pendingSyncMsg: "{n} ingreso(s) por sincronizar",
+    syncAutomatic: "Se sincronizan automáticamente",
+    syncOnReconnect: "Se enviarán al recuperar conexión",
+    synchronizing: "Sincronizando…",
+    synchronize: "Sincronizar",
+    entryLog: "Registro de ingresos",
+    entryDefault: "Boleta",
+    online: "En línea",
+    offline: "Sin conexión",
+    scanAdelante: "Adelante",
+    scanAlreadyIn: "Ya ingresó",
+    scanNotValid: "No válida",
   },
 
   en: {
@@ -466,6 +520,7 @@ export const translations = {
     cannotRemoveTicketTypeInUse: "Cannot remove ticket type — {count} ticket(s) of this type already exist. Reassign or delete those tickets first.",
     navTickets: "Tickets",
     navCopy: "Copy",
+    purchasesPanel: "Purchases",
 
     // Home Page
     welcome: "Welcome to",
@@ -647,6 +702,59 @@ export const translations = {
     qrDataLabel: "QR Data",
     continueAction: "Continue",
     tryAgain: "Try Again",
+
+    // TicketForm — inline validation errors + order number label
+    nameInvalid: "Invalid name. Letters and spaces only.",
+    idInvalid: "Invalid ID. Numbers only.",
+    stageInvalid: "Select a valid stage.",
+    orderNumber: "Order",
+
+    // AdminPage — Login screen
+    organizerPanel: "Organizer Panel",
+    loginSubtitle: "Log in to manage the event",
+    username: "Username",
+    password: "Password",
+    loggingIn: "Logging in…",
+    logIn: "Log in",
+    invalidCredentials: "Invalid credentials",
+
+    // AdminPage — post-login panel
+    loadingEvent: "Loading event…",
+    adminPanel: "Panel",
+    noAddressRegistered: "No address on file",
+    ticketsSold: "Sold",
+    collected: "Collected",
+    doorRegistration: "Direct register · Door",
+    registerSale: "Register Sale",
+    searchOrder: "Search order",
+    noOrdersForFilter: "No orders for this filter.",
+    filterWaiting: "Waiting",
+    filterConfirmed: "Confirmed",
+    filterRejected: "Rejected",
+    paymentsToReview: "{n} payment(s) to review",
+    confirmPayment: "Confirm payment",
+    ticketsIssued: "Tickets issued",
+    noActionsAvailable: "No actions available",
+
+    // ScanPage — door scanner
+    doorTitle: "Door",
+    ticketsCached: "Cached tickets",
+    lastUpdated: "Updated:",
+    downloading: "Downloading…",
+    download: "Download",
+    downloadFirstDesc: "Download the confirmed ticket list before opening doors. The scanner then works offline.",
+    pendingSyncMsg: "{n} check-in(s) to sync",
+    syncAutomatic: "Syncing automatically",
+    syncOnReconnect: "Will send when connection is restored",
+    synchronizing: "Synchronizing…",
+    synchronize: "Sync",
+    entryLog: "Entry log",
+    entryDefault: "Ticket",
+    online: "Online",
+    offline: "Offline",
+    scanAdelante: "Go ahead",
+    scanAlreadyIn: "Already in",
+    scanNotValid: "Not valid",
   }
 };
 

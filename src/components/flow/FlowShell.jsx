@@ -25,9 +25,16 @@ export function FlowShell({
   return (
     <Screen seed={30 + step}>
       <div className="topbar" style={{ paddingBottom: 8 }}>
-        <button className="tb-btn icon" onClick={onBack} aria-label="Atrás">
-          <Ic n="arrowL" s={20} />
-        </button>
+        {/* Once the buyer commits to paying (step 4+) we lock the back button so
+            they cannot rewind through previous steps. The 44px placeholder
+            keeps the wordmark centered. */}
+        {onBack ? (
+          <button className="tb-btn icon" onClick={onBack} aria-label="Atrás">
+            <Ic n="arrowL" s={20} />
+          </button>
+        ) : (
+          <div style={{ width: 44 }} />
+        )}
         <div className="serif" style={{ fontSize: 18, color: 'var(--cream)' }}>Sígale</div>
         <div style={{ width: 44 }} />
       </div>

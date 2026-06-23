@@ -3,6 +3,38 @@ import { useLocalStorage } from "../hooks/useLocalStorage";
 import { loadFromStorage } from "../utils/storage";
 import { generateValidationHash, generateTicketId } from "../utils/hashGenerator";
 import { toLocalDateString } from "../utils/timeFormat";
+import { admin, isLoggedIn } from "../api/admin";
+
+/**
+ * Map a DB ticket row (joined with its purchase + stage) to the internal
+ * shape every Tickets/Dashboard component already understands. The DB row
+ * carries fields like holderName/isUsed/usedAt; consumers expect
+ * buyerName/checkedIn/checkInTime.
+ *
+ * `dbId` is preserved so updateTicket() can route the patch back to the
+ * server when an organizer edits a server-minted ticket.
+ */
+const fromServerTicket = (row) => {
+  const purchaseDate = String(row.purchaseCreatedAt || "").slice(0, 10);
+  const phone = row.holderPhone ? String(row.holderPhone) : "000";
+  return {
+    ticketId: `t-${row.id}`,
+    dbId: row.id,
+    buyerName: row.holderName || "",
+    buyerId: row.holderIdNumber || "",
+    buyerPhone: phone,
+    // event.ticketTypes keys are lowercased + trimmed by deriveTicketTypes —
+    // match that here so price lookups land.
+    ticketType: String(row.stageName || "").toLowerCase().trim(),
+    purchaseDate,
+    checkedIn: !!row.isUsed,
+    checkInTime: row.usedAt || null,
+    validationHash: row.validationHash,
+    orderId: row.orderId,
+    deliveryMethod: row.deliveryMethod,
+    deliveryContact: row.deliveryContact,
+  };
+};
 
 const TicketContext = createContext();
 
@@ -128,6 +160,20 @@ export const TicketProvider = ({ children }) => {
 
   const updateTicket = useCallback(async (ticketId, updatedData) => {
     const fresh = loadFromStorage() || data;
+    const target = fresh.tickets.find((t) => t.ticketId === ticketId);
+    // If the ticket was hydrated from the server (dbId present), push the
+    // edit back so the change persists for everyone — not just this device.
+    // Errors propagate to the caller, which renders the toast.
+    if (target?.dbId && isLoggedIn()) {
+      await admin.updateTicket(target.dbId, {
+        holderName: updatedData.buyerName,
+        holderIdNumber: updatedData.buyerId,
+        holderPhone:
+          updatedData.buyerPhone && updatedData.buyerPhone !== "000"
+            ? updatedData.buyerPhone
+            : null,
+      });
+    }
     const updatedTickets = fresh.tickets.map((ticket) => {
       if (ticket.ticketId === ticketId) {
         return { ...ticket, ...updatedData };
@@ -135,6 +181,25 @@ export const TicketProvider = ({ children }) => {
       return ticket;
     });
     setData({ ...fresh, tickets: updatedTickets });
+  }, [data, setData]);
+
+  /**
+   * Pull the canonical ticket list from the server (every minted ticket from
+   * a confirmed purchase) and replace the in-memory cache. Called by the
+   * Tickets and Dashboard pages on mount. Quietly no-ops if the organizer
+   * isn't logged in — falls back to whatever localStorage has.
+   */
+  const refreshFromServer = useCallback(async () => {
+    if (!isLoggedIn()) return { ok: false, reason: "not-logged-in" };
+    try {
+      const rows = await admin.listTickets();
+      const mapped = Array.isArray(rows) ? rows.map(fromServerTicket) : [];
+      const fresh = loadFromStorage() || data;
+      setData({ ...fresh, tickets: mapped });
+      return { ok: true, count: mapped.length };
+    } catch (err) {
+      return { ok: false, reason: "fetch-failed", error: err };
+    }
   }, [data, setData]);
 
   const deleteTicket = useCallback((ticketId) => {
@@ -145,16 +210,31 @@ export const TicketProvider = ({ children }) => {
 
   // H3: memoize stats so every card re-render doesn't re-iterate the array.
   const stats = useMemo(
-    () => computeStats(data.tickets, data.event),
+    () => computeStats(data.tickets ?? [], data.event),
     [data.tickets, data.event]
   );
-  const getStats = useCallback(() => stats, [stats]);
+  // Stats are computed against an event's ticketTypes price map. EventContext
+  // keeps the active event in memory only (never localStorage, per 2.0), so
+  // data.event is null here — callers must pass the live event from
+  // useEvent() to get non-zero sold/revenue figures. No-arg keeps the old
+  // behavior for tests.
+  const getStats = useCallback(
+    (eventOverride) =>
+      eventOverride ? computeStats(data.tickets ?? [], eventOverride) : stats,
+    [stats, data.tickets]
+  );
 
   const importData = useCallback((importedData) => {
     setData(importedData);
   }, [setData]);
 
-  const clearAllTickets = useCallback(() => {
+  // Deletes all confirmed purchases + tickets on the server (restores stage
+  // inventory), then wipes the local cache. Falls back to local-only wipe
+  // when not logged in (offline / dev mode).
+  const clearAllTickets = useCallback(async () => {
+    if (isLoggedIn()) {
+      await admin.deleteAllPurchases();
+    }
     const fresh = loadFromStorage() || data;
     setData({ ...fresh, tickets: [] });
   }, [data, setData]);
@@ -226,6 +306,7 @@ export const TicketProvider = ({ children }) => {
       clearAllTickets,
       clearAllData,
       addTicketsFromCSV,
+      refreshFromServer,
       storageError: storage?.lastError ?? null,
       clearStorageError: storage?.clearError ?? (() => {}),
     }),
@@ -244,14 +325,13 @@ export const TicketProvider = ({ children }) => {
       clearAllTickets,
       clearAllData,
       addTicketsFromCSV,
+      refreshFromServer,
       storage?.lastError,
       storage?.clearError,
     ]
   );
 
   return (
-    <TicketContext.Provider value={value}>
-      {children}
-    </TicketContext.Provider>
+    <TicketContext.Provider value={value}>{children}</TicketContext.Provider>
   );
 };

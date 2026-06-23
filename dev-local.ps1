@@ -34,6 +34,21 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+# ---- auto-elevate if not admin (needed to start MySQL service) ---------------
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+             [Security.Principal.WindowsBuiltInRole]::Administrator)
+if(-not $isAdmin){
+  Write-Host '  Relaunching as administrator (needed to start MySQL service)...' -ForegroundColor Yellow
+  $argList = @('-ExecutionPolicy','Bypass','-File',$MyInvocation.MyCommand.Path)
+  if($InitDb)    { $argList += '-InitDb' }
+  if($NoSeed)    { $argList += '-NoSeed' }
+  if($NoClient)  { $argList += '-NoClient' }
+  if($NoInstall) { $argList += '-NoInstall' }
+  if($Open)      { $argList += '-Open' }
+  Start-Process powershell -ArgumentList $argList -Verb RunAs
+  exit
+}
+
 # ---- config ---------------------------------------------------------------
 $Root      = $PSScriptRoot
 $ServerDir = Join-Path $Root 'server'
@@ -55,6 +70,57 @@ function Note($m){ Write-Host "    $m" -ForegroundColor Yellow }
 function Stop-TreePid($procId){
   try { & taskkill /PID $procId /T /F *> $null } catch {}
 }
+
+function Find-MySql {
+  # 1. Already in PATH?
+  $inPath = Get-Command mysql -ErrorAction SilentlyContinue
+  if($inPath){ return $inPath.Source }
+  # 2. Typical MySQL 8.x Windows installer locations.
+  $candidates = @(
+    'C:\Program Files\MySQL\MySQL Server 8.4\bin\mysql.exe',
+    'C:\Program Files\MySQL\MySQL Server 8.3\bin\mysql.exe',
+    'C:\Program Files\MySQL\MySQL Server 8.2\bin\mysql.exe',
+    'C:\Program Files\MySQL\MySQL Server 8.1\bin\mysql.exe',
+    'C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe',
+    'C:\Program Files\MySQL\MySQL Server 9.0\bin\mysql.exe'
+  )
+  foreach($c in $candidates){ if(Test-Path $c){ return $c } }
+  # 3. Wildcard scan as last resort.
+  $found = Get-Item 'C:\Program Files\MySQL\MySQL Server *\bin\mysql.exe' -ErrorAction SilentlyContinue |
+             Sort-Object Name -Descending | Select-Object -First 1
+  if($found){ return $found.FullName }
+  return $null
+}
+
+function Start-MySqlService {
+  # Find the MySQL Windows service (MySQL80, MySQL, MySQL81, etc.)
+  $svc = Get-Service -Name 'MySQL*' -ErrorAction SilentlyContinue |
+           Where-Object { $_.Name -match '^MySQL' } |
+           Sort-Object Name -Descending |
+           Select-Object -First 1
+  if(-not $svc){
+    Note 'No MySQL Windows service found — assuming it is running externally.'
+    return
+  }
+  if($svc.Status -eq 'Running'){
+    Ok "MySQL service '$($svc.Name)' is already running."
+    return
+  }
+  Step "Starting MySQL service '$($svc.Name)'..."
+  try {
+    Start-Service $svc.Name -ErrorAction Stop
+    # Wait up to 15 s for it to come up.
+    for($i=0; $i -lt 30; $i++){
+      Start-Sleep -Milliseconds 500
+      $svc.Refresh()
+      if($svc.Status -eq 'Running'){ Ok "MySQL service started."; return }
+    }
+    throw "Timed out waiting for MySQL service to reach Running state."
+  } catch {
+    throw "Could not start MySQL service '$($svc.Name)': $_"
+  }
+}
+
 function Free-Port($port){
   try {
     Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue |
@@ -88,6 +154,9 @@ try {
     throw "server\.env is missing. See docs\LOCAL_TESTING.md, Section 2."
   }
 
+  # Ensure MySQL is running before anything touches the DB.
+  Start-MySqlService
+
   # Free the ports first - 'closes any execution instance' from a previous run.
   Step "Freeing ports $ApiPort and $CliPort if already in use"
   Free-Port $ApiPort
@@ -95,6 +164,10 @@ try {
 
   # Optional one-time DB + user creation (needs MySQL root).
   if($InitDb){
+    $mysqlBin = Find-MySql
+    if(-not $mysqlBin){ throw 'mysql.exe not found. Add MySQL Server\bin to PATH or install MySQL 8.' }
+    Note "Using mysql at: $mysqlBin"
+
     Step "Creating local 'sigale' database and user (MySQL root required)"
     $sec  = Read-Host 'MySQL root password' -AsSecureString
     $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec)
@@ -106,8 +179,8 @@ CREATE USER IF NOT EXISTS 'sigale'@'localhost' IDENTIFIED WITH mysql_native_pass
 GRANT ALL PRIVILEGES ON sigale.* TO 'sigale'@'localhost';
 FLUSH PRIVILEGES;
 "@
-    $sql | & mysql -u root "--password=$rootPw"
-    if($LASTEXITCODE -ne 0){ throw 'DB init failed (check the root password and that mysql is in PATH).' }
+    $sql | & $mysqlBin -u root "--password=$rootPw"
+    if($LASTEXITCODE -ne 0){ throw 'DB init failed (check the root password).' }
     Ok 'Database and user ready.'
   }
 

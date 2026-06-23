@@ -1,25 +1,46 @@
 /*
- * PurchaseFlow — the public 7-step purchase flow (the heart of 2.0).
- * Steps ported/adapted from docs/design2.0/flow.jsx, made functional and
- * wired to local reservation state via `purchases` (src/api/purchases.js).
- * When the backend is live, `purchases.*` already points at the real
- * endpoints — no change needed here.
+ * PurchaseFlow — the public 6-step purchase flow (the heart of 2.0).
+ * Wired to the real backend via src/api/purchases.js (no localStorage).
  *
- * Steps: 1 Selección · 2 Confirmar (folio) · 3 Datos · 4 Pago · 5 WhatsApp
- *        · 6 Verificando → /compra/:orderId status page.
+ * Steps: 1 Selección · 2 Confirmar (orden) · 3 Datos · 4 Pago · 5 WhatsApp
+ *        · 6 ¡Listo! (terminal success screen — buyer is told tickets will be
+ *        delivered to their chosen contact and routed back to the landing).
+ *
+ * After "Ir a pagar" (step 4 onward) the back button is locked: buyers cannot
+ * rewind to change quantity or holder data once they're at the payment step.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvent } from '../../context/EventContext';
 import { Ic } from '../ui/Ic';
-import { Money } from '../ui/Money';
 import { FlowShell } from './FlowShell';
 import { purchases, whatsappLink } from '../../api/purchases';
+import { Screen } from '../ui/Screen';
 import { SAMPLE_EVENT, resolveActiveStage, stageCupos } from '../../utils/sampleEvent';
-import { formatCurrency, formatTo12Hour, parseLocalDate } from '../../utils/timeFormat';
+import { formatCurrency } from '../../utils/timeFormat';
 
 const MAX_QTY = 6;
 const COUNTDOWN_SECONDS = 20 * 60; // cosmetic only (real hold is 24h server-side)
+
+// ── Field validators (regex-driven) ─────────────────────────────────────────────
+const RE_NUMERIC = /^[0-9]+$/;
+const RE_NAME = /^[A-Za-zÀ-ÖØ-öø-ÿñÑ' -]+$/; // letters (incl. accented + ñ), spaces, hyphen, apostrophe
+const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validators = {
+  idNumber: (v) => RE_NUMERIC.test(String(v).trim()),
+  name: (v) => RE_NAME.test(String(v).trim()) && String(v).trim().length >= 2,
+  phone: (v) => RE_NUMERIC.test(String(v).replace(/[\s+-]/g, '').trim()) && String(v).replace(/[\s+-]/g, '').length >= 10,
+  email: (v) => RE_EMAIL.test(String(v).trim()),
+};
+
+// Sanitizers that strip invalid characters as the user types
+const sanitize = {
+  numeric: (v) => String(v).replace(/[^0-9]/g, ''),
+  name: (v) => String(v).replace(/[^A-Za-zÀ-ÖØ-öø-ÿñÑ' -]/g, ''),
+  phone: (v) => String(v).replace(/[^0-9+\s-]/g, ''),
+  // email: don't sanitize (let user type freely; validate on submit)
+};
 
 function mmss(total) {
   const m = String(Math.floor(total / 60)).padStart(2, '0');
@@ -29,20 +50,33 @@ function mmss(total) {
 
 export function PurchaseFlow() {
   const navigate = useNavigate();
-  const { event: ctxEvent } = useEvent();
-  const event = ctxEvent || SAMPLE_EVENT;
-  const stage = resolveActiveStage(event);
-  const cupos = stageCupos(stage);
-  const maxQty = Math.max(1, Math.min(MAX_QTY, cupos || MAX_QTY));
+  const { event: ctxEvent, eventLoading } = useEvent();
 
+  // All hooks first — they must run on every render in the same order.
   const [step, setStep] = useState(1);
   const [qty, setQty] = useState(1);
   const [holders, setHolders] = useState([{ name: '', idNumber: '' }]);
   const [delivery, setDelivery] = useState({ method: 'whatsapp', contact: '' });
   const [orderId, setOrderId] = useState(null);
   const [reserving, setReserving] = useState(false);
+  const [reserveError, setReserveError] = useState('');
   const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
   const [keyCopied, setKeyCopied] = useState(false);
+
+  // Derived state (no hooks). Uses sample event as a placeholder for the
+  // initial render; the guards below block the flow until ctxEvent loads.
+  const event = ctxEvent || SAMPLE_EVENT;
+  const stage = resolveActiveStage(event);
+  const cupos = stageCupos(stage);
+  const maxQty = Math.max(1, Math.min(MAX_QTY, cupos || MAX_QTY));
+
+  // Two failure modes the original code masked by silently falling back to the
+  // SAMPLE_EVENT (which has no DB ids): (1) the real event is still loading,
+  // (2) there is no active event at all. Surface both before we try to reserve
+  // — otherwise the reservation POST goes out with stageId: null and the
+  // server (correctly) returns 400 "Faltan campos obligatorios de la compra".
+  const hasRealEvent = !!ctxEvent && Number.isFinite(Number(ctxEvent.id));
+  const hasRealStage = !!stage && Number.isFinite(Number(stage.id));
 
   const total = (Number(stage?.price) || 0) * qty;
 
@@ -52,7 +86,6 @@ export function PurchaseFlow() {
       setKeyCopied(true);
       setTimeout(() => setKeyCopied(false), 2000);
     } catch {
-      /* fallback for older browsers */
       const ta = document.createElement('textarea');
       ta.value = '3212619103';
       ta.style.position = 'fixed';
@@ -86,41 +119,110 @@ export function PurchaseFlow() {
 
   const reserve = async () => {
     if (orderId || reserving) return;
+    // Defensive guard — by this point hasRealEvent + hasRealStage are true,
+    // but a stale state could still slip a non-numeric id through.
+    const numericEventId = Number(event.id);
+    const numericStageId = Number(stage.id);
+    if (!Number.isFinite(numericEventId) || !Number.isFinite(numericStageId)) {
+      setReserveError('No se pudo identificar el evento o la etapa. Recarga la página.');
+      throw new Error('Invalid event/stage id');
+    }
     setReserving(true);
+    setReserveError('');
     try {
       const res = await purchases.create({
-        eventId: event.id,
-        stageId: stage?.id ?? null,
+        eventId: numericEventId,
+        stageId: numericStageId,
         stageName: stage?.name ?? '',
         quantity: qty,
         totalAmount: total,
+        // Contact + holders are deferred to the submit step; we send what we
+        // have today (an empty contact is accepted by the server).
         deliveryMethod: delivery.method,
         deliveryContact: delivery.contact,
         holders,
       });
       setOrderId(res.orderId);
+    } catch (err) {
+      setReserveError(err?.message || 'No fue posible reservar tu cupo');
+      throw err;
     } finally {
       setReserving(false);
     }
   };
 
   const next = async () => {
-    if (step === 1) await reserve(); // reserve before showing the folio
+    if (step === 1) {
+      try {
+        await reserve(); // reserve before showing the orden
+      } catch {
+        return; // stop advancing — keep step 1 and show the error
+      }
+    }
+    if (step === 5 && orderId) {
+      // Mark the payment as submitted and patch the contact info captured
+      // in step 3 so the organizer sees the buyer's real method/contact +
+      // holder names alongside the order.
+      try {
+        await purchases.submit(orderId, {
+          deliveryMethod: delivery.method,
+          deliveryContact: delivery.contact,
+          holders,
+        });
+      } catch { /* surface gently on next page */ }
+    }
     if (step < 6) setStep((s) => s + 1);
   };
-  const back = () => {
-    if (step > 1) setStep((s) => s - 1);
-    else navigate(`/evento/${event.id ?? 'sample'}`);
-  };
+  // Back is intentionally locked from step 4 onward — once the buyer commits
+  // to paying we don't let them rewind through the wizard. Returning null
+  // tells FlowShell to hide the back chevron entirely.
+  const back = step >= 4
+    ? null
+    : () => {
+      if (step > 1) setStep((s) => s - 1);
+      else navigate(`/evento/${event.id ?? 'sample'}`);
+    };
 
-  const datosValid = useMemo(
-    () => holders.every((h) => h.name.trim()) && delivery.contact.trim(),
-    [holders, delivery.contact],
-  );
+  // ── Step 3 validation ────────────────────────────────────────────────────────
+  // Every holder needs a valid name and ID. Delivery contact must match its
+  // chosen method (WhatsApp = numeric phone; Email = valid email address).
+  const datosValid = useMemo(() => {
+    const holdersOk = holders.every(
+      (h) => validators.name(h.name) && validators.idNumber(h.idNumber),
+    );
+    const contactOk = delivery.method === 'email'
+      ? validators.email(delivery.contact)
+      : validators.phone(delivery.contact);
+    return holdersOk && contactOk;
+  }, [holders, delivery]);
 
-  const dateLabel = event.date
-    ? `${parseLocalDate(event.date)?.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })} · ${formatTo12Hour(event.entranceTime || '00:00')}`
-    : '';
+  // Early returns AFTER all hooks (rules of hooks). Block the flow until the
+  // real event finishes loading; show a friendly message if none exists.
+  if (eventLoading) {
+    return (
+      <Screen seed={42}>
+        <div className="scr-body pad" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+          <p className="muted">Cargando evento…</p>
+        </div>
+      </Screen>
+    );
+  }
+  if (!hasRealEvent || !hasRealStage) {
+    return (
+      <Screen seed={42}>
+        <div className="scr-body pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12, zIndex: 1 }}>
+          <div className="charly" style={{ width: 64, height: 64, fontSize: 28 }}>✦</div>
+          <div className="serif" style={{ fontSize: 22 }}>Aún no hay boletas disponibles</div>
+          <p className="muted" style={{ maxWidth: 280 }}>
+            {hasRealEvent
+              ? 'Ninguna etapa está activa en este momento. Vuelve más tarde.'
+              : 'No hay un evento publicado todavía. Vuelve más tarde.'}
+          </p>
+          <button className="btn ghost sm" onClick={() => navigate('/')}>Volver al inicio</button>
+        </div>
+      </Screen>
+    );
+  }
 
   // ── Step 1 · Selección ────────────────────────────────────────────────────────
   if (step === 1) {
@@ -155,11 +257,17 @@ export function PurchaseFlow() {
           <div className="label" style={{ color: 'var(--cream-dim)' }}>Total</div>
           <div className="serif" style={{ fontSize: 28, color: 'var(--yellow)' }}>{formatCurrency(total)}</div>
         </div>
+
+        {reserveError && (
+          <div className="card" style={{ marginTop: 14, padding: 12, borderColor: 'rgba(248,113,113,0.4)' }}>
+            <p style={{ margin: 0, color: 'var(--red, #f87171)', fontSize: 14 }}>{reserveError}</p>
+          </div>
+        )}
       </FlowShell>
     );
   }
 
-  // ── Step 2 · Confirmar → reserved (folio) ──────────────────────────────────────
+  // ── Step 2 · Confirmar → reserved (orden) ──────────────────────────────────────
   if (step === 2) {
     return (
       <FlowShell step={2} kicker="Confirmar compra" title="Tu cupo está reservado" onNext={next} onBack={back}
@@ -172,7 +280,7 @@ export function PurchaseFlow() {
           </p>
           <div className="tile" style={{ background: 'linear-gradient(150deg,var(--purple),var(--purple-deep))', padding: '18px 30px', marginTop: 16, textAlign: 'center' }}>
             <div className="label" style={{ color: 'rgba(255,255,255,0.7)' }}>Orden</div>
-            <div className="folio" style={{ fontSize: 38, color: 'var(--yellow)' }}>#{orderId}</div>
+            <div className="orden" style={{ fontSize: 38, color: 'var(--yellow)' }}>#{orderId}</div>
           </div>
           <div className="chip lilac" style={{ marginTop: 18 }}><Ic n="lock" s={14} /> Guárdala, no la compartas</div>
         </div>
@@ -189,39 +297,86 @@ export function PurchaseFlow() {
 
   // ── Step 3 · Datos ──────────────────────────────────────────────────────────────
   if (step === 3) {
+    const contactPlaceholder = delivery.method === 'whatsapp'
+      ? '+57 · número de WhatsApp'
+      : 'tu@correo.com';
+
+    const onHolderChange = (i, field, raw) => {
+      const cleaned = field === 'idNumber' ? sanitize.numeric(raw) : sanitize.name(raw);
+      setHolders((prev) => prev.map((x, j) => (j === i ? { ...x, [field]: cleaned } : x)));
+    };
+    const onContactChange = (raw) => {
+      const cleaned = delivery.method === 'whatsapp' ? sanitize.phone(raw) : raw;
+      setDelivery((d) => ({ ...d, contact: cleaned }));
+    };
+
+    const contactInvalid = delivery.method === 'email'
+      ? delivery.contact.includes('@') && !validators.email(delivery.contact)
+      : delivery.contact.length > 0 && !validators.phone(delivery.contact);
+
     return (
       <FlowShell step={3} kicker="Datos de boletas" title="¿Para quién son?" onNext={next} onBack={back}
         cta="Ir a pagar" ctaIcon={<Ic n="chevR" s={20} />} ctaDisabled={!datosValid}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {holders.map((h, i) => (
-            <div className="card" key={i} style={{ padding: 14 }}>
-              <div className="label" style={{ marginBottom: 12, color: 'var(--orange-soft)' }}>Boleta {i + 1}</div>
-              <div className="field" style={{ marginBottom: 10 }}>
-                <div className="flabel"><span style={{ color: 'var(--lilac)' }}><Ic n="user" s={16} /></span><span className="label" style={{ color: 'var(--cream-dim)' }}>Nombre</span></div>
-                <input className="input" placeholder="Nombre completo" value={h.name}
-                  onChange={(e) => setHolders((prev) => prev.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
+          {holders.map((h, i) => {
+            const nameInvalid = h.name.length >= 4 && !validators.name(h.name);
+            const idInvalid = h.idNumber.length > 0 && !validators.idNumber(h.idNumber);
+            return (
+              <div className="card" key={i} style={{ padding: 14 }}>
+                <div className="label" style={{ marginBottom: 12, color: 'var(--orange-soft)' }}>Boleta {i + 1}</div>
+                <div className="field" style={{ marginBottom: 10 }}>
+                  <div className="flabel"><span style={{ color: 'var(--lilac)' }}><Ic n="user" s={16} /></span><span className="label" style={{ color: 'var(--cream-dim)' }}>Nombre</span></div>
+                  <input
+                    className="input"
+                    type="text"
+                    autoComplete="name"
+                    placeholder="Nombre completo"
+                    value={h.name}
+                    onChange={(e) => onHolderChange(i, 'name', e.target.value)}
+                  />
+                  {nameInvalid && <p style={{ margin: '4px 2px 0', color: 'var(--red, #f87171)', fontSize: 12 }}>Solo letras y espacios.</p>}
+                </div>
+                <div className="field">
+                  <div className="flabel"><span style={{ color: 'var(--lilac)' }}><Ic n="id" s={16} /></span><span className="label" style={{ color: 'var(--cream-dim)' }}>Documento</span></div>
+                  <input
+                    className="input"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="off"
+                    placeholder="N.º de cédula"
+                    value={h.idNumber}
+                    onChange={(e) => onHolderChange(i, 'idNumber', e.target.value)}
+                  />
+                  {idInvalid && <p style={{ margin: '4px 2px 0', color: 'var(--red, #f87171)', fontSize: 12 }}>Solo números.</p>}
+                </div>
               </div>
-              <div className="field">
-                <div className="flabel"><span style={{ color: 'var(--lilac)' }}><Ic n="id" s={16} /></span><span className="label" style={{ color: 'var(--cream-dim)' }}>Documento</span></div>
-                <input className="input" inputMode="numeric" placeholder="N.º de cédula" value={h.idNumber}
-                  onChange={(e) => setHolders((prev) => prev.map((x, j) => (j === i ? { ...x, idNumber: e.target.value } : x)))} />
-              </div>
-            </div>
-          ))}
+            );
+          })}
           <div className="card" style={{ padding: 14 }}>
             <div className="label" style={{ marginBottom: 10, color: 'var(--cream-dim)' }}>¿Cómo te enviamos las boletas?</div>
             <div className="seg">
-              <div className={`opt ${delivery.method === 'whatsapp' ? 'on' : ''}`} onClick={() => setDelivery((d) => ({ ...d, method: 'whatsapp' }))} role="button" tabIndex={0}>
+              <div className={`opt ${delivery.method === 'whatsapp' ? 'on' : ''}`} onClick={() => setDelivery((d) => ({ ...d, method: 'whatsapp', contact: '' }))} role="button" tabIndex={0}>
                 <Ic n="wa" s={16} fill /> WhatsApp
               </div>
-              <div className={`opt ${delivery.method === 'email' ? 'on' : ''}`} onClick={() => setDelivery((d) => ({ ...d, method: 'email' }))} role="button" tabIndex={0}>
+              <div className={`opt ${delivery.method === 'email' ? 'on' : ''}`} onClick={() => setDelivery((d) => ({ ...d, method: 'email', contact: '' }))} role="button" tabIndex={0}>
                 <Ic n="share" s={16} /> Email
               </div>
             </div>
-            <input className="input" style={{ marginTop: 10 }}
-              placeholder={delivery.method === 'whatsapp' ? '+57 · número de WhatsApp' : 'tu@correo.com'}
+            <input
+              className="input"
+              style={{ marginTop: 10 }}
+              type={delivery.method === 'email' ? 'email' : 'tel'}
+              inputMode={delivery.method === 'email' ? 'email' : 'tel'}
+              autoComplete={delivery.method === 'email' ? 'email' : 'tel'}
+              placeholder={contactPlaceholder}
               value={delivery.contact}
-              onChange={(e) => setDelivery((d) => ({ ...d, contact: e.target.value }))} />
+              onChange={(e) => onContactChange(e.target.value)}
+            />
+            {contactInvalid && (
+              <p style={{ margin: '4px 2px 0', color: 'var(--red, #f87171)', fontSize: 12 }}>
+                {delivery.method === 'email' ? 'Correo no válido.' : 'Solo números (mínimo 10 dígitos).'}
+              </p>
+            )}
           </div>
         </div>
       </FlowShell>
@@ -250,7 +405,6 @@ export function PurchaseFlow() {
             ? <img src={event.bankQrImageUrl} alt="QR de pago" style={{ width: 350, height: 'auto', marginTop: 14, borderRadius: 'var(--r-md)', background: '#fff', padding: 10 }} />
             : <div className="qr" style={{ marginTop: 14 }} />}
 
-          {/* ── Copy Key Button ── */}
           <button
             type="button"
             onClick={handleCopyKey}
@@ -264,7 +418,7 @@ export function PurchaseFlow() {
           <div className="muted" style={{ fontSize: 13, marginTop: 10 }}>Transfiere y guarda el comprobante</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '8px 14px', borderRadius: 'var(--r-full)', background: 'var(--black-3)' }}>
             <span className="label" style={{ color: 'var(--cream-dim)' }}>Orden</span>
-            <span className="folio" style={{ fontSize: 20, color: 'var(--yellow)' }}>#{orderId}</span>
+            <span className="orden" style={{ fontSize: 20, color: 'var(--yellow)' }}>#{orderId}</span>
           </div>
         </div>
 
@@ -281,7 +435,20 @@ export function PurchaseFlow() {
     return (
       <FlowShell step={5} kicker="Enviar comprobante" title="Envíanos tu pantallazo" onBack={back}
         footnote={
-          <a className="btn" href={link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', marginBottom: 10 }}>
+          <a
+            className="btn"
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              textDecoration: 'none',
+              marginBottom: 10,
+              background: 'var(--green)',
+              borderColor: 'var(--green)',
+              color: '#fff',
+              boxShadow: '0 4px 14px rgba(95,190,123,0.35)',
+            }}
+          >
             <Ic n="wa" s={20} fill /> Abrir WhatsApp
           </a>
         }
@@ -296,43 +463,68 @@ export function PurchaseFlow() {
         <div className="card" style={{ padding: 16, marginTop: 22 }}>
           <div className="label" style={{ color: 'var(--cream-dim)', marginBottom: 8 }}>Mensaje</div>
           <div style={{ padding: '12px 14px', borderRadius: 'var(--r-md)', background: 'rgba(95,190,123,0.10)', border: '1px solid rgba(95,190,123,0.2)', fontSize: 15 }}>
-            ¡Hola! Envío pantallazo de compra <b style={{ color: 'var(--yellow)' }}>#{orderId}</b>
+            ¡Hola! Envío pantallazo de orden <b style={{ color: 'var(--yellow)' }}>#{orderId}</b>
           </div>
         </div>
       </FlowShell>
     );
   }
 
-  // ── Step 6 · Verificando → status page ──────────────────────────────────────────
-  return <Step6 orderId={orderId} stage={stage} qty={qty} total={total} event={event} dateLabel={dateLabel} onBack={back} navigate={navigate} />;
+  // ── Step 6 · Terminal success screen ───────────────────────────────────────────
+  // No more "Ver el estado de mi compra" page. The buyer is told that, as soon
+  // as the team validates the payment, the ticket(s) will be sent to the
+  // contact they picked in step 3 (WhatsApp or email). Only exit is the home.
+  return (
+    <Step6
+      orderId={orderId}
+      stage={stage}
+      qty={qty}
+      total={total}
+      delivery={delivery}
+      navigate={navigate}
+    />
+  );
 }
 
-function Step6({ orderId, stage, qty, total, event, dateLabel, onBack, navigate }) {
-  // Mark the payment submitted once we land on this step.
+function Step6({ orderId, stage, qty, total, delivery, navigate }) {
+  // Submit was already marked from step 5 → 6; this is a no-op if so.
   useEffect(() => {
-    if (orderId) purchases.submit(orderId);
+    if (orderId) {
+      purchases.submit(orderId).catch(() => { /* already submitted or transient */ });
+    }
   }, [orderId]);
 
+  const methodLabel = delivery.method === 'email' ? 'correo' : 'WhatsApp';
+
+  // navigate('/', { replace: true }) so the back button on the landing won't
+  // pop the wizard back onto the stack — Ir a pagar really is final.
+  const goHome = () => navigate('/', { replace: true });
+
   return (
-    <FlowShell step={6} kicker="Verificando pago" title="Tus boletas están en camino" onBack={onBack}
-      cta="Ver el estado de mi compra" ctaIcon={<Ic n="chevR" s={20} />}
-      onNext={() => navigate(`/compra/${orderId}`)}
-      ghost="Volver al inicio">
+    <FlowShell
+      step={6}
+      kicker="¡Listo!"
+      title="Recibimos tu mensaje"
+      onBack={null}
+      cta="Volver al inicio"
+      ctaIcon={<Ic n="home" s={20} />}
+      onNext={goHome}
+    >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 12 }}>
-        <div className="spinner">
-          <div className="spinner-ring" />
-          <div className="spinner-core"><Ic n="ticket" s={30} /></div>
+        <div style={{ width: 84, height: 84, borderRadius: '50%', background: 'rgba(95,190,123,0.14)', border: '1px solid rgba(95,190,123,0.4)', display: 'grid', placeItems: 'center', color: 'var(--green)' }}>
+          <Ic n="check" s={40} />
         </div>
         <span className="pill sent" style={{ marginTop: 18, height: 34 }}><span className="dot" /> Pago enviado</span>
-        <p className="muted" style={{ fontSize: 15.5, marginTop: 16, maxWidth: 292, lineHeight: 1.45 }}>
-          Nuestro equipo está verificando tu pago. En cuanto lo confirmemos, recibirás tus boletas por <b style={{ color: 'var(--green)' }}>WhatsApp</b>.
+        <p className="muted" style={{ fontSize: 15.5, marginTop: 16, maxWidth: 320, lineHeight: 1.45 }}>
+          Tan pronto nuestro equipo valide tu pago te enviaremos {qty > 1 ? 'las boletas' : 'la boleta'} a{' '}
+          <b style={{ color: 'var(--green)' }}>{delivery.contact || 'tu contacto'}</b> por{' '}
+          <b style={{ color: 'var(--green)' }}>{methodLabel}</b>.
         </p>
       </div>
       <div className="card" style={{ padding: 16, marginTop: 22 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div className="label" style={{ color: 'var(--cream-dim)' }}>Orden #{orderId} · {stage?.name} × {qty}</div>
-            <div className="muted" style={{ fontSize: 13 }}>{event.venue} · {dateLabel}</div>
           </div>
           <div className="serif" style={{ fontSize: 22, color: 'var(--yellow)' }}>{formatCurrency(total)}</div>
         </div>

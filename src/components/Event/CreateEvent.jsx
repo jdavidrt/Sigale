@@ -97,7 +97,9 @@ export const CreateEvent = ({ isEditing = false }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const named = formData.stages.filter((st) => st.name.trim() !== "");
@@ -143,13 +145,24 @@ export const CreateEvent = ({ isEditing = false }) => {
       stages,
     };
 
-    if (isEditing) {
-      updateEvent(eventObj);
-    } else {
-      createEvent(eventObj);
+    // The API (MySQL) is the source of truth. Await it so a failure (e.g. 409
+    // over aforo, 401 session expired) surfaces a message instead of a silent
+    // navigation to a stale Home.
+    setSaving(true);
+    try {
+      if (isEditing) {
+        await updateEvent(eventObj);
+      } else {
+        await createEvent(eventObj);
+      }
+      notify({ message: isEditing ? t("eventUpdated") || "Evento actualizado." : t("eventCreated") || "Evento creado.", tone: "success" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      navigate("/admin");
+    } catch (err) {
+      notify({ message: err?.message || t("error"), tone: "error" });
+    } finally {
+      setSaving(false);
     }
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    navigate("/admin/create");
   };
 
   const handlePasteFromClipboard = async () => {
@@ -404,11 +417,11 @@ export const CreateEvent = ({ isEditing = false }) => {
             {/* Save Button */}
             <button
               type="submit"
-              disabled={submitDisabled}
+              disabled={submitDisabled || saving}
               className={`${btn.btn} ${btn.primary} ${btn.lg} ${s.saveBtn}`}
             >
               <FontAwesomeIcon icon={isEditing ? faFloppyDisk : faWandMagicSparkles} />
-              <span>{isEditing ? t("updateEvent") : t("createEvent")}</span>
+              <span>{saving ? `${t("loading")}…` : isEditing ? t("updateEvent") : t("createEvent")}</span>
             </button>
           </div>
         </div>

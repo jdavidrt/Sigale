@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTickets } from "../../context/TicketContext";
+import { admin } from "../../api/admin";
 import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useDialog } from "../../context/DialogContext";
@@ -13,10 +14,24 @@ import { faTicketSimple, faPenToSquare, faUser, faIdCard, faPhone, faChevronDown
 import s from "./TicketForm.module.css";
 import btn from "../Common/Button.module.css";
 
+// "Optional phone" sentinel — kept for back-compat with TicketCard, which
+// hides the phone line when the value is exactly "000". When the user
+// leaves the phone blank we save the sentinel so the card stays clean.
+const NO_PHONE = "000";
+const MIN_FOR_ALERT = 4; // don't pop validation errors before this many chars
+
+// Live validation rules. Same character set as the public PurchaseFlow so
+// the front-door and back-office both reject the same junk input.
+const RE_NAME = /^[A-Za-zÀ-ÖØ-öø-ÿñÑ' -]+$/;
+const RE_ID = /^[0-9]+$/;
+
+const isNameValid = (v) => RE_NAME.test(String(v).trim()) && String(v).trim().length >= 2;
+const isIdValid = (v) => RE_ID.test(String(v).trim()) && String(v).trim().length >= 1;
+
 export const TicketForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { addTicket, updateTicket } = useTickets();
+  const { updateTicket, refreshFromServer } = useTickets();
   const { event } = useEvent();
   const { t } = useLanguage();
   const { notify } = useDialog();
@@ -24,28 +39,95 @@ export const TicketForm = () => {
   const editTicket = location.state?.editTicket;
   const isEditMode = !!editTicket;
 
-  const [formData, setFormData] = useState({ buyerName: "", buyerId: "", buyerPhone: "000", ticketType: "" });
+  const [formData, setFormData] = useState({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "" });
   const [createdTicket, setCreatedTicket] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (editTicket) {
-      setFormData({ buyerName: editTicket.buyerName, buyerId: editTicket.buyerId, buyerPhone: editTicket.buyerPhone, ticketType: editTicket.ticketType });
+      setFormData({
+        buyerName: editTicket.buyerName,
+        buyerId: editTicket.buyerId,
+        // Don't pre-fill the sentinel — show an empty field so the seller
+        // doesn't have to clear "000" before typing the real number.
+        buyerPhone: editTicket.buyerPhone === NO_PHONE ? "" : editTicket.buyerPhone,
+        ticketType: editTicket.ticketType,
+      });
     }
   }, [editTicket]);
 
+  // Hold the inline-error visibility off until the user has clearly committed
+  // to a value (4+ characters). Below that threshold the field stays neutral
+  // even if the partial input technically fails the regex.
+  const nameError = formData.buyerName.length >= MIN_FOR_ALERT && !isNameValid(formData.buyerName);
+  const idError = formData.buyerId.length >= MIN_FOR_ALERT && !isIdValid(formData.buyerId);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Final, blocking check on submit — required fields must be valid.
+    if (!isNameValid(formData.buyerName)) {
+      notify({ message: t("nameInvalid"), tone: "error" });
+      return;
+    }
+    if (!isIdValid(formData.buyerId)) {
+      notify({ message: t("idInvalid"), tone: "error" });
+      return;
+    }
     setIsSubmitting(true);
+    const payload = {
+      ...formData,
+      // Phone is optional; collapse blank input to the sentinel that
+      // TicketCard treats as "no phone on file".
+      buyerPhone: formData.buyerPhone.trim() || NO_PHONE,
+    };
     try {
       if (isEditMode) {
-        await updateTicket(editTicket.ticketId, formData);
+        await updateTicket(editTicket.ticketId, payload);
         notify({ message: t("ticketUpdatedFromForm"), tone: "success" });
         navigate("/validate-qr");
       } else {
-        const ticket = await addTicket(formData);
-        setCreatedTicket(ticket);
-        setFormData({ buyerName: "", buyerId: "", buyerPhone: "000", ticketType: "" });
+        // Walk-in / door sale. Persist through the server so the sale becomes
+        // a confirmed purchase with a sequential orderId and a server-minted
+        // ticket — visible at /admin and /tickets, not just this device's
+        // localStorage. (The old addTicket() path only wrote local state and
+        // was wiped by /tickets' refreshFromServer on next mount.)
+        const stage = (event.stages || []).find(
+          (st) => String(st.name).toLowerCase().trim() === formData.ticketType
+        );
+        if (!stage) {
+          notify({ message: t("stageInvalid"), tone: "error" });
+          return;
+        }
+        const res = await admin.walkIn({
+          eventId: event.id,
+          stageId: stage.id,
+          quantity: 1,
+          holders: [
+            {
+              name: payload.buyerName.trim(),
+              idNumber: payload.buyerId.trim(),
+              // Send null (not the "000" sentinel) so the DB stays clean.
+              phone: formData.buyerPhone.trim() || null,
+            },
+          ],
+        });
+        const minted = res?.tickets?.[0];
+        // Shape the API response into the ticket object QRDisplay expects.
+        setCreatedTicket({
+          ticketId: minted ? `t-${minted.id}` : `order-${res?.orderId}`,
+          dbId: minted?.id ?? null,
+          buyerName: payload.buyerName.trim(),
+          buyerId: payload.buyerId.trim(),
+          buyerPhone: payload.buyerPhone, // sentinel kept for display
+          ticketType: formData.ticketType,
+          validationHash: minted?.validationHash ?? null,
+          orderId: res?.orderId ?? null,
+          checkedIn: false,
+          checkInTime: null,
+        });
+        // Keep the in-memory list in sync so /tickets reflects the new order.
+        refreshFromServer();
+        setFormData({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "" });
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } catch (error) {
@@ -95,6 +177,11 @@ export const TicketForm = () => {
                   </div>
                   <p className={s.successHeading}>{t("readyToGo")}</p>
                   <p className={s.successSubtitle}>{t("ticketGenerated")}</p>
+                  {createdTicket.orderId && (
+                    <p className={s.successSubtitle}>
+                      {t("orderNumber")} #{createdTicket.orderId}
+                    </p>
+                  )}
                 </div>
 
                 {/* Ticket details */}
@@ -150,22 +237,50 @@ export const TicketForm = () => {
                     <FieldLabel icon={faUser} rowClass={s.fieldLabelRow} textClass={s.fieldLabelText}>
                       {t("buyerName")}
                     </FieldLabel>
-                    <input type="text" required maxLength={100} value={formData.buyerName} onChange={(e) => setFormData({ ...formData, buyerName: e.target.value })} placeholder={t("enterFullName")} />
+                    <input
+                      type="text"
+                      required
+                      maxLength={100}
+                      value={formData.buyerName}
+                      onChange={(e) => setFormData({ ...formData, buyerName: e.target.value })}
+                      placeholder={t("enterFullName")}
+                    />
+                    {nameError && (
+                      <p className={s.fieldError}>{t("nameInvalid")}</p>
+                    )}
                   </div>
 
-                  {/* ID + Phone two-col */}
+                  {/* ID + Phone two-col — phone is OPTIONAL */}
                   <div className={s.twoCol}>
                     <div>
                       <FieldLabel icon={faIdCard} rowClass={s.fieldLabelRow} textClass={s.fieldLabelText}>
                         {t("idNumber")}
                       </FieldLabel>
-                      <input type="tel" required maxLength={30} value={formData.buyerId} onChange={(e) => setFormData({ ...formData, buyerId: e.target.value })} placeholder="ID..." className="text-mono" />
+                      <input
+                        type="tel"
+                        required
+                        maxLength={30}
+                        value={formData.buyerId}
+                        onChange={(e) => setFormData({ ...formData, buyerId: e.target.value })}
+                        placeholder="ID..."
+                        className="text-mono"
+                      />
+                      {idError && (
+                        <p className={s.fieldError}>{t("idInvalid")}</p>
+                      )}
                     </div>
                     <div>
                       <FieldLabel icon={faPhone} rowClass={s.fieldLabelRow} textClass={s.fieldLabelText}>
-                        {t("phoneNumber")}
+                        {t("phoneNumber")} <span className={s.fieldHint}>· {t("optional")}</span>
                       </FieldLabel>
-                      <input type="tel" required maxLength={30} value={formData.buyerPhone} onChange={(e) => setFormData({ ...formData, buyerPhone: e.target.value })} onFocus={(e) => e.target.select()} placeholder="Phone..." className="text-mono" />
+                      <input
+                        type="tel"
+                        maxLength={30}
+                        value={formData.buyerPhone}
+                        onChange={(e) => setFormData({ ...formData, buyerPhone: e.target.value })}
+                        placeholder={t("optional")}
+                        className="text-mono"
+                      />
                     </div>
                   </div>
 
@@ -184,7 +299,7 @@ export const TicketForm = () => {
                   </div>
                 </div>
 
-                <button type="submit" disabled={isSubmitting} className={`${btn.btn} ${btn.primary} ${btn.lg}`}>
+                <button type="submit" disabled={isSubmitting} className={`${btn.btn} ${btn.orange} ${btn.lg}`}>
                   <FontAwesomeIcon icon={isEditMode ? faPenToSquare : faPlusCircle} />
                   <span>{isSubmitting ? "..." : (isEditMode ? t("updateTicket") : t("createTicket"))}</span>
                 </button>

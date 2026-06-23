@@ -47,6 +47,7 @@ export function toApiEventPayload(event) {
     eventDate: toSqlDateTime(event.date, event.entranceTime),
     openingTime: toSqlDateTime(event.date, event.entranceTime),
     venue: event.venue,
+    address: event.address || null,
     venueCapacity: Number(event.venueCapacity) || 0,
     flyerImageUrl: event.flyerImageUrl || null,
     bankQrImageUrl: event.bankQrImageUrl || null,
@@ -86,7 +87,7 @@ export function fromApiEvent(apiEvent) {
     date,
     entranceTime: timePart.slice(0, 5),
     venue: apiEvent.venue,
-    address: apiEvent.address || '', // not yet in schema; kept for app back-compat
+    address: apiEvent.address || '', // persisted since migration 002
     venueCapacity: Number(apiEvent.venueCapacity) || 0,
     flyerImageUrl: apiEvent.flyerImageUrl || '',
     bankQrImageUrl: apiEvent.bankQrImageUrl || '',
@@ -113,10 +114,10 @@ export const eventsApi = {
   getActive: () => api.get('/api/events/active').then(fromApiEvent),
   /** GET /api/events/:id */
   getById: (id) => api.get(`/api/events/${id}`).then(fromApiEvent),
-  /** POST /api/events — organizer create. */
-  create: (event) => api.post('/api/events', toApiEventPayload(event)).then(fromApiEvent),
-  /** PUT /api/events/:id — organizer edit. */
-  update: (id, event) => api.put(`/api/events/${id}`, toApiEventPayload(event)).then(fromApiEvent),
+  /** POST /api/events — organizer create. `opts` carries the Basic auth header. */
+  create: (event, opts) => api.post('/api/events', toApiEventPayload(event), opts).then(fromApiEvent),
+  /** PUT /api/events/:id — organizer edit. `opts` carries the Basic auth header. */
+  update: (id, event, opts) => api.put(`/api/events/${id}`, toApiEventPayload(event), opts).then(fromApiEvent),
 };
 
 export default eventsApi;

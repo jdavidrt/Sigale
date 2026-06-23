@@ -530,7 +530,8 @@
   box-shadow: 0 0 0 6px #fbf3e6;
 }
 
-/* folio token */
+/* orden token (legacy .folio kept as alias) */
+.orden,
 .folio {
   font-family: var(--font-mono);
   font-size: 26px;

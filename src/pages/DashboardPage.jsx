@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SalesDashboard } from "../components/Dashboard/SalesDashboard";
 import { CheckInDashboard } from "../components/Dashboard/CheckInDashboard";
 import { useLanguage } from "../context/LanguageContext";
+import { useTickets } from "../context/TicketContext";
 import { getStorageSizeInMB } from "../utils/storage";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChartLine, faDatabase } from "@fortawesome/free-solid-svg-icons";
@@ -9,7 +10,15 @@ import s from "./DashboardPage.module.css";
 
 export const DashboardPage = () => {
   const { t } = useLanguage();
+  const { refreshFromServer } = useTickets();
   const [activeTab, setActiveTab] = useState("sales");
+
+  // Sales/check-in stats are derived from `tickets` in TicketContext. Pull
+  // the canonical list from the server on mount so the dashboard reflects
+  // every confirmed purchase, not just what was produced on this device.
+  useEffect(() => {
+    refreshFromServer();
+  }, [refreshFromServer]);
 
   const tabs = [
     { id: "sales", label: t("salesDashboard") },

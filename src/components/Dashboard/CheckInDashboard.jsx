@@ -1,4 +1,5 @@
 import { useTickets } from "../../context/TicketContext";
+import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUsers, faChartLine, faClock, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
@@ -7,8 +8,9 @@ import s from "./CheckInDashboard.module.css";
 
 export const CheckInDashboard = () => {
   const { tickets, getStats } = useTickets();
+  const { event } = useEvent();
   const { t } = useLanguage();
-  const stats = getStats();
+  const stats = getStats(event);
 
   const checkedInTickets = tickets
     .filter((tk) => tk.checkedIn)

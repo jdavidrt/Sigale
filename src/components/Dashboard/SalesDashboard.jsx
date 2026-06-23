@@ -11,7 +11,7 @@ export const SalesDashboard = () => {
   const { getStats } = useTickets();
   const { event } = useEvent();
   const { t } = useLanguage();
-  const stats = getStats();
+  const stats = getStats(event);
 
   if (!event) {
     return <EmptyStateCard icon="📊" title={t("noEvent")} description={t("noEventDesc")} />;

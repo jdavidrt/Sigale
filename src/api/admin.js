@@ -74,12 +74,24 @@ function localOrderId(all) {
 export const adminApi = {
   login: (username, password) => api.post('/api/login', { username, password }),
   listPurchases: (params = {}) => {
-    const qs = new URLSearchParams(params).toString();
+    // Strip undefined/null values BEFORE handing them to URLSearchParams —
+    // otherwise they serialize as the literal string "undefined" and the
+    // server treats it as a filter that matches no rows.
+    const clean = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''),
+    );
+    const qs = new URLSearchParams(clean).toString();
     return api.get(`/api/admin/purchases${qs ? `?${qs}` : ''}`, { headers: authHeader() });
   },
   confirm: (id, holders) => api.post(`/api/admin/purchases/${id}/confirm`, { holders }, { headers: authHeader() }),
   reject: (id) => api.post(`/api/admin/purchases/${id}/reject`, undefined, { headers: authHeader() }),
   walkIn: (payload) => api.post('/api/admin/sales', payload, { headers: authHeader() }),
+  // Confirmed-purchase tickets joined with their stage + order. The
+  // /tickets and /dashboard pages call this so the organizer sees the
+  // same minted tickets that the door scanner will accept.
+  listTickets: () => api.get('/api/admin/tickets', { headers: authHeader() }),
+  updateTicket: (id, patch) => api.patch(`/api/admin/tickets/${id}`, patch, { headers: authHeader() }),
+  deleteAllPurchases: () => api.del('/api/admin/purchases', { headers: authHeader() }),
 };
 
 // ── LOCAL simulation ────────────────────────────────────────────────────────────
@@ -142,30 +154,28 @@ const localAdmin = {
   },
 };
 
-// ── Facade the UI imports. Swap bodies to adminApi.* on cutover. ───────────────
+// ── Facade the UI imports. Flipped to real API (backend now live). ─────────────
 export const admin = {
   login: async (username, password) => {
-    // >>> API: await adminApi.login(username, password); then store Basic creds:
-    //          setAuth({ username, basic: btoa(`${username}:${password}`) });
+    await adminApi.login(username, password); // throws ApiError on wrong creds
     setAuth({ username, basic: btoa(`${username}:${password}`) });
     return { ok: true, username };
   },
   list: async (params) => {
-    // >>> API: return adminApi.listPurchases(params);
-    return localAdmin.list(params);
+    return adminApi.listPurchases(params);
   },
   confirm: async (row) => {
-    // >>> API: return adminApi.confirm(row.id, row.holders);
-    return localAdmin.confirm(row.orderId);
+    return adminApi.confirm(row.id, row.holders);
   },
   reject: async (row) => {
-    // >>> API: return adminApi.reject(row.id);
-    return localAdmin.reject(row.orderId);
+    return adminApi.reject(row.id);
   },
   walkIn: async (payload) => {
-    // >>> API: return adminApi.walkIn(payload);
-    return localAdmin.walkIn(payload);
+    return adminApi.walkIn(payload);
   },
+  listTickets: async () => adminApi.listTickets(),
+  updateTicket: async (id, patch) => adminApi.updateTicket(id, patch),
+  deleteAllPurchases: async () => adminApi.deleteAllPurchases(),
 };
 
 export default admin;

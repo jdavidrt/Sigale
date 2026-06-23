@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS purchases (
   stageId              BIGINT UNSIGNED NOT NULL,
   quantity             INT UNSIGNED NOT NULL,
   totalAmount          DECIMAL(12,2) NOT NULL,
-  orderId              CHAR(3) NOT NULL,            -- 3 digits, unique PER event
+  orderId              INT UNSIGNED NOT NULL,       -- sequential, globally unique, starts at 100
   deliveryMethod       ENUM('email','whatsapp') NOT NULL,
   deliveryContact      VARCHAR(160) NOT NULL,
   status               ENUM('pending_payment','payment_submitted',
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS purchases (
   confirmedAt          DATETIME NULL,
   confirmedBy          VARCHAR(80) NULL,
   PRIMARY KEY (id),
-  UNIQUE KEY uqPurchaseOrderId (eventId, orderId),  -- orderId unique per event
+  UNIQUE KEY uqOrderIdGlobal (orderId),             -- orderId globally unique (sequential)
   UNIQUE KEY uqPurchaseIdem (idempotencyKey),       -- record idempotency
   KEY idxPurchaseEventStatus (eventId, status),
   KEY idxPurchaseSweeper (status, reservationExpiresAt), -- expired sweep

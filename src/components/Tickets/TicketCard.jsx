@@ -92,6 +92,13 @@ export const TicketCard = ({ ticket }) => {
           </div>
 
           <div className={s.details}>
+            {ticket.orderId != null && (
+              <div className={s.detailRow}>
+                <p className={s.ticketId} style={{ color: "var(--yellow)", fontWeight: 700 }}>
+                  Orden #{ticket.orderId}
+                </p>
+              </div>
+            )}
             <div className={s.detailRow}>
               <p className={s.ticketId}>{ticket.ticketId}</p>
               <p className={s.buyerId}>{ticket.buyerId}</p>

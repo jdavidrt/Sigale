@@ -64,9 +64,17 @@ const TypedConfirmBody = ({ count, requiredWord, t, onConfirm, onCancel }) => {
 export const TicketsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { event } = useEvent();
-  const { tickets, searchTickets, clearAllTickets } = useTickets();
+  const { tickets, searchTickets, clearAllTickets, refreshFromServer } = useTickets();
   const { t } = useLanguage();
   const { openCustom, notify } = useDialog();
+
+  // Pull the canonical confirmed-purchase tickets from the server on mount.
+  // This is what makes /tickets show every order the organizer just
+  // confirmed on /admin — without it the page would only see whatever was
+  // produced locally on this device.
+  useEffect(() => {
+    refreshFromServer();
+  }, [refreshFromServer]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState(searchParams.get("type") || "all");
@@ -102,10 +110,14 @@ export const TicketsPage = () => {
         requiredWord={t("deleteAllConfirmWord")}
         t={t}
         onCancel={close}
-        onConfirm={() => {
+        onConfirm={async () => {
           close();
-          clearAllTickets();
-          notify({ message: t("deleteAllSuccess"), tone: "success" });
+          try {
+            await clearAllTickets();
+            notify({ message: t("deleteAllSuccess"), tone: "success" });
+          } catch {
+            notify({ message: t("error"), tone: "error" });
+          }
         }}
       />
     ));

@@ -36,8 +36,22 @@ const FLOATS = [
 
 export function LandingPage() {
   const navigate = useNavigate();
-  const { event: ctxEvent } = useEvent();
-  const event = ctxEvent || SAMPLE_EVENT;
+  const { event: ctxEvent, eventLoading } = useEvent();
+
+  // While fetching the active event, show a minimal spinner.
+  if (eventLoading) {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+        <StarField seed={2} density={34} w={430} h={880} />
+        <p className="muted" style={{ position: 'relative', zIndex: 1 }}>Cargando…</p>
+      </div>
+    );
+  }
+
+  // No active event — show a "coming soon" placeholder instead of sample data.
+  if (!ctxEvent) return <NoEventScreen />;
+
+  const event = ctxEvent;
   const active = resolveActiveStage(event);
   const upcoming = (event.stages || []).filter((s) => s !== active);
   const flyerSrc = event.flyerImageUrl || flyerImg;
@@ -126,7 +140,7 @@ export function LandingPage() {
           <StarField seed={2} density={42} w={430} h={880} />
           <div className="lhero-overlay" ref={overlayRef} style={{ opacity: 0 }} />
           <div className="lhero-sb" ref={sbRef}>
-            <span className="kicker">Bogot\xe1, CO</span>
+            <span className="kicker">Bogotá, CO</span>
           </div>
           <div className="lhero-flyer" ref={heroFlyerRef}>
             <img src={flyerSrc} alt={event.name} />
@@ -230,6 +244,26 @@ export function LandingPage() {
 
           </div>
         </section>
+      </div>
+    </div>
+  );
+}
+
+// ── No-event placeholder ───────────────────────────────────────────────────────
+function NoEventScreen() {
+  return (
+    <div className="scr" style={{ height: '100dvh' }}>
+      <div className="lscroll" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, textAlign: 'center', padding: '0 24px' }}>
+        <StarField seed={5} density={28} w={430} h={880} />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div className="serif" style={{ fontSize: 48, color: 'var(--yellow)', lineHeight: 1 }}>✦</div>
+          <div className="serif" style={{ fontSize: 32, color: 'var(--cream)', marginTop: 16 }}>
+            No hay eventos activos
+          </div>
+          <p className="muted" style={{ fontSize: 15, marginTop: 10, maxWidth: 280, lineHeight: 1.6 }}>
+            Por el momento no hay ningún evento publicado.<br />¡Vuelve pronto!
+          </p>
+        </div>
       </div>
     </div>
   );

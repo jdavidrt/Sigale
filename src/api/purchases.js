@@ -2,14 +2,11 @@
  * ============================================================
  * SÍGALE — PURCHASES API (2.0)
  * Client functions for the purchase endpoints + the five-state
- * machine metadata + a LOCAL simulation used while the backend
- * isn't running (David's call: keep the app working on local data,
- * flip to the server later with minimal edits).
+ * machine metadata.
  *
- * The `purchases` facade at the bottom is what the UI imports. Today
- * it delegates to the localStorage simulation; each method has a
- * `// >>> API:` line showing the one-line swap to the real endpoint
- * (server/controllers/purchases.controllers.js shapes already match).
+ * The `purchases` facade at the bottom is what the UI imports.
+ * It calls the real API (server is the source of truth). No more
+ * localStorage simulation — every purchase is persisted to the DB.
  * ============================================================
  */
 
@@ -38,95 +35,26 @@ export const statusMeta = (status) => STATUS_META[status] || STATUS_META.pending
 /** WhatsApp deep link for sending the payment screenshot (Guide §5.3). */
 export function whatsappLink(whatsappNumber, orderId) {
   const num = String(whatsappNumber || '').replace(/[^\d]/g, '');
-  const text = encodeURIComponent(`¡Hola! Envío pantallazo de compra #${orderId}`);
+  const text = encodeURIComponent(`¡Hola! Envío pantallazo de orden #${orderId}`);
   return `https://wa.me/${num}?text=${text}`;
 }
 
-// ── Real API client functions (wired, not yet the source of truth) ─────────────
+// ── Real API client functions ──────────────────────────────────────────────────
+// The public status / recover endpoints were removed (the buyer no longer has
+// a "Ver el estado de mi compra" page). The flow now ends on a terminal
+// success screen, and tickets are delivered out-of-band by the organizer.
 export const purchasesApi = {
   create: (payload) => api.post('/api/purchases', payload),
-  submit: (orderId) => api.post(`/api/purchases/${orderId}/submitted`),
-  getByOrderId: (orderId) => api.get(`/api/purchases/${orderId}`),
-  recover: (contact) => api.get(`/api/recover?contact=${encodeURIComponent(contact)}`),
+  // submit accepts an optional body { deliveryMethod, deliveryContact, holders }
+  // so the buyer's real contact info captured AFTER the initial hold is
+  // persisted alongside the status transition.
+  submit: (orderId, payload) => api.post(`/api/purchases/${orderId}/submitted`, payload || {}),
 };
 
-// ── LOCAL simulation (no backend) ──────────────────────────────────────────────
-// Stored separately from the event blob so it's easy to delete on cutover.
-const LS_KEY = 'sigale-purchases';
-
-function readAll() {
-  try {
-    return JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-  } catch {
-    return {};
-  }
-}
-function writeAll(map) {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify(map));
-  } catch {
-    /* quota / private mode — non-fatal for the demo flow */
-  }
-}
-
-/** Unique-ish 3-digit folio that doesn't collide with existing local purchases. */
-function localOrderId(existing) {
-  for (let i = 0; i < 50; i++) {
-    const id = String(Math.floor(Math.random() * 900) + 100);
-    if (!existing[id]) return id;
-  }
-  return String(Math.floor(Math.random() * 900) + 100);
-}
-
-export const localPurchases = {
-  /** Mirror of POST /api/purchases — reserves locally and returns the folio. */
-  create({ eventId, stageId, stageName, quantity, totalAmount, deliveryMethod, deliveryContact, holders }) {
-    const all = readAll();
-    const orderId = localOrderId(all);
-    all[orderId] = {
-      orderId,
-      eventId,
-      stageId,
-      stageName,
-      quantity,
-      totalAmount,
-      deliveryMethod,
-      deliveryContact,
-      holders: holders || [],
-      status: PURCHASE_STATUS.PENDING,
-      createdAt: new Date().toISOString(),
-      tickets: [], // populated only on confirm (Phase 3 / backend)
-    };
-    writeAll(all);
-    return all[orderId];
-  },
-  get(orderId) {
-    return readAll()[orderId] || null;
-  },
-  markSubmitted(orderId) {
-    const all = readAll();
-    if (all[orderId] && all[orderId].status === PURCHASE_STATUS.PENDING) {
-      all[orderId].status = PURCHASE_STATUS.SUBMITTED;
-      writeAll(all);
-    }
-    return all[orderId] || null;
-  },
-};
-
-// ── Facade the UI imports. Swap the bodies to purchasesApi.* on cutover. ───────
+// ── Facade the UI imports. Every call hits the backend. ────────────────────────
 export const purchases = {
-  create: async (payload) => {
-    // >>> API: return purchasesApi.create(payload);  // returns { orderId, totalAmount }
-    return localPurchases.create(payload);
-  },
-  submit: async (orderId) => {
-    // >>> API: return purchasesApi.submit(orderId);
-    return localPurchases.markSubmitted(orderId);
-  },
-  get: async (orderId) => {
-    // >>> API: return purchasesApi.getByOrderId(orderId);
-    return localPurchases.get(orderId);
-  },
+  create: async (payload) => purchasesApi.create(payload),
+  submit: async (orderId, payload) => purchasesApi.submit(orderId, payload),
 };
 
 export default purchases;

@@ -25,7 +25,7 @@ import { BOGOTA, UTC } from '../utils/time.js';
 
 // Columns we expose to the public, with datetimes converted to Bogotá time.
 const EVENT_SELECT = `
-  SELECT id, name, description, artists, venue, venueCapacity,
+  SELECT id, name, description, artists, venue, address, venueCapacity,
          flyerImageUrl, bankQrImageUrl, whatsappNumber, isActive,
          CONVERT_TZ(eventDate,   '${UTC}', '${BOGOTA}') AS eventDate,
          CONVERT_TZ(openingTime, '${UTC}', '${BOGOTA}') AS openingTime,
@@ -189,12 +189,12 @@ export const createEvent = async (req, res) => {
     const b = req.body;
     const [result] = await conn.query(
       `INSERT INTO events
-         (name, description, artists, eventDate, openingTime, venue, venueCapacity,
+         (name, description, artists, eventDate, openingTime, venue, address, venueCapacity,
           flyerImageUrl, bankQrImageUrl, whatsappNumber, isActive)
        VALUES (?, ?, CAST(? AS JSON),
                CONVERT_TZ(?, '${BOGOTA}', '${UTC}'),
                CONVERT_TZ(?, '${BOGOTA}', '${UTC}'),
-               ?, ?, ?, ?, ?, 1)`,
+               ?, ?, ?, ?, ?, ?, 1)`,
       [
         b.name,
         b.description || null,
@@ -202,6 +202,7 @@ export const createEvent = async (req, res) => {
         b.eventDate,
         b.openingTime,
         b.venue,
+        b.address || null,
         b.venueCapacity,
         b.flyerImageUrl || null,
         b.bankQrImageUrl || null,
@@ -249,7 +250,7 @@ export const updateEvent = async (req, res) => {
          name = ?, description = ?, artists = CAST(? AS JSON),
          eventDate   = CONVERT_TZ(?, '${BOGOTA}', '${UTC}'),
          openingTime = CONVERT_TZ(?, '${BOGOTA}', '${UTC}'),
-         venue = ?, venueCapacity = ?, flyerImageUrl = ?, bankQrImageUrl = ?, whatsappNumber = ?
+         venue = ?, address = ?, venueCapacity = ?, flyerImageUrl = ?, bankQrImageUrl = ?, whatsappNumber = ?
        WHERE id = ?`,
       [
         b.name,
@@ -258,6 +259,7 @@ export const updateEvent = async (req, res) => {
         b.eventDate,
         b.openingTime,
         b.venue,
+        b.address || null,
         b.venueCapacity,
         b.flyerImageUrl || null,
         b.bankQrImageUrl || null,

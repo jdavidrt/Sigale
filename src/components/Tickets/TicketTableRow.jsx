@@ -181,7 +181,14 @@ export const TicketTableRow = ({ ticket }) => {
             maxLength={100}
           />
         ) : (
-          <span>{ticket.buyerName}</span>
+          <span>
+            {ticket.buyerName}
+            {ticket.orderId != null && (
+              <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "var(--yellow)" }}>
+                Orden #{ticket.orderId}
+              </span>
+            )}
+          </span>
         )}
       </div>
 

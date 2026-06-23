@@ -9,6 +9,14 @@ export const SlideToConfirm = ({ onConfirm, label, disabled = false }) => {
   const [confirmed, setConfirmed] = useState(false);
   const containerRef = useRef(null);
   const startXRef = useRef(0);
+  // Mirror position/confirmed in refs. The desktop drag listens on `window`
+  // (registered once when dragging starts), so its handleEnd closure would
+  // otherwise read the stale `position` from the render where the drag began
+  // (≈0) and never cross the threshold. Touch worked only because its
+  // handlers live on the element and re-bind every render. Refs give every
+  // handler the live value regardless of where it was bound.
+  const positionRef = useRef(0);
+  const confirmedRef = useRef(false);
 
   const THRESHOLD = 0.85;
 
@@ -17,30 +25,36 @@ export const SlideToConfirm = ({ onConfirm, label, disabled = false }) => {
     return containerRef.current.offsetWidth - 56;
   };
 
+  const updatePosition = (p) => {
+    positionRef.current = p;
+    setPosition(p);
+  };
+
   const handleStart = (clientX) => {
-    if (disabled || confirmed) return;
+    if (disabled || confirmedRef.current) return;
     setIsDragging(true);
-    startXRef.current = clientX - position;
+    startXRef.current = clientX - positionRef.current;
   };
 
   const handleMove = (clientX) => {
-    if (!isDragging || disabled || confirmed) return;
+    if (disabled || confirmedRef.current) return;
     const maxPos = getMaxPosition();
     const newPosition = Math.max(0, Math.min(clientX - startXRef.current, maxPos));
-    setPosition(newPosition);
+    updatePosition(newPosition);
   };
 
   const handleEnd = () => {
-    if (!isDragging || disabled || confirmed) return;
+    if (disabled || confirmedRef.current) return;
     setIsDragging(false);
     const maxPos = getMaxPosition();
-    const progress = position / maxPos;
+    const progress = maxPos > 0 ? positionRef.current / maxPos : 0;
     if (progress >= THRESHOLD) {
-      setPosition(maxPos);
+      updatePosition(maxPos);
+      confirmedRef.current = true;
       setConfirmed(true);
       onConfirm();
     } else {
-      setPosition(0);
+      updatePosition(0);
     }
   };
 

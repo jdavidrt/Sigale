@@ -1,16 +1,16 @@
 /*
  * ============================================================
  * SÍGALE — DATABASE POOL
- * One mysql2/promise pool, reused across the whole app — the
- * same pattern as BlackCoffe's current-server/db.js, with two
- * deliberate hardening changes from ADR-0001 §9:
+ * One mysql2/promise pool, reused across the whole app.
  *
- *   1. SSL verifies the DigitalOcean CA certificate
- *      (ssl.ca = the downloaded cert), instead of
- *      rejectUnauthorized:false which disables verification.
- *   2. A hard guardrail refuses to build the pool unless
- *      DB_NAME === 'sigale'. Sígale must NEVER connect to
- *      BlackCoffe's database. See SIGALE_2.0_IMPLEMENTATION_PLAN §3.1.
+ * Two modes:
+ *   LOCAL  — DB_CA_CERT empty → plain TCP to 127.0.0.1:3306, no SSL.
+ *            Safe: the socket never leaves the machine.
+ *   PROD   — DB_CA_CERT set   → TLS with the DigitalOcean CA cert;
+ *            rejectUnauthorized stays true (ADR-0001 §9).
+ *
+ * GUARDRAIL: DB_NAME must be 'sigale'. This pool must NEVER connect
+ * to BlackCoffe's database. See SIGALE_2.0_IMPLEMENTATION_PLAN §3.1.
  *
  * dateStrings:true keeps DATETIME as strings so the driver never
  * shifts them by the Node process timezone (ADR-0001 §8).
@@ -21,8 +21,6 @@ import { createPool } from 'mysql2/promise';
 import fs from 'node:fs';
 
 // ── Guardrail: dedicated `sigale` database only ────────────────────────────────
-// The shared .env.local may carry BlackCoffe's real credentials. Pointing this
-// pool at the wrong database is the single most dangerous mistake in the project.
 const DB_NAME = process.env.DB_NAME;
 if (DB_NAME !== 'sigale') {
   throw new Error(
@@ -31,30 +29,37 @@ if (DB_NAME !== 'sigale') {
   );
 }
 
-// ── SSL: verify the DigitalOcean CA cert (ADR-0001 §9) ─────────────────────────
-// Provide the downloaded CA certificate path in DB_CA_CERT. rejectUnauthorized
-// stays at its secure default (true) so MITM is not possible.
-const ssl = process.env.DB_CA_CERT
-  ? { ca: fs.readFileSync(process.env.DB_CA_CERT) }
-  : undefined;
-
-if (!ssl) {
-  console.warn(
-    '[sigale/db] DB_CA_CERT not set — refusing implicit insecure SSL. ' +
-      'Set DB_CA_CERT to the DigitalOcean CA certificate path before connecting.',
-  );
+// ── SSL: prod uses DigitalOcean CA cert; local skips SSL entirely ──────────────
+let ssl;
+if (process.env.DB_CA_CERT) {
+  ssl = { ca: fs.readFileSync(process.env.DB_CA_CERT) };
+  console.log('[sigale/db] SSL enabled — using CA cert from DB_CA_CERT.');
+} else {
+  ssl = false; // plain TCP; safe for localhost-only connections
+  console.log('[sigale/db] DB_CA_CERT not set — connecting without SSL (local dev mode).');
 }
 
-export const pool = await createPool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT, // 25060 on DigitalOcean
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: DB_NAME, // 'sigale' — enforced above
-  dateStrings: true, // DATETIME as string: JS never moves it across zones
+export const pool = createPool({
+  host:        process.env.DB_HOST || '127.0.0.1',
+  port:        Number(process.env.DB_PORT) || 3306,
+  user:        process.env.DB_USER,
+  password:    process.env.DB_PASSWORD,
+  database:    DB_NAME,
+  dateStrings: true,
   ssl,
+  waitForConnections: true,
+  connectionLimit:    10,
 });
 
-console.log(`[${new Date().toISOString()}] [sigale] Connected to DigitalOcean Database (db=${DB_NAME})`);
+// Verify connectivity eagerly so boot fails fast with a clear message.
+try {
+  const conn = await pool.getConnection();
+  conn.release();
+  console.log(`[${new Date().toISOString()}] [sigale] Connected to MySQL (db=${DB_NAME}, host=${process.env.DB_HOST}:${process.env.DB_PORT || 3306})`);
+} catch (err) {
+  console.error(`[sigale/db] Cannot connect to MySQL: ${err.message}`);
+  console.error('[sigale/db] Check DB_HOST, DB_PORT, DB_USER, DB_PASSWORD in server/.env');
+  throw err;
+}
 
 export default pool;
