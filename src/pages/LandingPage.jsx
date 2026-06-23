@@ -203,7 +203,7 @@ export function LandingPage() {
                       <div className={`tile ${i === 0 ? 'yellow' : 'orange'}`} key={i}>
                         <div className="label" style={i === 0 ? undefined : { color: 'rgba(255,255,255,0.85)' }}>{s.name}</div>
                         <div className="serif" style={{ fontSize: 26, color: i === 0 ? undefined : '#fff' }}>{formatCurrency(s.price)}</div>
-                        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>Pr\xf3ximamente</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>Próximamente</div>
                       </div>
                     ))}
                   </div>

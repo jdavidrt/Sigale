@@ -306,7 +306,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                 <div className={s.field}>
                   <label className={s.fieldLabel}>{t("whatsappNumber")}</label>
                   <input
-                    type="text" inputMode="numeric" value={formData.whatsappNumber}
+                    type="text" inputMode="tel" value={formData.whatsappNumber}
                     onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
                     placeholder={t("whatsappPlaceholder")}
                   />
