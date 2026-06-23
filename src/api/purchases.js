@@ -33,9 +33,13 @@ export const STATUS_META = {
 export const statusMeta = (status) => STATUS_META[status] || STATUS_META.pending_payment;
 
 /** WhatsApp deep link for sending the payment screenshot (Guide §5.3). */
-export function whatsappLink(whatsappNumber, orderId) {
+export function whatsappLink(whatsappNumber, orderId, landing) {
   const num = String(whatsappNumber || '').replace(/[^\d]/g, '');
-  const text = encodeURIComponent(`¡Hola! Envío pantallazo de orden #${orderId}`);
+  var text = encodeURIComponent(`¡Hola! Envío pantallazo de orden #${orderId}`);
+  if (landing) {
+    text = "Hola, quiero más info sobre el evento Festival Astromelias, por favor";
+    return `https://wa.me/${num}?text=${text}`;
+  }
   return `https://wa.me/${num}?text=${text}`;
 }
 

@@ -234,7 +234,7 @@ export function LandingPage() {
                           <div className="label" style={{ color: 'var(--cream-dim)' }}>Info y reservas</div>
                           <div style={{ fontWeight: 600 }}>{formatPhone(event.whatsappNumber)}</div>
                         </div>
-                        <a className="chip green" href={whatsappLink(event.whatsappNumber, '')} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                        <a className="chip green" href={whatsappLink(event.whatsappNumber, '', true)} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
                           <Ic n="wa" s={14} fill /> WhatsApp
                         </a>
                       </div>

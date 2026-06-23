@@ -202,7 +202,12 @@ export const TicketProvider = ({ children }) => {
     }
   }, [data, setData]);
 
-  const deleteTicket = useCallback((ticketId) => {
+  const deleteTicket = useCallback(async (ticketId) => {
+    // ticketId is the local key "t-{dbId}"; extract the numeric DB id.
+    const dbId = String(ticketId).replace(/^t-/, '');
+    if (isLoggedIn() && dbId && !isNaN(Number(dbId))) {
+      await admin.deleteTicket(Number(dbId));
+    }
     const fresh = loadFromStorage() || data;
     const updatedTickets = fresh.tickets.filter((ticket) => ticket.ticketId !== ticketId);
     setData({ ...fresh, tickets: updatedTickets });

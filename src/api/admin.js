@@ -83,7 +83,7 @@ export const adminApi = {
     const qs = new URLSearchParams(clean).toString();
     return api.get(`/api/admin/purchases${qs ? `?${qs}` : ''}`, { headers: authHeader() });
   },
-  confirm: (id, holders) => api.post(`/api/admin/purchases/${id}/confirm`, { holders }, { headers: authHeader() }),
+  confirm: (id) => api.post(`/api/admin/purchases/${id}/confirm`, {}, { headers: authHeader() }),
   reject: (id) => api.post(`/api/admin/purchases/${id}/reject`, undefined, { headers: authHeader() }),
   walkIn: (payload) => api.post('/api/admin/sales', payload, { headers: authHeader() }),
   // Confirmed-purchase tickets joined with their stage + order. The
@@ -91,6 +91,7 @@ export const adminApi = {
   // same minted tickets that the door scanner will accept.
   listTickets: () => api.get('/api/admin/tickets', { headers: authHeader() }),
   updateTicket: (id, patch) => api.patch(`/api/admin/tickets/${id}`, patch, { headers: authHeader() }),
+  deleteTicket: (id) => api.del(`/api/admin/tickets/${id}`, { headers: authHeader() }),
   deleteAllPurchases: () => api.del('/api/admin/purchases', { headers: authHeader() }),
 };
 
@@ -165,7 +166,7 @@ export const admin = {
     return adminApi.listPurchases(params);
   },
   confirm: async (row) => {
-    return adminApi.confirm(row.id, row.holders);
+    return adminApi.confirm(row.id);
   },
   reject: async (row) => {
     return adminApi.reject(row.id);
@@ -175,6 +176,7 @@ export const admin = {
   },
   listTickets: async () => adminApi.listTickets(),
   updateTicket: async (id, patch) => adminApi.updateTicket(id, patch),
+  deleteTicket: async (id) => adminApi.deleteTicket(id),
   deleteAllPurchases: async () => adminApi.deleteAllPurchases(),
 };
 
