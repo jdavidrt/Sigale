@@ -31,6 +31,7 @@ const fromServerTicket = (row) => {
     checkInTime: row.usedAt || null,
     validationHash: row.validationHash,
     orderId: row.orderId,
+    folio: String(row.orderId),
     deliveryMethod: row.deliveryMethod,
     deliveryContact: row.deliveryContact,
   };

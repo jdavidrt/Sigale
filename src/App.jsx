@@ -25,8 +25,8 @@ const LandingPage = lazy(() => import("./pages/LandingPage").then((m) => ({ defa
 const PurchaseFlowPage = lazy(() => import("./pages/PurchaseFlowPage").then((m) => ({ default: m.PurchaseFlowPage })));
 const AdminPage = lazy(() => import("./pages/AdminPage").then((m) => ({ default: m.AdminPage })));
 const ScanPage = lazy(() => import("./pages/ScanPage").then((m) => ({ default: m.ScanPage })));
-import { loadCharlyIllustration } from "./utils/svgTicketTemplate";
-import { CHARLY_ILLUSTRATION_BASE64 } from "./assets/charlyIllustration";
+import { loadFlyerImage } from "./utils/svgTicketTemplate";
+import { FLYER_IMAGE_BASE64 } from "./assets/flyerImage";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import { usePageVisibility } from "./hooks/usePageVisibility";
 import { isLoggedIn } from "./api/admin";
@@ -51,7 +51,7 @@ function AppContent() {
   const { isVisible } = usePageVisibility();
 
   useEffect(() => {
-    loadCharlyIllustration(CHARLY_ILLUSTRATION_BASE64);
+    loadFlyerImage(FLYER_IMAGE_BASE64);
   }, []);
 
   useEffect(() => {

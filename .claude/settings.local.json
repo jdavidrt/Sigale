@@ -23,7 +23,8 @@
       "Bash(timeout:*)",
       "Bash(ping:*)",
       "Bash(npx vitest *)",
-      "Bash(npm test *)"
+      "Bash(npm test *)",
+      "PowerShell($flyerPath = \"c:\\\\dev\\\\Sígale\\\\src\\\\assets\\\\flyer.png\"; $base64 = [Convert]::ToBase64String\\([System.IO.File]::ReadAllBytes\\($flyerPath\\)\\); $base64.Length)"
     ],
     "deny": [],
     "ask": []

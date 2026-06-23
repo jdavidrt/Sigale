@@ -1,317 +1,184 @@
 import { formatTo12Hour, parseLocalDate, formatCurrency } from './timeFormat';
 import { cleanBase64 } from './base64Cleaner';
 
-// Charly's illustration base64 - imported at build time
-// This will be embedded in the ticket at the bottom right
-let charlyIllustration = null;
+/* ============================================================
+   ASTROMELIAS · "Editorial" premium ticket
+   Renders the approved mockup as an export-safe SVG:
+   flyer hero on top, dark stub below with QR + details.
+   Everything is self-contained (embedded image + fonts) so the
+   SVG rasterises identically wherever it's shared.
+   ============================================================ */
 
-/**
- * Load the Charly illustration from the mockups folder
- * This function should be called once to initialize the illustration
- * @param {string} base64Data - Base64 encoded image data
- */
-export const loadCharlyIllustration = (base64Data) => {
-  try {
-    charlyIllustration = cleanBase64(base64Data);
-  } catch (error) {
-    console.error('Failed to load Charly illustration:', error);
-    charlyIllustration = null;
-  }
+/* ── Flyer artwork (embedded as base64, like Charly was) ──────
+   Call once at startup with the event flyer. You can also pass a
+   ready data-URL per ticket via opts.flyerDataURL (takes priority). */
+let flyerImage = null;
+export const loadFlyerImage = (base64Data) => {
+  try { flyerImage = cleanBase64(base64Data); }
+  catch (e) { console.error('Failed to load flyer image:', e); flyerImage = null; }
 };
 
-/**
- * Split long text into multiple lines
- * @param {string} text - Text to split
- * @param {number} maxCharsPerLine - Maximum characters per line
- * @returns {string[]} Array of text lines
- */
-const splitTextIntoLines = (text, maxCharsPerLine) => {
-  if (text.length <= maxCharsPerLine) {
-    return [text];
-  }
+/* ── Embedded fonts ───────────────────────────────────────────
+   The ticket is rasterised to a PNG to be shared, so the fonts
+   MUST travel inside the SVG — a bare font-family name won't be
+   available to the canvas/Image rasteriser. Grab the two woff2
+   files (DM Serif Display, Barlow Semi Condensed) and pass them
+   base64-encoded once at startup. Until then the SVG falls back
+   to serif / sans-serif so it still renders. */
+let FONT_FACE_CSS = '';
+export const loadTicketFonts = ({ serifWoff2Base64, sansWoff2Base64 } = {}) => {
+  const faces = [];
+  if (serifWoff2Base64) faces.push(
+    `@font-face{font-family:'DM Serif Display';font-style:normal;font-weight:400;` +
+    `src:url(data:font/woff2;base64,${cleanBase64(serifWoff2Base64)}) format('woff2');}`);
+  if (sansWoff2Base64) faces.push(
+    `@font-face{font-family:'Barlow Semi Condensed';font-style:normal;font-weight:400 700;` +
+    `src:url(data:font/woff2;base64,${cleanBase64(sansWoff2Base64)}) format('woff2');}`);
+  FONT_FACE_CSS = faces.join('');
+};
 
-  const words = text.split(' ');
-  const lines = [];
-  let currentLine = '';
+/* ── Palette (Astromelias tokens) ─────────────────────────── */
+const C = {
+  black: '#09060A', cream: '#F3E8D6',
+  creamDim: 'rgba(243,232,214,0.62)', creamFaint: 'rgba(243,232,214,0.34)',
+  gold: '#E7AE3F', tile: '#FBF6EC', hair: 'rgba(243,232,214,0.13)',
+  perf: 'rgba(231,174,63,0.45)',
+};
+const SANS = "'Barlow Semi Condensed', -apple-system, 'Segoe UI', sans-serif";
+const SERIF = "'DM Serif Display', Georgia, serif";
 
-  words.forEach((word) => {
-    const testLine = currentLine ? `${currentLine} ${word}` : word;
-    if (testLine.length <= maxCharsPerLine) {
-      currentLine = testLine;
-    } else {
-      if (currentLine) lines.push(currentLine);
-      currentLine = word;
-    }
+/* Split long text into N lines that fit a character budget. */
+const splitTextIntoLines = (text, maxChars) => {
+  const t = (text || '').trim();
+  if (t.length <= maxChars) return [t];
+  const words = t.split(' ');
+  const lines = []; let cur = '';
+  words.forEach((w) => {
+    const test = cur ? `${cur} ${w}` : w;
+    if (test.length <= maxChars) cur = test;
+    else { if (cur) lines.push(cur); cur = w; }
   });
-
-  if (currentLine) lines.push(currentLine);
+  if (cur) lines.push(cur);
   return lines;
 };
 
 /**
- * Calculate dynamic font size based on text length
- * @param {string} text - Text to measure
- * @param {number} maxSize - Maximum font size
- * @param {number} minSize - Minimum font size
- * @param {number} threshold - Character count threshold
- * @returns {number} Font size
+ * Generate the Editorial ticket SVG.
+ * @param {Object} ticket  buyer + ticket info  (buyerName, ticketType, ticketId)
+ * @param {Object} event   event info           (name, venue, address, date, entranceTime, ticketTypes, flyerImageUrl?)
+ * @param {string} qrDataURL  QR code as a data URL
+ * @param {Object} [opts]   { flyerDataURL?: string }
+ * @returns {string} SVG markup
  */
-const calculateFontSize = (text, maxSize, minSize, threshold) => {
-  if (text.length <= threshold) return maxSize;
-  const ratio = Math.max(threshold / text.length, minSize / maxSize);
-  return Math.max(maxSize * ratio, minSize);
-};
+export const generateTicketSVG = (ticket, event, qrDataURL, opts = {}) => {
+  /* ── data ─────────────────────────────────────────────── */
+  const price = event.ticketTypes?.[ticket.ticketType] || 0;
+  const dateStr = parseLocalDate(event.date)
+    .toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+    .replace(/[.,]/g, '').toUpperCase();             // "VIE 24 JUL 2026"
+  const timeStr = formatTo12Hour(event.entranceTime); // "5:00 PM"
 
-/**
- * Generate a ticket SVG using the template design with two-column layout
- * @param {Object} ticket - Ticket object with buyer information
- * @param {Object} event - Event object with event details
- * @param {string} qrDataURL - QR code as data URL
- * @returns {string} SVG string
- */
-export const generateTicketSVG = (ticket, event, qrDataURL) => {
-  // Get ticket price from event.ticketTypes
-  const ticketPrice = event.ticketTypes[ticket.ticketType] || 0;
+  const holderLines = splitTextIntoLines(ticket.buyerName || '', 16).slice(0, 2);
+  const venueLines  = splitTextIntoLines(event.venue || '', 18).slice(0, 2);
 
-  // Format date and time with proper timezone handling
-  const formattedDate = parseLocalDate(event.date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
-  const formattedTime = formatTo12Hour(event.entranceTime);
+  const flyerHref = opts.flyerDataURL
+    || (flyerImage ? `data:image/jpeg;base64,${flyerImage}` : null);
 
-  // Two-column layout: Left column max ~20 chars, Right column max ~18 chars
-  // LEFT COLUMN: Event Name, Venue, Address, Date/Time
-  const eventNameLines = splitTextIntoLines(event.name.toUpperCase(), 24);
-  const eventNameFontSize = calculateFontSize(event.name, 14, 9, 20);
+  /* ── geometry (matches the approved mockup at 384px wide) ─ */
+  const W = 384, pX = 28, R = 18, rn = 14;
+  const heroH = 430;                 // big flyer hero
+  const qrSize = 112, tilePad = 10, tileS = qrSize + tilePad * 2;
+  const tileX = pX, tileY = heroH + 92;
+  const detailsX = tileX + tileS + 16;
 
-  const venueLines = splitTextIntoLines(event.venue || '', 22);
-  const venueFontSize = calculateFontSize(event.venue || '', 12, 9, 22); // +2pt (was 10, 7)
+  const fechaLabelY = heroH + 32, dateY = heroH + 52;
+  const priceY = heroH + 58;
+  const puertasY = heroH + 86;
+  const footerDivY = tileY + tileS + 22;
+  const footerTextY = footerDivY + 20;
+  const H = footerTextY + 22;
 
-  const addressLines = splitTextIntoLines(event.address || '', 22);
-  const addressFontSize = calculateFontSize(event.address || '', 11, 8, 22); // +1pt (was 10, 7)
+  /* ── small text helpers ───────────────────────────────── */
+  const label = (x, y, text, anchor = 'start') =>
+    `<text x="${x}" y="${y}" text-anchor="${anchor}" font-family="${SANS}" font-size="9.5" font-weight="700" letter-spacing="2.2" fill="${C.creamFaint}">${escapeXml(text)}</text>`;
+  const value = (x, y, text, opt = {}) =>
+    `<text x="${x}" y="${y}" text-anchor="${opt.anchor || 'start'}" font-family="${opt.serif ? SERIF : SANS}" font-size="${opt.size || 16}" font-weight="${opt.weight || 600}" letter-spacing="${opt.track ?? 0.4}" fill="${opt.fill || C.cream}">${escapeXml(text)}</text>`;
 
-  // RIGHT COLUMN: Ticket Type, Price, Buyer Name, Ticket ID
-  const buyerNameLines = splitTextIntoLines(ticket.buyerName.toUpperCase(), 18);
-  const buyerNameFontSize = calculateFontSize(ticket.buyerName, 14, 10, 18);
+  /* ── details column beside the QR ─────────────────────── */
+  let dy = tileY + 18;
+  let details = label(detailsX, dy, 'ASISTENTE');
+  dy += 24;
+  holderLines.forEach((ln) => { details += value(detailsX, dy, ln, { serif: true, size: 21, weight: 400 }); dy += 25; });
+  dy += 8;
+  details += label(detailsX, dy, 'LUGAR'); dy += 18;
+  venueLines.forEach((ln) => { details += value(detailsX, dy, ln, { size: 15 }); dy += 18; });
+  details += value(detailsX, dy, event.address || '', { size: 13, fill: C.creamDim });
 
-  // Calculate dynamic height based on content
-  const leftColumnHeight =
-    (eventNameLines.length * (eventNameFontSize + 3)) +
-    (venueLines.length * (venueFontSize + 2)) +
-    (addressLines.length * (addressFontSize + 2)) +
-    20; // Date/Time line
-
-  const rightColumnHeight =
-    15 + // Ticket type label
-    (buyerNameLines.length * (buyerNameFontSize + 3)) +
-    15; // Ticket ID
-
-  const contentHeight = Math.max(leftColumnHeight, rightColumnHeight);
-
-  // Reduced spacing: minimal padding above/below QR
-  const qrTopPadding = 20; // Reduced from 50
-  const qrBottomPadding = 5; // Minimal space between QR and dotted line
-  const qrSize = 200;
-  const dottedLineToTextSpacing = 20; // 20px separation between dotted line and text below
-  const totalHeight = Math.max(300, qrTopPadding + qrSize + qrBottomPadding + dottedLineToTextSpacing + contentHeight + 40);
-
-  // Wider ticket: 400px instead of 300px
-  const ticketWidth = 400;
-  const qrX = (ticketWidth - qrSize) / 2; // Center QR code
-  const dottedLineY = qrTopPadding + qrSize + qrBottomPadding;
-  const columnStartY = dottedLineY + dottedLineToTextSpacing;
-
-  // Charly illustration dimensions and position (aligned with right column)
-  const illustrationWidth = 44.8; // 100% more than 22.4 (doubled)
-  const illustrationHeight = 26.88; // Maintain aspect ratio (0.6 ratio), doubled from 13.44
-  const illustrationX = 230; // Align with right column left margin (x=230)
-  const illustrationY = totalHeight - illustrationHeight - 15; // 15px from bottom
-
-  const svgMarkup = `<?xml version="1.0" encoding="UTF-8"?>
-<svg id="Capa_1" data-name="Capa 1" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${ticketWidth} ${totalHeight}">
+  /* ── assemble ─────────────────────────────────────────── */
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
   <defs>
-    <style>
-      .cls-1 {
-        fill: #fff;
-      }
-      .cls-1, .cls-2 {
-        stroke-width: 2px;
-      }
-      .cls-1, .cls-2, .cls-3 {
-        stroke: #000;
-      }
-      .cls-11 {
-        stroke-width: 0px;
-      }
-      .cls-11, .cls-2, .cls-3 {
-        fill: none;
-      }
-      .cls-12 {
-        clip-path: url(#clippath);
-      }
-      .cls-3 {
-        stroke-dasharray: 0 0 5 5;
-        stroke-width: 1.5px;
-      }
-    </style>
-    <clipPath id="clippath">
-      <path class="cls-11" d="M0,0h20c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h20v${dottedLineY - 10}c-6.7,0-10,3.3-10,10s3.3,10,10,10v${totalHeight - (dottedLineY + 10)}h-20c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10H0v-${totalHeight - (dottedLineY + 10)}c6.7,0,10-3.3,10-10s-3.3-10-10-10V0Z"/>
-    </clipPath>
+    <style>${FONT_FACE_CSS}</style>
+    <linearGradient id="heroFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${C.black}" stop-opacity="0"/>
+      <stop offset="1" stop-color="${C.black}" stop-opacity="0.94"/>
+    </linearGradient>
+    <!-- ticket silhouette: rounded card minus the two side notches -->
+    <mask id="ticketShape">
+      <rect x="0" y="0" width="${W}" height="${H}" rx="${R}" ry="${R}" fill="#fff"/>
+      <circle cx="0" cy="${heroH}" r="${rn}" fill="#000"/>
+      <circle cx="${W}" cy="${heroH}" r="${rn}" fill="#000"/>
+    </mask>
   </defs>
-  <rect class="cls-11" width="${ticketWidth}" height="${totalHeight}"/>
-  <g class="cls-12">
-    <g>
-      <rect class="cls-1" width="${ticketWidth}" height="${totalHeight}"/>
-      <rect class="cls-1" x="${qrX}" y="${qrTopPadding}" width="${qrSize}" height="${qrSize}" rx="5" ry="5"/>
 
-      <!-- Embedded QR Code -->
-      <image x="${qrX}" y="${qrTopPadding}" width="${qrSize}" height="${qrSize}" href="${qrDataURL}" preserveAspectRatio="xMidYMid meet"/>
+  <g mask="url(#ticketShape)">
+    <rect x="0" y="0" width="${W}" height="${H}" fill="${C.black}"/>
+    ${flyerHref ? `<image x="0" y="0" width="${W}" height="${heroH}" href="${flyerHref}" xlink:href="${flyerHref}" preserveAspectRatio="xMidYMin slice"/>` : ''}
+    <rect x="0" y="${heroH - 110}" width="${W}" height="110" fill="url(#heroFade)"/>
+    <rect x="0" y="${heroH}" width="${W}" height="${H - heroH}" fill="${C.black}"/>
 
-      <line class="cls-3" x1="20" y1="${dottedLineY}" x2="${ticketWidth - 20}" y2="${dottedLineY}"/>
+    <!-- perforation -->
+    <line x1="${pX - 2}" y1="${heroH}" x2="${W - pX + 2}" y2="${heroH}" stroke="${C.perf}" stroke-width="1.5" stroke-dasharray="0 0 5 5"/>
 
-      <g id="eventDetails">
-        <!-- LEFT COLUMN (x=30 to x=210) -->
-        <g id="leftColumn">
-          ${generateLeftColumn(eventNameLines, eventNameFontSize, venueLines, venueFontSize, addressLines, addressFontSize, formattedDate, formattedTime, ticket.ticketId, columnStartY)}
-        </g>
+    <!-- date / stage + price -->
+    ${label(pX, fechaLabelY, 'FECHA')}
+    ${value(pX, dateY, dateStr, { size: 16, track: 0.6 })}
+    ${label(W - pX, fechaLabelY, ticket.ticketType?.toUpperCase() || '', 'end')}
+    ${value(W - pX, priceY, formatCurrency(price), { serif: true, size: 30, weight: 400, fill: C.gold, anchor: 'end' })}
 
-        <!-- RIGHT COLUMN (x=230 to x=370) -->
-        <g id="rightColumn">
-          ${generateRightColumn(ticket, ticketPrice, buyerNameLines, buyerNameFontSize, columnStartY)}
-        </g>
-      </g>
-    </g>
+    <!-- entrance time -->
+    <text x="${pX}" y="${puertasY}" font-family="${SANS}" font-size="13.5" font-weight="700" letter-spacing="2.4" fill="${C.creamFaint}">PUERTAS<tspan font-weight="600" letter-spacing="0.6" fill="${C.cream}" dx="8">${escapeXml(timeStr)}</tspan></text>
+
+    <!-- QR tile -->
+    <rect x="${tileX}" y="${tileY}" width="${tileS}" height="${tileS}" rx="12" ry="12" fill="${C.tile}"/>
+    <image x="${tileX + tilePad}" y="${tileY + tilePad}" width="${qrSize}" height="${qrSize}" href="${qrDataURL}" xlink:href="${qrDataURL}" preserveAspectRatio="xMidYMid meet"/>
+
+    <!-- details -->
+    ${details}
+
+    <!-- footer -->
+    <line x1="${pX}" y1="${footerDivY}" x2="${W - pX}" y2="${footerDivY}" stroke="${C.hair}" stroke-width="1"/>
+    <text x="${pX}" y="${footerTextY}" font-family="ui-monospace, 'Courier New', monospace" font-size="11" letter-spacing="1" fill="${C.creamDim}">${escapeXml(ticket.ticketId || '')}</text>
+    <text x="${W - pX}" y="${footerTextY}" text-anchor="end" font-family="ui-monospace, 'Courier New', monospace" font-size="12" font-weight="700" letter-spacing="1" fill="${C.gold}">#${escapeXml(ticket.folio || ticket.ticketId || '')}</text>
   </g>
-
-  <!-- Border path with notches on both left and right -->
-  <path class="cls-2" d="M0,0h20c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h30c0,6.7,3.3,10,10,10s10-3.3,10-10h20v${dottedLineY - 10}c-6.7,0-10,3.3-10,10s3.3,10,10,10v${totalHeight - (dottedLineY + 10)}h-20c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10h-30c0-6.7-3.3-10-10-10s-10,3.3-10,10H0v-${totalHeight - (dottedLineY + 10)}c6.7,0,10-3.3,10-10s-3.3-10-10-10V0Z"/>
-
-  <!-- Charly Illustration (Bottom Right, aligned with right column) - Outside clipping -->
-  ${charlyIllustration ? `<image x="${illustrationX}" y="${illustrationY}" width="${illustrationWidth}" height="${illustrationHeight}" href="data:image/jpeg;base64,${charlyIllustration}" preserveAspectRatio="xMidYMid meet" opacity="0.9"/>` : ''}
 </svg>`;
 
-  return assertSafeSvg(svgMarkup);
+  return assertSafeSvg(svg);
 };
 
-/**
- * Generate left column content (Event Name, Venue, Address, Date/Time, Ticket ID)
- */
-const generateLeftColumn = (eventNameLines, eventNameFontSize, venueLines, venueFontSize, addressLines, addressFontSize, formattedDate, formattedTime, ticketId, startY) => {
-  let currentY = startY;
-  let content = '';
-
-  // Event Name - Modern stylish font (Helvetica/Arial)
-  eventNameLines.forEach((line) => {
-    content += `<text text-anchor="start" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="${eventNameFontSize}" fill="#000">
-      <tspan x="30" y="${currentY}">${escapeXml(line)}</tspan>
-    </text>`;
-    currentY += eventNameFontSize + 3;
-  });
-
-  currentY += 5; // Space between event name and venue
-
-  // Venue - Monaco monospace font
-  venueLines.forEach((line) => {
-    content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="${venueFontSize}" fill="#000">
-      <tspan x="30" y="${currentY}">${escapeXml(line)}</tspan>
-    </text>`;
-    currentY += venueFontSize + 2;
-  });
-
-  currentY += 2; // Space between venue and address
-
-  // Address - Monaco monospace font
-  addressLines.forEach((line) => {
-    content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="${addressFontSize}" fill="#000">
-      <tspan x="30" y="${currentY}">${escapeXml(line)}</tspan>
-    </text>`;
-    currentY += addressFontSize + 2;
-  });
-
-  currentY += 5; // Space before date/time
-
-  // Date and Time - Monaco monospace font (+1pt, was 10)
-  content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="11" fill="#000">
-    <tspan x="30" y="${currentY}">${formattedDate}, ${formattedTime}</tspan>
-  </text>`;
-  currentY += 15; // Space before ticket ID
-
-  // Ticket ID - Monaco monospace font (close to date/time) - Dark grey
-  content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="8" fill="#666">
-    <tspan x="30" y="${currentY}">${escapeXml(ticketId)}</tspan>
-  </text>`;
-
-  return content;
-};
-
-/**
- * Generate right column content (Buyer Name, Ticket Type, Price)
- */
-const generateRightColumn = (ticket, ticketPrice, buyerNameLines, buyerNameFontSize, startY) => {
-  let currentY = startY;
-  let content = '';
-
-  // Buyer Name - Monaco monospace (now at the top)
-  buyerNameLines.forEach((line) => {
-    content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="${buyerNameFontSize}" fill="#000">
-      <tspan x="230" y="${currentY}">${escapeXml(line)}</tspan>
-    </text>`;
-    currentY += buyerNameFontSize + 3;
-  });
-
-  currentY += 5; // Space between buyer name and ticket type
-
-  // Ticket Type - Monaco monospace, bold (11pt)
-  content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-weight="700" font-size="11" fill="#000">
-    <tspan x="230" y="${currentY}">${escapeXml(ticket.ticketType.toUpperCase())}</tspan>
-  </text>`;
-  currentY += 12;
-
-  // Price - Only show if price > 0 (10pt)
-  if (ticketPrice > 0) {
-    content += `<text text-anchor="start" font-family="Monaco, 'Courier New', Courier, monospace" font-size="10" fill="#000">
-      <tspan x="230" y="${currentY}">${formatCurrency(ticketPrice)}</tspan>
-    </text>`;
-    currentY += 13;
-  } else {
-    currentY += 5; // Small spacing when no price
-  }
-
-  // Ticket ID removed from right column - now in bottom left corner
-
-  return content;
-};
-
-/**
- * Escape XML special characters used in text nodes and attribute values.
- * Must be applied to EVERY user-controlled string interpolated into the
- * SVG template. A defense-in-depth check runs post-generation
- * (assertSafeSvg) to catch any missed call sites.
- */
+/* ============================================================
+   Safety helpers (unchanged from the original generator)
+   ============================================================ */
 export const escapeXml = (str) => {
   if (str === null || str === undefined) return '';
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 };
 
-/**
- * Defense-in-depth tripwire for audit finding M3. The final SVG is
- * rendered via dangerouslySetInnerHTML, so any regression that smuggles
- * executable markup through an unescaped interpolation is a real XSS.
- * This function throws loudly in dev and strips the dangerous nodes in
- * prod. Keep the denylist narrow — only constructs that execute.
- */
 const DANGEROUS_SVG_PATTERNS = [
-  /<script\b/i,
-  /<iframe\b/i,
-  /<foreignObject\b/i,
-  /\son\w+\s*=/i,           // on-* event handler attributes
+  /<script\b/i, /<iframe\b/i, /<foreignObject\b/i,
+  /\son\w+\s*=/i,
   /\shref\s*=\s*["']?\s*javascript:/i,
   /\sxlink:href\s*=\s*["']?\s*javascript:/i,
 ];
@@ -320,7 +187,7 @@ export const assertSafeSvg = (svg) => {
   for (const pattern of DANGEROUS_SVG_PATTERNS) {
     if (pattern.test(svg)) {
       const message = `Unsafe SVG detected (matched ${pattern}). Check that every interpolated string passes through escapeXml().`;
-      if (import.meta?.env?.DEV) throw new Error(message);
+      if (typeof import.meta !== 'undefined' && import.meta?.env?.DEV) throw new Error(message);
       console.error(message);
       return svg.replace(pattern, '');
     }
