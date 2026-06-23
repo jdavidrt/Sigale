@@ -224,6 +224,17 @@ export const TicketTableRow = ({ ticket }) => {
         )}
       </div>
 
+      {/* Delivery */}
+      <div className={s.cell}>
+        {ticket.deliveryContact && ticket.deliveryMethod !== "taquilla" ? (
+          <span style={{ fontSize: 12, color: ticket.deliveryMethod === "whatsapp" ? "var(--green)" : "var(--lilac)", wordBreak: "break-all" }}>
+            {ticket.deliveryMethod === "whatsapp" ? "WA" : "✉"} {ticket.deliveryContact}
+          </span>
+        ) : (
+          <span style={{ color: "var(--color-text-muted, #888)", fontSize: 12 }}>—</span>
+        )}
+      </div>
+
       {/* Type */}
       <div className={s.cell}>
         {isEditing && event?.ticketTypes ? (

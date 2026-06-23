@@ -154,6 +154,7 @@ export const TicketTable = ({ tickets }) => {
             <div className={s.headerCell}>{t("colName")}</div>
             <div className={s.headerCell}>{t("colId")}</div>
             <div className={s.headerCell}>{t("colPhone")}</div>
+            <div className={s.headerCell}>{t("colDelivery")}</div>
             <div className={s.headerCell}>{t("colType")}</div>
             <div className={s.headerCell}>{t("colStatus")}</div>
             <div className={s.headerCell}>{t("colActions")}</div>

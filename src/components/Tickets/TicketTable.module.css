@@ -110,16 +110,17 @@
 
 .table {
   display: grid;
-  /* edit | name | id | phone | type | status | actions */
+  /* edit | name | id | phone | delivery | type | status | actions */
   grid-template-columns:
     minmax(96px, 0.7fr)
     minmax(160px, 2fr)
     minmax(120px, 1.2fr)
     minmax(110px, 1fr)
+    minmax(140px, 1.4fr)
     minmax(120px, 1fr)
     minmax(120px, 1fr)
     minmax(80px, 0.6fr);
-  min-width: 800px;
+  min-width: 920px;
   gap: var(--space-1);
 }
 

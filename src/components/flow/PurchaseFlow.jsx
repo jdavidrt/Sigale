@@ -515,9 +515,8 @@ function Step6({ orderId, stage, qty, total, delivery, navigate }) {
           <Ic n="check" s={40} />
         </div>
         <span className="pill sent" style={{ marginTop: 18, height: 34 }}><span className="dot" /> Pago enviado</span>
-        <p className="muted" style={{ fontSize: 15.5, marginTop: 16, maxWidth: 320, lineHeight: 1.45 }}>
+        <p className="muted" style={{ fontSize: 24.5, marginTop: 16, maxWidth: 320, lineHeight: 1.45 }}>
           Tan pronto nuestro equipo valide tu pago te enviaremos {qty > 1 ? 'las boletas' : 'la boleta'} a{' '}
-          <b style={{ color: 'var(--green)' }}>{delivery.contact || 'tu contacto'}</b> por{' '}
           <b style={{ color: 'var(--green)' }}>{methodLabel}</b>.
         </p>
       </div>

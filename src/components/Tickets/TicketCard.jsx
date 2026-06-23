@@ -115,6 +115,14 @@ export const TicketCard = ({ ticket }) => {
                 <p className={s.metaDate}>{formatDate(ticket.purchaseDate)}</p>
               </div>
             )}
+
+            {ticket.deliveryContact && ticket.deliveryMethod !== "taquilla" && (
+              <div className={s.detailRow}>
+                <p className={s.metaText} style={{ color: ticket.deliveryMethod === "whatsapp" ? "var(--green)" : "var(--lilac)" }}>
+                  {ticket.deliveryMethod === "whatsapp" ? "WA" : "✉"} {ticket.deliveryContact}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
