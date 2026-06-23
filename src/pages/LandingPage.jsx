@@ -38,30 +38,8 @@ export function LandingPage() {
   const navigate = useNavigate();
   const { event: ctxEvent, eventLoading } = useEvent();
 
-  // While fetching the active event, show a minimal spinner.
-  if (eventLoading) {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
-        <StarField seed={2} density={34} w={430} h={880} />
-        <p className="muted" style={{ position: 'relative', zIndex: 1 }}>Cargando…</p>
-      </div>
-    );
-  }
-
-  // No active event — show a "coming soon" placeholder instead of sample data.
-  if (!ctxEvent) return <NoEventScreen />;
-
-  const event = ctxEvent;
-  const active = resolveActiveStage(event);
-  const upcoming = (event.stages || []).filter((s) => s !== active);
-  const flyerSrc = event.flyerImageUrl || flyerImg;
-
-  const goBuy = () => navigate('/compra');
-
-  const dateLabel = event.date
-    ? `${parseLocalDate(event.date)?.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })} \xB7 ${formatTo12Hour(event.entranceTime || '00:00')}`
-    : '';
-
+  // All hooks must run on every render — declare BEFORE any conditional return.
+  // (Violating this triggers React error #310 when `eventLoading` flips.)
   const scrollRef = useRef(null);
   const lheadRef = useRef(null);
   const heroFlyerRef = useRef(null);
@@ -117,7 +95,31 @@ export function LandingPage() {
       scroll.removeEventListener('scroll', onScroll);
       reduceMQ.removeEventListener?.('change', onScroll);
     };
-  }, []);
+  }, [ctxEvent]);
+
+  // While fetching the active event, show a minimal spinner.
+  if (eventLoading) {
+    return (
+      <div style={{ height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+        <StarField seed={2} density={34} w={430} h={880} />
+        <p className="muted" style={{ position: 'relative', zIndex: 1 }}>Cargando…</p>
+      </div>
+    );
+  }
+
+  // No active event — show a "coming soon" placeholder instead of sample data.
+  if (!ctxEvent) return <NoEventScreen />;
+
+  const event = ctxEvent;
+  const active = resolveActiveStage(event);
+  const upcoming = (event.stages || []).filter((s) => s !== active);
+  const flyerSrc = event.flyerImageUrl || flyerImg;
+
+  const goBuy = () => navigate('/compra');
+
+  const dateLabel = event.date
+    ? `${parseLocalDate(event.date)?.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })} \xB7 ${formatTo12Hour(event.entranceTime || '00:00')}`
+    : '';
 
   return (
     <div className="scr" style={{ height: '100dvh' }}>

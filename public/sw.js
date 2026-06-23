@@ -306,7 +306,10 @@ async function handleSameOriginAsset(request) {
 async function handleCrossOrigin(request) {
   try {
     const response = await fetch(request);
-    if (isCacheableResponse(response)) {
+    // Only http(s) requests are cacheable. Browser-extension and other
+    // non-http schemes throw on cache.put(), so skip them silently.
+    const scheme = new URL(request.url).protocol;
+    if (isCacheableResponse(response) && (scheme === 'http:' || scheme === 'https:')) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
