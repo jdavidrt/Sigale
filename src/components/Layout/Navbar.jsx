@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHouse, faTicket, faTicketSimple, faCircleCheck, faClipboard, faChartLine, faGlobe, faXmark, faClipboardList, faPenToSquare, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { faHouse, faTicket, faTicketSimple, faCircleCheck, faChartLine, faGlobe, faXmark, faClipboardList, faPenToSquare, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import { useLanguage } from "../../context/LanguageContext";
 import { logout } from "../../api/admin";
 import s from "./Navbar.module.css";
@@ -20,7 +20,6 @@ export const Navbar = () => {
     { path: "/sell-tickets", label: t("sell"), icon: faTicket, iconClass: s.iconSell },
     { path: "/tickets", label: t("navTickets"), icon: faTicketSimple, iconClass: s.iconTickets },
     { path: "/validate-qr", label: t("validate"), icon: faCircleCheck, iconClass: s.iconScan },
-    { path: "/copy-event", label: t("navCopy"), icon: faClipboard, iconClass: s.iconCopy },
     { path: "/dashboard", label: t("dashboard"), icon: faChartLine, iconClass: s.iconDash },
     { path: "/edit", label: t("editEvent") || "Editar evento", icon: faPenToSquare, iconClass: s.iconSell },
   ];

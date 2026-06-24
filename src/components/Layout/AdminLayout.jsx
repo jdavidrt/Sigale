@@ -37,7 +37,7 @@ export function AdminLayout({ title, subtitle, children, onLogout }) {
   return (
     <Screen seed={11}>
       <StorageErrorBanner />
-      <div className="topbar">
+      <div className="topbar" style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--black)' }}>
         <div>
           <div className="serif" style={{ fontSize: 18, color: 'var(--cream)' }}>{headerTitle}</div>
           {headerSubtitle && <div className="muted" style={{ fontSize: 12 }}>{headerSubtitle}</div>}

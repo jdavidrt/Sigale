@@ -22,30 +22,6 @@
 }
 
 
-/* ── Paste button (success variant, full-width) ─────────── */
-.pasteBtn {
-  padding: var(--space-7) var(--space-8);
-  margin: var(--space-3);
-  border-radius: var(--radius-xl);
-  background: var(--color-tint-success);
-  border: 1px solid var(--color-border-success);
-  color: var(--color-success);
-  font-size: var(--text-body);
-  font-weight: var(--weight-semibold);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-4);
-  width: 100%;
-  transition: var(--transition-base);
-}
-
-.pasteBtn:hover {
-  background: var(--color-tint-success-lg);
-  transform: scale(1.02);
-}
-
 
 /* ── Main card outer ────────────────────────────────────── */
 .mainCard {

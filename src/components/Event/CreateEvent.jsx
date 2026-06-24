@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEvent } from "../../context/EventContext";
-import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useDialog } from "../../context/DialogContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faWandMagicSparkles, faFloppyDisk, faTriangleExclamation, faTrash, faPaste,
+  faWandMagicSparkles, faFloppyDisk, faTriangleExclamation, faTrash,
   faCalendarDay, faPlus, faUsers, faLayerGroup,
 } from "@fortawesome/free-solid-svg-icons";
 import s from "./CreateEvent.module.css";
@@ -18,7 +17,6 @@ const emptyStage = () => ({ id: null, name: "", price: 0, totalQuantity: 0, acti
 export const CreateEvent = ({ isEditing = false }) => {
   const navigate = useNavigate();
   const { createEvent, updateEvent, event } = useEvent();
-  const { importData } = useTickets();
   const { t } = useLanguage();
   const { notify } = useDialog();
 
@@ -123,6 +121,7 @@ export const CreateEvent = ({ isEditing = false }) => {
     }
 
     const stages = named.map((st, i) => ({
+      id: st.id || undefined,
       name: st.name.trim(),
       price: Number(st.price) || 0,
       totalQuantity: Number(st.totalQuantity) || 0,
@@ -166,20 +165,6 @@ export const CreateEvent = ({ isEditing = false }) => {
     }
   };
 
-  const handlePasteFromClipboard = async () => {
-    try {
-      const clipboardText = await navigator.clipboard.readText();
-      const parsedData = JSON.parse(clipboardText);
-      if (!parsedData.event) { notify({ message: t("jsonImportInvalid"), tone: "error" }); return; }
-      importData(parsedData);
-      notify({ message: t("eventImported"), tone: "success" });
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Paste error:", error);
-      notify({ message: t("eventImportError"), tone: "error" });
-    }
-  };
-
   const handleDeleteEvent = () => {
     if (!deleteConfirmChecked) return;
     localStorage.removeItem("sigale-event-data");
@@ -193,12 +178,6 @@ export const CreateEvent = ({ isEditing = false }) => {
   return (
     <div className={s.page}>
       <form onSubmit={handleSubmit} className={s.form}>
-
-        {/* Paste button */}
-        <button type="button" onClick={handlePasteFromClipboard} className={`${btn.btn} ${btn.success} ${s.pasteBtn}`}>
-          <FontAwesomeIcon icon={faPaste} />
-          <span>{t("pasteEventData")}</span>
-        </button>
 
         {/* Main Card */}
         <div className={`${s.mainCard} glass-elevated shadow-floating`}>

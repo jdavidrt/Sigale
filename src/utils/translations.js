@@ -141,7 +141,6 @@ export const translations = {
     filterAll: "Todas",
     cannotRemoveTicketTypeInUse: "No se puede eliminar el tipo de boleta — ya existen {count} boleta(s) de este tipo. Reasigne o elimine esas boletas primero.",
     navTickets: "Boletas",
-    navCopy: "Copiar",
     purchasesPanel: "Compras",
 
     // Home Page
@@ -264,30 +263,11 @@ export const translations = {
     failedToCreateToast: "No se pudo crear la boleta",
     ticketUpdatedFromForm: "Boleta actualizada exitosamente",
 
-    // Attendance Sheet PDF
-    exportAttendanceSheet: "Exportar Hoja de Asistencia",
-    attendanceSheet: "Hoja de Asistencia",
-    artistCourtesy: "Artista/Cortesía",
-    attendance: "Asistencia",
-    copyJSON: "Copiar JSON",
-    downloadJSON: "Descargar JSON",
-    copyCSV: "Copiar CSV",
-    downloadCSV: "Descargar CSV",
-
-    // Copy Event Page
-    copyEventData: "Copiar Datos del Evento",
-    copyEventSubtitle: "Respalda o transfiere los datos de tu evento y boletas",
-
     // H5 — check-in window warnings (soft, confirm-to-proceed)
     checkInEarlyWarning: "La fecha del evento es en {days} día(s). ¿Continuar con el registro?",
     checkInLateWarning: "La fecha del evento fue hace {days} día(s). ¿Continuar con el registro?",
     checkInCancelledOutsideWindow: "Registro cancelado (fuera de la ventana del evento)",
 
-    // N1 — JSON import (Event page)
-    jsonImportInvalid: "❌ Formato JSON inválido",
-    eventImported: "✅ ¡Evento importado exitosamente!",
-    eventImportError: "❌ Error al importar el evento",
-    pasteEventData: "Pegar Datos del Evento",
     allTicketTypesMustHavePrice: "Todos los tipos de boleta deben tener un precio válido (0 o positivo).",
     type: "Tipo",
     newType: "Nuevo Tipo...",
@@ -520,7 +500,6 @@ export const translations = {
     filterAll: "All",
     cannotRemoveTicketTypeInUse: "Cannot remove ticket type — {count} ticket(s) of this type already exist. Reassign or delete those tickets first.",
     navTickets: "Tickets",
-    navCopy: "Copy",
     purchasesPanel: "Purchases",
 
     // Home Page
@@ -643,30 +622,11 @@ export const translations = {
     failedToCreateToast: "Could not create ticket",
     ticketUpdatedFromForm: "Ticket updated successfully",
 
-    // Attendance Sheet PDF
-    exportAttendanceSheet: "Export Attendance Sheet",
-    attendanceSheet: "Attendance Sheet",
-    artistCourtesy: "Artist/Courtesy",
-    attendance: "Attendance",
-    copyJSON: "Copy JSON",
-    downloadJSON: "Download JSON",
-    copyCSV: "Copy CSV",
-    downloadCSV: "Download CSV",
-
-    // Copy Event Page
-    copyEventData: "Copy Event Data",
-    copyEventSubtitle: "Backup or transfer your event and ticket data",
-
     // H5 — check-in window warnings (soft, confirm-to-proceed)
     checkInEarlyWarning: "Event date is in {days} day(s). Continue with check-in?",
     checkInLateWarning: "Event date was {days} day(s) ago. Continue with check-in?",
     checkInCancelledOutsideWindow: "Check-in cancelled (outside event window)",
 
-    // N1 — JSON import (Event page)
-    jsonImportInvalid: "❌ Invalid JSON format",
-    eventImported: "✅ Event imported successfully!",
-    eventImportError: "❌ Error importing event",
-    pasteEventData: "Paste Event Data",
     allTicketTypesMustHavePrice: "All ticket types must have a valid price (0 or positive).",
     type: "Type",
     newType: "New Type...",

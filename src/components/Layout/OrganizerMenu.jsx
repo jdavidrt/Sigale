@@ -23,7 +23,6 @@ const LINKS = [
   { to: '/validate-qr', icon: 'check', es: 'Validar QR', en: 'Validate QR' },
   { to: '/scan', icon: 'qr', es: 'Escanear (puerta)', en: 'Scan (door)' },
   { to: '/dashboard', icon: 'sparkle', es: 'Tablero', en: 'Dashboard' },
-  { to: '/copy-event', icon: 'copy', es: 'Copiar / exportar', en: 'Copy / export' },
   { to: '/edit', icon: 'cal', es: 'Editar evento', en: 'Edit event' },
 ];
 

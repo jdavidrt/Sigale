@@ -18,7 +18,6 @@ const EditEventPage = lazy(() => import("./pages/EditEventPage").then((m) => ({ 
 const SellTicketsPage = lazy(() => import("./pages/SellTicketsPage").then((m) => ({ default: m.SellTicketsPage })));
 const TicketsPage = lazy(() => import("./pages/TicketsPage").then((m) => ({ default: m.TicketsPage })));
 const ValidateQRPage = lazy(() => import("./pages/ValidateQRPage").then((m) => ({ default: m.ValidateQRPage })));
-const CopyEventPage = lazy(() => import("./pages/CopyEventPage").then((m) => ({ default: m.CopyEventPage })));
 const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 // 2.0 public routes (Astromelias) — rendered outside the organizer Layout.
 const LandingPage = lazy(() => import("./pages/LandingPage").then((m) => ({ default: m.LandingPage })));
@@ -89,7 +88,6 @@ function AppContent() {
                     <Route path="/sell-tickets" element={<SellTicketsPage />} />
                     <Route path="/tickets" element={<TicketsPage />} />
                     <Route path="/validate-qr" element={<ValidateQRPage />} />
-                    <Route path="/copy-event" element={<CopyEventPage />} />
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Route>

@@ -24,6 +24,17 @@ For depth, read `docs/architecture/PROJECT_OVERVIEW.md`. This file is the agent 
 - **Stage `sold_out` must be toggled on every inventory path**: after any increment to `soldQuantity`/`reservedQuantity` check if the stage is now full and flip to `sold_out`; after any decrement check if spots opened up and flip back to `active`. See the "Stage status & inventory invariants" section below for the exact SQL pattern and which code paths carry each check.
 - **`GREATEST(INT UNSIGNED − n, 0)` is NOT safe**: when `n > col`, MySQL evaluates the subtraction as unsigned first, wrapping to ~4 294 967 295. That value violates `chkStageCapacity`. Only decrement `soldQuantity`/`reservedQuantity` for purchases whose status proves they still hold inventory — `rejected` and `expired` have already been decremented by their own handlers.
 - **`resolveActiveStage(event)` returns `null` when no `active` stage**: it no longer falls back to `stages[0]`. Always guard on `!stage` before reading `stage.id`. LandingPage gates its "Comprar boleta" button and PurchaseFlow blocks the wizard on a null result.
+- **No JSON export/import or event-cloning tools**: these are obsolete now that event/ticket data lives in the cloud `sigale` MySQL DB — there is nothing to manually back up or transfer between devices anymore. The `/copy-event` page (JSON copy/download, ticket CSV export, PDF attendance sheet) and the "Pegar Datos del Evento" paste-to-clone button in `CreateEvent` were removed for this reason; don't reintroduce JSON/clipboard-based event transfer as a workaround for anything — fetch from the API instead.
+
+---
+
+## Production environment
+
+Sígale already runs in production — merged into the shared BlackCoffe backend at `coffeserver.onrender.com` (see `docs/SIGALE_MERGE_INTO_SHARED_SERVER.md`). **Don't spin up a local Express/MySQL instance to "test" something that's already live.** The frontend dev server (`npm run dev`) is usually already running locally at `http://localhost:5173/` and proxies API calls straight to production per `.env.development.local` / `vite.config.js` — there is normally no local backend process to start for routine work.
+
+- **Production DB is queryable directly, but it's a *shared* MySQL instance.** Sígale's tables live in their own `sigale` schema on the same DigitalOcean cluster BlackCoffe uses. Credentials in `.env.local` (git-ignored, repo root) connect to BlackCoffe's `defaultdb` by default — any ad-hoc inspection script must explicitly pass `database: 'sigale'` to the client, never rely on that file's own `DB_NAME` value. Never query or touch BlackCoffe's own tables (`orders`, `deposits`, `clients`, `products`, `users`).
+- **Treat production data mutations as irreversible.** Read-only inspection first — dump the rows, check `purchases`/`tickets` references before deleting or altering anything — then confirm the exact change with the user before writing.
+- **Known gap: `activateDueStages` (`server/jobs/scheduler.js`) never demotes the stage it supersedes.** It flips any `upcoming` stage past its `activatesAt` straight to `active`, without checking whether another stage on the same event is already `active`. Two stages can end up simultaneously `active`; `resolveActiveStage()` (`src/utils/sampleEvent.js`) only returns the first match by `sortOrder`, so the second `active` stage becomes invisible on the landing page — not featured (it lost the "active" slot) and not listed under "Próximamente" either (its status isn't `upcoming`). This has happened in production. Don't "fix" it by flipping the superseded stage to `sold_out` without checking the restore-on-decrement invariant first — several paths (`rejectPurchase`, `sweepExpiredHolds`, `deleteAdminTicket`, `updateEvent`) auto-flip `sold_out` back to `active` once `soldQuantity + reservedQuantity < totalQuantity`, which would silently resurrect a stage that should stay closed.
 
 ---
 
@@ -76,7 +87,7 @@ src/
 │   ├── ScanPage.jsx               # Door scan, offline-first (/scan)
 │   ├── Home.jsx                   # (deprecated) — merged into AdminPage at /admin
 │   ├── CreateEventPage.jsx, EditEventPage.jsx, SellTicketsPage.jsx
-│   ├── TicketsPage.jsx, ValidateQRPage.jsx, CopyEventPage.jsx, DashboardPage.jsx
+│   ├── TicketsPage.jsx, ValidateQRPage.jsx, DashboardPage.jsx
 │   │                              # /tickets + /dashboard hydrate from /api/admin/tickets
 │   │                              # on mount via TicketContext.refreshFromServer()
 ├── styles/
@@ -146,11 +157,12 @@ Every organizer route below requires the admin login (`isLoggedIn()`); unauthent
 | `/sell-tickets` | SellTicketsPage (walk-in entry). Phone field is **optional**; name and ID don't pop the "not valid" inline error until the user types ≥ 4 characters. **Persists server-side**: submitting `POST`s to `/api/admin/sales`, which mints a `confirmed` purchase with a sequential `orderId` + a server-minted ticket — so the sale shows up at `/admin` and `/tickets` immediately. The success screen shows the order number and the ticket QR (built from the `validationHash` the API now returns). It does **not** write localStorage-only tickets. |
 | `/tickets` | TicketsPage (cards / table toggle, search, CSV). Hydrates from `/api/admin/tickets` on mount; this is where the organizer edits holder data and generates / shares each QR. |
 | `/validate-qr` | ValidateQRPage (camera scanner) |
-| `/copy-event` | CopyEventPage (JSON / CSV / PDF export, import) |
 | `/dashboard` | DashboardPage — hydrates from `/api/admin/tickets` on mount so sales and check-in stats match `/admin`. |
 | `*` | redirect → `/` |
 
 Every route except Home is lazy-loaded. There is **one** event form (`CreateEvent`), wired to the API for both create and edit — the old minimal inline form on `/admin` is gone.
+
+There is intentionally no `/copy-event` route anymore. It used to export/import event + ticket data as JSON (plus a CSV/PDF ticket export) so an organizer could back up or clone an event across devices — a localStorage-era need. Now that events and tickets are persisted server-side in the cloud `sigale` DB, every device already sees the same data via the API, so the whole copy/paste/JSON-clone flow is dead weight. Don't rebuild it.
 
 ---
 

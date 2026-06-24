@@ -68,7 +68,7 @@ export function PurchaseFlow() {
   const event = ctxEvent || SAMPLE_EVENT;
   const stage = resolveActiveStage(event);
   const cupos = stageCupos(stage);
-  const maxQty = Math.max(1, Math.min(MAX_QTY, cupos || MAX_QTY));
+  const maxQty = Math.max(1, Math.min(MAX_QTY, cupos));
 
   // Two failure modes the original code masked by silently falling back to the
   // SAMPLE_EVENT (which has no DB ids): (1) the real event is still loading,
@@ -234,10 +234,11 @@ export function PurchaseFlow() {
             <div className="chip" style={{ background: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.24)', color: '#fff', marginBottom: 8 }}>Etapa activa</div>
             <div className="label" style={{ color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>{stage?.name || 'Etapa'}</div>
             <div className="serif" style={{ fontSize: 32, color: 'var(--yellow)', lineHeight: 1, marginTop: 3 }}>{formatCurrency(stage?.price || 0)}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px', marginTop: 6 }}>✦ Toda entrada incluye pola</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div className="serif" style={{ fontSize: 30, color: '#fff' }}>{cupos}</div>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.75)' }}>cupos</div>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.75)' }}>{cupos === 1 ? 'cupo' : 'cupos'}</div>
           </div>
         </div>
 
@@ -285,11 +286,14 @@ export function PurchaseFlow() {
           <div className="chip lilac" style={{ marginTop: 18 }}><Ic n="lock" s={14} /> Guárdala, no la compartas</div>
         </div>
 
-        <div className="card" style={{ padding: 16, marginTop: 22, display: 'flex', justifyContent: 'space-between' }}>
-          <div>
-            <div className="label" style={{ color: 'var(--cream-dim)' }}>{stage?.name} × {qty}</div>
+        <div className="card" style={{ padding: 16, marginTop: 22 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div>
+              <div className="label" style={{ color: 'var(--cream-dim)' }}>{stage?.name} × {qty}</div>
+            </div>
+            <div className="serif" style={{ fontSize: 26, color: 'var(--yellow)' }}>{formatCurrency(total)}</div>
           </div>
-          <div className="serif" style={{ fontSize: 26, color: 'var(--yellow)' }}>{formatCurrency(total)}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px', marginTop: 10, textAlign: 'center' }}>✦ Toda entrada incluye pola</div>
         </div>
       </FlowShell>
     );

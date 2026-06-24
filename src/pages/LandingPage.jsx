@@ -199,10 +199,11 @@ export function LandingPage() {
                       <div className="chip" style={{ background: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.24)', color: '#fff', marginBottom: 8 }}>Etapa activa</div>
                       <div className="label" style={{ color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>{active.name}</div>
                       <div className="serif" style={{ fontSize: 38, color: 'var(--yellow)', lineHeight: 1, marginTop: 3 }}>{formatCurrency(active.price)}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px', marginTop: 6 }}>✦ Toda entrada incluye pola</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
                       <div className="serif" style={{ fontSize: 36, color: '#fff' }}>{stageCupos(active)}</div>
-                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.75)' }}>cupos</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.75)' }}>{stageCupos(active) === 1 ? 'cupo' : 'cupos'}</div>
                     </div>
                   </div>
                 )}
@@ -222,7 +223,7 @@ export function LandingPage() {
                 ) : isSoldOut ? (
                   <button className="btn btn-buy" disabled style={{ opacity: 0.55, cursor: 'not-allowed' }}><Ic n="x" s={20} /> ¡Agotado!</button>
                 ) : null}
-                {(active || isSoldOut || upcoming.length > 0) && (
+                {(!active && (isSoldOut || upcoming.length > 0)) && (
                   <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px' }}>
                     ✦ Toda entrada incluye pola
                   </div>

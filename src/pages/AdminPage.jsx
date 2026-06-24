@@ -154,7 +154,7 @@ function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
   return (
     <Screen seed={11}>
       <StorageErrorBanner />
-      <div className="topbar">
+      <div className="topbar" style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--black)' }}>
         <div>
           <div className="serif" style={{ fontSize: 18, color: 'var(--cream)' }}>{t('adminPanel')}</div>
           <div className="muted" style={{ fontSize: 12 }}>{event.name}</div>

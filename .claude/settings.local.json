@@ -24,7 +24,22 @@
       "Bash(ping:*)",
       "Bash(npx vitest *)",
       "Bash(npm test *)",
-      "PowerShell($flyerPath = \"c:\\\\dev\\\\Sígale\\\\src\\\\assets\\\\flyer.png\"; $base64 = [Convert]::ToBase64String\\([System.IO.File]::ReadAllBytes\\($flyerPath\\)\\); $base64.Length)"
+      "PowerShell($flyerPath = \"c:\\\\dev\\\\Sígale\\\\src\\\\assets\\\\flyer.png\"; $base64 = [Convert]::ToBase64String\\([System.IO.File]::ReadAllBytes\\($flyerPath\\)\\); $base64.Length)",
+      "Bash(npm run *)",
+      "Bash(npx --no-install playwright --version)",
+      "Bash(mysql -h 127.0.0.1 -P 3306 -u sigale -psigale_local_dev sigale -e \"SELECT id, eventId, name, totalQuantity, soldQuantity, reservedQuantity, sortOrder, status FROM ticket_stages ORDER BY eventId, sortOrder;\")",
+      "Bash(grep -n '\"type\"' package.json ../package.json)",
+      "Bash(which mysql.exe)",
+      "Bash(ls \"C:/Program Files/MySQL\")",
+      "PowerShell(Get-NetTCPConnection -State Listen | Where-Object { $_.LocalPort -in 3306,25060,5173 } | Select-Object LocalAddress,LocalPort,OwningProcess)",
+      "Bash(sc query *)",
+      "Bash(npm uninstall *)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(curl -s -o /dev/null -w \"CopyEventPage.jsx -> %{http_code}\\\\n\" \"http://localhost:5173/src/pages/CopyEventPage.jsx\" --max-time 5 *)",
+      "Read(//tmp/**)",
+      "Bash(npx eslint *)"
     ],
     "deny": [],
     "ask": []

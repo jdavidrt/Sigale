@@ -230,10 +230,6 @@ export const TicketProvider = ({ children }) => {
     [stats, data.tickets]
   );
 
-  const importData = useCallback((importedData) => {
-    setData(importedData);
-  }, [setData]);
-
   // Deletes all confirmed purchases + tickets on the server (restores stage
   // inventory), then wipes the local cache. Falls back to local-only wipe
   // when not logged in (offline / dev mode).
@@ -308,7 +304,6 @@ export const TicketProvider = ({ children }) => {
       checkInTicket,
       deleteTicket,
       getStats,
-      importData,
       clearAllTickets,
       clearAllData,
       addTicketsFromCSV,
@@ -327,7 +322,6 @@ export const TicketProvider = ({ children }) => {
       checkInTicket,
       deleteTicket,
       getStats,
-      importData,
       clearAllTickets,
       clearAllData,
       addTicketsFromCSV,
