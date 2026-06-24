@@ -26,6 +26,14 @@ function formatPhone(raw) {
   return raw;
 }
 
+const ARTIST_COLORS = [
+  'var(--cream)',
+  'var(--yellow)',
+  'var(--lilac)',
+  'var(--orange-soft)',
+  'var(--purple-2)',
+];
+
 const FLOATS = [
   { left: '8%', top: 60, color: 'var(--yellow)', size: 12, icon: 'sparkle', speed: 0.07 },
   { left: '82%', top: 30, color: 'var(--lilac)', size: 16, icon: 'star', speed: -0.05 },
@@ -111,8 +119,9 @@ export function LandingPage() {
   if (!ctxEvent) return <NoEventScreen />;
 
   const event = ctxEvent;
-  const active = resolveActiveStage(event);
-  const upcoming = (event.stages || []).filter((s) => s !== active);
+  const active = resolveActiveStage(event); // null when no 'active' stage
+  const upcoming = (event.stages || []).filter((s) => s.status === 'upcoming');
+  const isSoldOut = !active && (event.stages || []).some((s) => s.status === 'sold_out');
   const flyerSrc = event.flyerImageUrl || flyerImg;
 
   const goBuy = () => navigate('/compra');
@@ -174,7 +183,7 @@ export function LandingPage() {
                     <div className="label" style={{ color: 'var(--orange-soft)', textAlign: 'center', marginBottom: 18 }}>Line-up</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'center' }}>
                       {event.artists.map((a, i) => (
-                        <div key={i} className="serif actbig" style={{ fontSize: 32, color: i % 3 === 1 ? 'var(--yellow)' : 'var(--cream)', lineHeight: 1.04 }}>{a}</div>
+                        <div key={i} className="serif actbig" style={{ fontSize: 32, color: ARTIST_COLORS[i % ARTIST_COLORS.length], lineHeight: 1.04 }}>{a}</div>
                       ))}
                     </div>
                   </div>
@@ -208,7 +217,16 @@ export function LandingPage() {
                     ))}
                   </div>
                 )}
-                <button className="btn btn-buy" onClick={goBuy}><Ic n="ticket" s={20} /> Comprar boleta</button>
+                {active ? (
+                  <button className="btn btn-buy" onClick={goBuy}><Ic n="ticket" s={20} /> Comprar boleta</button>
+                ) : isSoldOut ? (
+                  <button className="btn btn-buy" disabled style={{ opacity: 0.55, cursor: 'not-allowed' }}><Ic n="x" s={20} /> ¡Agotado!</button>
+                ) : null}
+                {(active || isSoldOut || upcoming.length > 0) && (
+                  <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px' }}>
+                    ✦ Toda entrada incluye pola
+                  </div>
+                )}
                 <div className="card" style={{ padding: 16 }}>
                   <div style={{ display: 'flex', gap: 14 }}>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flex: 1 }}>

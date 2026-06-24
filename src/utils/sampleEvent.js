@@ -25,10 +25,10 @@ export const SAMPLE_EVENT = {
   ],
 };
 
-/** The single active stage of an event (first 'active', else first stage). */
+/** The single active stage of an event (status === 'active' only; null if none). */
 export function resolveActiveStage(event) {
   if (!event || !Array.isArray(event.stages) || event.stages.length === 0) return null;
-  return event.stages.find((s) => s.status === 'active') || event.stages[0];
+  return event.stages.find((s) => s.status === 'active') ?? null;
 }
 
 /** Remaining spots for a stage; falls back to total - sold - reserved. */

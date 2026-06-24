@@ -108,6 +108,33 @@ pending_payment → (24h sweeper)    → expired
 
 `validationHash` is a **random 128-bit server secret** minted at confirm (`crypto.randomBytes(16).toString('hex')`). QR codes are never stored — generated from the hash on demand, and rendered to the organizer on `/tickets`.
 
+**Stage status lifecycle (`ticket_stages.status`):**
+
+The ENUM is `('upcoming', 'active', 'sold_out')`. The scheduler promotes `upcoming → active` on a timer (`activatesAt`). Every other transition is owned by the code path that mutates inventory:
+
+| Transition | When | Who |
+|------------|------|-----|
+| `active → sold_out` | After incrementing `soldQuantity` or `reservedQuantity` fills the stage (`sold + reserved >= total`) | `createPurchase`, `createWalkInSale` |
+| `sold_out → active` | After decrementing `soldQuantity` or `reservedQuantity` opens spots (`sold + reserved < total`) | `rejectPurchase`, `deleteAdminTicket` (confirmed ticket), `sweepExpiredHolds`, `updateEvent` (totalQuantity raised), `deleteAllPurchases` (batch) |
+| `upcoming → active` | `activatesAt` reached | `scheduler.activateDueStages` |
+
+`confirmPurchase` moves `reservedQuantity − qty` / `soldQuantity + qty` simultaneously — net available spots unchanged, no transition needed.
+
+**Inventory arithmetic safety (`INT UNSIGNED`):**
+
+`soldQuantity` and `reservedQuantity` are `INT UNSIGNED`. Decrementing below zero wraps to ~4 294 967 295, violating the `chkStageCapacity` CHECK (`sold + reserved <= total`). Only restore inventory for purchases that provably still hold it:
+
+- `rejected` and `expired` purchases were already decremented by `rejectPurchase` / `sweepExpiredHolds` when they transitioned — never include them in a subsequent batch restore.
+- `deleteAllPurchases` only restores `confirmed` rows (→ `soldQuantity`) and `pending_payment` / `payment_submitted` rows (→ `reservedQuantity`).
+
+**`updateEvent` capacity floor guard:**
+
+`PUT /api/events/:id` checks each existing stage: if the submitted `totalQuantity < soldQuantity + reservedQuantity` it rolls back and returns **409** with a descriptive Spanish message before the UPDATE reaches the DB. Additionally, after every successful UPDATE it runs the `sold_out → active` restore check, so increasing capacity on a sold-out stage automatically reopens it.
+
+**Idempotent action guards:**
+
+`rejectPurchase` returns 200 immediately for purchases already in `rejected` or `expired` state (both have already released their inventory — re-decrementing would underflow). `confirmPurchase` returns 200 immediately for an already-`confirmed` purchase. Every new purchase action must `SELECT … FOR UPDATE`, check current status, and short-circuit on terminal/no-op states.
+
 `orderId` is an `INT UNSIGNED`, assigned sequentially (global `MAX(orderId) + 1`, starting at 100). Migration 003 converted it from `CHAR(3)` unique-per-event to a globally unique integer. `nextOrderId()` is called inside a `FOR UPDATE` transaction and is shared between purchase creation and walk-in registration.
 
 `holdersSnapshot` (`JSON NULL`) captures the buyer-entered holder names / ID numbers / phones when the purchase is created or submitted. At confirm-time `confirmPurchase` uses this snapshot to mint tickets automatically; the organizer can pass an overriding `holders` array in the confirm request body to change them.
@@ -175,7 +202,7 @@ utils/
 current-server/     # READ-ONLY BlackCoffe reference copy — never run or import
 ```
 
-**Inventory rule:** every path that touches `soldQuantity` or `reservedQuantity` uses `pool.getConnection()` → `beginTransaction()` → `SELECT … FOR UPDATE` → mutate → `COMMIT`/`ROLLBACK` in a `finally` that calls `conn.release()`. Never `pool.query` for inventory.
+**Inventory rule:** every path that touches `soldQuantity` or `reservedQuantity` uses `pool.getConnection()` → `beginTransaction()` → `SELECT … FOR UPDATE` → mutate → `COMMIT`/`ROLLBACK` in a `finally` that calls `conn.release()`. Never `pool.query` for inventory. After every increment, run the `active → sold_out` fill check; after every decrement, run the `sold_out → active` restore check. See the "Stage status lifecycle" table in the Data model section for the full matrix. Never use `GREATEST(INT UNSIGNED − n, 0)` as a safe no-op — unsigned underflow wraps to ~4 294 967 295 and violates `chkStageCapacity`.
 
 **Auth model:** no JWT/session. `requireOrganizer` re-validates bcrypt credentials on every `/api/admin/*` request **and** on the event write routes (`POST`/`PUT /api/events`), Basic header over HTTPS. `/api/login` is rate-limited. On the client, `RequireAuth` gates every organizer route on the session-stored login — a UX funnel only; the server check is the real boundary.
 
@@ -209,7 +236,7 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 | File | Role |
 |------|------|
 | `FlowShell.jsx` | Step container, progress indicator, back/forward. Renders an empty 44px placeholder where the back chevron would be when `onBack` is `null`, so the wordmark stays centered when the back button is intentionally suppressed. |
-| `PurchaseFlow.jsx` | Steps 1–6 wired to `api/purchases.js`; WhatsApp deep-link on step 5; step 6 is a terminal success screen. `back` returns `null` for `step >= 4`, hiding the back chevron from "Ir a pagar" onward. |
+| `PurchaseFlow.jsx` | Steps 1–6 wired to `api/purchases.js`; WhatsApp deep-link on step 5; step 6 is a terminal success screen. `back` returns `null` for `step >= 4`, hiding the back chevron from "Ir a pagar" onward. Blocks the flow with "Ninguna etapa está activa" when `resolveActiveStage(event)` returns `null` (sold_out or all upcoming). |
 
 ### Organizer — Tickets
 
@@ -264,6 +291,7 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 
 | Util | Key exports |
 |------|-------------|
+| `sampleEvent.js` | `SAMPLE_EVENT` (dev placeholder), `resolveActiveStage(event) → stage \| null` (**returns `null` when no stage has `status === 'active'`** — does not fall back to `stages[0]`), `stageCupos(stage) → number` |
 | `hashGenerator.js` | `generateTicketId() → "TKT-<8hex>-<ts>"` (walk-in only; server mints hashes for purchases) |
 | `qrGenerator.js` | `generateQRData(ticket, event, eventId)`, `parseQRData(text)` — `hash` arrives from API |
 | `qrCopy.js` | `copySVGToClipboard`, `copyPNGToClipboard`, `shareQR` |

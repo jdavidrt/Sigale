@@ -876,6 +876,16 @@
     opacity: 0.95;
   }
 }
+@keyframes starTwinkle {
+  0%, 100% {
+    opacity: 0.05;
+    transform: scale(0.8);
+  }
+  45%, 55% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
 .actbig {
   letter-spacing: 0.3px;
 }
@@ -910,6 +920,12 @@
   }
   .btn-buy {
     animation: buy-pulse 2.2s ease-in-out infinite;
+  }
+  .star {
+    animation-name: starTwinkle;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    /* duration + delay are set per-star via inline style from StarField.jsx */
   }
 }
 

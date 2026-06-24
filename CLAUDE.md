@@ -21,6 +21,9 @@ For depth, read `docs/architecture/PROJECT_OVERVIEW.md`. This file is the agent 
 - **DB isolation**: Sígale migrations may only `CREATE`/`ALTER` Sígale's own tables (`organizers`, `events`, `ticket_stages`, `purchases`, `tickets`). Confirm `DB_NAME=sigale` before any DB command.
 - **Sales are server-side, never localStorage-only**: every ticket that must appear at `/admin`, `/tickets`, `/dashboard`, or the door scanner has to exist in the `tickets` table. Walk-in sales (`/sell-tickets` → `TicketForm`) **must** go through `admin.walkIn()` → `POST /api/admin/sales` so they mint a `confirmed` purchase with a sequential `orderId`. Do **not** use the localStorage-only `addTicket()` for real sales — `/tickets` and `/dashboard` overwrite local state with `refreshFromServer()` on mount, so anything not persisted server-side silently disappears.
 - **Dashboard stats need the live event**: `EventContext` keeps the active event in memory only (never localStorage, per 2.0), so `TicketContext.data.event` is `null`. Always call `getStats(event)` with the event from `useEvent()` — bare `getStats()` resolves every price to `0` and the dashboard reads empty.
+- **Stage `sold_out` must be toggled on every inventory path**: after any increment to `soldQuantity`/`reservedQuantity` check if the stage is now full and flip to `sold_out`; after any decrement check if spots opened up and flip back to `active`. See the "Stage status & inventory invariants" section below for the exact SQL pattern and which code paths carry each check.
+- **`GREATEST(INT UNSIGNED − n, 0)` is NOT safe**: when `n > col`, MySQL evaluates the subtraction as unsigned first, wrapping to ~4 294 967 295. That value violates `chkStageCapacity`. Only decrement `soldQuantity`/`reservedQuantity` for purchases whose status proves they still hold inventory — `rejected` and `expired` have already been decremented by their own handlers.
+- **`resolveActiveStage(event)` returns `null` when no `active` stage**: it no longer falls back to `stages[0]`. Always guard on `!stage` before reading `stage.id`. LandingPage gates its "Comprar boleta" button and PurchaseFlow blocks the wizard on a null result.
 
 ---
 
@@ -171,6 +174,44 @@ The buyer never sees these states — they're an organizer concern. The buyer's 
 `holdersSnapshot` (`JSON NULL`, added by Migration 004) stores the holder names / ID numbers / phones the buyer enters during the public flow. At confirm-time `confirmPurchase` mints tickets from this snapshot unless the organizer explicitly passes overriding holder data in the request body.
 
 `validationHash` is a **server-generated random 128-bit secret** minted when the organizer confirms (`CHAR(64)`). QR codes are NOT stored — generated on demand from the hash. Hold: `reservationExpiresAt = createdAt + 24h`; scheduler sweeps `pending_payment` past expiry; `payment_submitted` waits for organizer action.
+
+---
+
+## Stage status & inventory invariants
+
+`ticket_stages.status` is `ENUM('upcoming', 'active', 'sold_out')`. The scheduler handles `upcoming → active` on a timer (`activatesAt`). All other transitions must be enforced **by the code path that changes `soldQuantity` or `reservedQuantity`**, never lazily.
+
+### Fill check (after incrementing sold or reserved)
+
+```sql
+UPDATE ticket_stages SET status = 'sold_out'
+  WHERE id = ? AND status = 'active'
+    AND soldQuantity + reservedQuantity >= totalQuantity;
+```
+
+**Paths that carry this check:** `createPurchase` (reservation), `createWalkInSale` (direct sale).
+
+### Restore check (after decrementing sold or reserved)
+
+```sql
+UPDATE ticket_stages SET status = 'active'
+  WHERE id = ? AND status = 'sold_out'
+    AND soldQuantity + reservedQuantity < totalQuantity;
+```
+
+**Paths that carry this check:** `rejectPurchase` (reserved → released), `deleteAdminTicket` for a confirmed ticket (sold → released), `sweepExpiredHolds` per expired row (reserved → released), `updateEvent` when `totalQuantity` is raised (no quantity change, but the capacity ceiling moves up), `deleteAllPurchases` (batch restore via a single un-scoped UPDATE after the DELETE).
+
+### `confirmPurchase` — no status transition
+
+Confirm moves `reservedQuantity − qty` and `soldQuantity + qty` simultaneously, so the net available spots are unchanged. No fill or restore check is needed.
+
+### `deleteAllPurchases` inventory rule
+
+Only `confirmed` purchases have held `soldQuantity`; only `pending_payment` and `payment_submitted` have held `reservedQuantity`. `rejected` and `expired` purchases already had their counters decremented by their own handlers — including them in a batch restore causes unsigned underflow (`GREATEST(0 − n, 0)` wraps to ~4 294 967 295, violating `chkStageCapacity`).
+
+### `updateEvent` totalQuantity floor guard
+
+`PUT /api/events/:id` returns **409** with a Spanish message if the submitted `totalQuantity` for an existing stage would drop below `soldQuantity + reservedQuantity`. `CreateEvent.handleSubmit` catches `ApiError.message` and pipes it to `notify()` — any future edit UI must follow the same pattern.
 
 ---
 

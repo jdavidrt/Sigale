@@ -96,7 +96,8 @@ export const generateTicketSVG = (ticket, event, qrDataURL, opts = {}) => {
   const puertasY = heroH + 86;
   const footerDivY = tileY + tileS + 22;
   const footerTextY = footerDivY + 20;
-  const H = footerTextY + 22;
+  const polaY = footerTextY + 20;
+  const H = polaY + 18;
 
   /* ── small text helpers ───────────────────────────────── */
   const label = (x, y, text, anchor = 'start') =>
@@ -160,6 +161,7 @@ export const generateTicketSVG = (ticket, event, qrDataURL, opts = {}) => {
     <line x1="${pX}" y1="${footerDivY}" x2="${W - pX}" y2="${footerDivY}" stroke="${C.hair}" stroke-width="1"/>
     <text x="${pX}" y="${footerTextY}" font-family="ui-monospace, 'Courier New', monospace" font-size="11" letter-spacing="1" fill="${C.creamDim}">${escapeXml(ticket.ticketId || '')}</text>
     <text x="${W - pX}" y="${footerTextY}" text-anchor="end" font-family="ui-monospace, 'Courier New', monospace" font-size="12" font-weight="700" letter-spacing="1" fill="${C.gold}">#${escapeXml(ticket.folio || ticket.ticketId || '')}</text>
+    <text x="${W / 2}" y="${polaY}" text-anchor="middle" font-family="${SANS}" font-size="12" font-weight="700" letter-spacing="1.5" fill="${C.gold}">✦ TODA ENTRADA INCLUYE POLA ✦</text>
   </g>
 </svg>`;
 

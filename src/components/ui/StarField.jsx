@@ -24,16 +24,20 @@ export function StarField({ seed = 1, w = 390, h = 844, density = 40 }) {
   const count = Math.round(((w * h) / 5200) * (density / 40));
   const stars = [];
   for (let i = 0; i < count; i++) {
-    const big = rnd() > 0.92;
-    const s = big ? 2.2 + rnd() * 1.3 : 0.7 + rnd() * 1.2;
-    const op = big ? 0.7 + rnd() * 0.3 : 0.18 + rnd() * 0.55;
+    const big = rnd() > 0.85;
+    const s = big ? 4 + rnd() * 3 : 1.2 + rnd() * 2;
+    const op = big ? 0.75 + rnd() * 0.25 : 0.3 + rnd() * 0.55;
+    const dur = (1.8 + rnd() * 3.5).toFixed(1);
+    const delay = (rnd() * 7).toFixed(2);
     stars.push({
       left: (rnd() * 100).toFixed(2) + '%',
       top: (rnd() * 100).toFixed(2) + '%',
       width: s.toFixed(2) + 'px',
       height: s.toFixed(2) + 'px',
       opacity: op.toFixed(2),
-      boxShadow: big ? '0 0 ' + (3 + rnd() * 4).toFixed(1) + 'px rgba(255,255,255,0.8)' : 'none',
+      boxShadow: big ? '0 0 ' + (5 + rnd() * 6).toFixed(1) + 'px rgba(255,255,255,0.9)' : 'none',
+      animationDuration: dur + 's',
+      animationDelay: delay + 's',
     });
   }
   return (
