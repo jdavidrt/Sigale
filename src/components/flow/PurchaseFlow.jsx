@@ -378,7 +378,7 @@ export function PurchaseFlow() {
             />
             {contactInvalid && (
               <p style={{ margin: '4px 2px 0', color: 'var(--red, #f87171)', fontSize: 12 }}>
-                {delivery.method === 'email' ? 'Correo no válido.' : 'Solo números (mínimo 10 dígitos).'}
+                {delivery.method === 'email' ? 'Correo no válido.' : 'Solo números'}
               </p>
             )}
           </div>

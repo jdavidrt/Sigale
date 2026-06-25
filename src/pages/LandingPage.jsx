@@ -232,11 +232,6 @@ export function LandingPage() {
                 ) : isSoldOut ? (
                   <button className="btn btn-buy" disabled style={{ opacity: 0.55, cursor: 'not-allowed' }}><Ic n="x" s={20} /> ¡Agotado!</button>
                 ) : null}
-                {(!active && (isSoldOut || upcoming.length > 0)) && (
-                  <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px' }}>
-                    ✦ Toda entrada incluye pola
-                  </div>
-                )}
                 <div className="card" style={{ padding: 16 }}>
                   <div style={{ display: 'flex', gap: 14 }}>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flex: 1 }}>

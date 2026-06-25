@@ -18,6 +18,7 @@ import { OrganizerMenu } from '../components/Layout/OrganizerMenu';
 import { StorageErrorBanner } from '../components/Common/StorageErrorBanner';
 import { useEvent } from '../context/EventContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useDialog } from '../context/DialogContext';
 import { admin, isLoggedIn, logout } from '../api/admin';
 import { statusMeta } from '../api/purchases';
 import { formatCurrency, formatTo12Hour, parseLocalDate } from '../utils/timeFormat';
@@ -112,6 +113,7 @@ function Panel({ onLogout }) {
 // ── Home (event hero + purchases panel) ────────────────────────────────────────
 function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
   const { t } = useLanguage();
+  const { openCustom } = useDialog();
   const navigate = useNavigate();
   const activeStage = event?.activeStage || (event?.stages || []).find((s) => s.status === 'active');
 
@@ -139,7 +141,91 @@ function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
   }, [rows, query, filter]);
 
   const doConfirm = async (row) => { await admin.confirm(row); load(); };
-  const doReject = async (row) => { await admin.reject(row); load(); };
+  const doReject  = async (row) => { await admin.reject(row);  load(); };
+
+  // Green confirmation modal — fires before confirming a payment
+  const handleConfirm = (row) => {
+    const firstHolder = Array.isArray(row.holders) && row.holders[0]?.name ? row.holders[0].name : null;
+    openCustom((close) => (
+      <div>
+        <div style={{
+          margin: '-12px -12px 20px', padding: '24px 16px',
+          background: 'var(--color-tint-success-md)',
+          borderBottom: '1px solid var(--color-border-success)',
+          textAlign: 'center',
+        }}>
+          <div style={{ color: 'var(--green)', marginBottom: 10 }}><Ic n="check" s={44} sw={1.5} /></div>
+          <div style={{ fontWeight: 700, fontSize: 21, color: 'var(--green)' }}>{t('confirmPurchaseTitle')}</div>
+        </div>
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontWeight: 600, color: 'var(--cream)', fontSize: 18 }}>
+            #{row.orderId} · {row.stageName} × {row.quantity}
+          </div>
+          {firstHolder && (
+            <div style={{ color: 'var(--cream-dim)', fontSize: 16, marginTop: 6 }}>
+              {firstHolder}{row.quantity > 1 ? ` +${row.quantity - 1}` : ''}
+            </div>
+          )}
+          <div style={{ color: 'var(--cream-dim)', fontSize: 16, marginTop: 6 }}>{formatCurrency(row.totalAmount)}</div>
+          <p style={{ color: 'var(--cream-dim)', fontSize: 15, marginTop: 14, marginBottom: 0 }}>{t('confirmPurchaseMsg')}</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button className="btn sm" type="button"
+            style={{ background: 'transparent', border: '1px solid var(--frame)', color: 'var(--cream-dim)', boxShadow: 'none' }}
+            onClick={close}>
+            {t('cancel')}
+          </button>
+          <button className="btn sm" type="button"
+            style={{ background: 'var(--green)', boxShadow: 'var(--shadow-btn-success)' }}
+            onClick={() => { doConfirm(row); close(); }}>
+            <Ic n="check" s={18} /> {t('confirmPayment')}
+          </button>
+        </div>
+      </div>
+    ));
+  };
+
+  // Red rejection modal — fires before deleting/rejecting an order
+  const handleReject = (row) => {
+    const firstHolder = Array.isArray(row.holders) && row.holders[0]?.name ? row.holders[0].name : null;
+    openCustom((close) => (
+      <div>
+        <div style={{
+          margin: '-12px -12px 20px', padding: '24px 16px',
+          background: 'var(--color-tint-error-md)',
+          borderBottom: '1px solid var(--color-border-error)',
+          textAlign: 'center',
+        }}>
+          <div style={{ color: 'var(--red)', marginBottom: 10 }}><Ic n="warn" s={44} sw={1.5} /></div>
+          <div style={{ fontWeight: 700, fontSize: 21, color: 'var(--red)' }}>{t('rejectPurchaseTitle')}</div>
+        </div>
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontWeight: 600, color: 'var(--cream)', fontSize: 18 }}>
+            #{row.orderId} · {row.stageName} × {row.quantity}
+          </div>
+          {firstHolder && (
+            <div style={{ color: 'var(--cream-dim)', fontSize: 16, marginTop: 6 }}>
+              {firstHolder}{row.quantity > 1 ? ` +${row.quantity - 1}` : ''}
+            </div>
+          )}
+          <div style={{ color: 'var(--cream-dim)', fontSize: 16, marginTop: 6 }}>{formatCurrency(row.totalAmount)}</div>
+          <p style={{ color: 'var(--red)', fontSize: 15, marginTop: 14, marginBottom: 0 }}>{t('rejectPurchaseMsg')}</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button className="btn sm" type="button"
+            style={{ background: 'transparent', border: '1px solid var(--frame)', color: 'var(--cream-dim)', boxShadow: 'none' }}
+            onClick={close}>
+            {t('cancel')}
+          </button>
+          <button className="btn sm" type="button"
+            style={{ background: 'var(--red)', boxShadow: 'var(--shadow-btn-error)' }}
+            onClick={() => { doReject(row); close(); }}>
+            <Ic n="warn" s={18} /> {t('rejectPurchaseBtn')}
+          </button>
+        </div>
+      </div>
+    ));
+  };
 
   const pending = rows.filter((r) => r.status === 'payment_submitted').length;
   const confirmed = rows.filter((r) => r.status === 'confirmed');
@@ -255,29 +341,41 @@ function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
               const firstHolder = Array.isArray(row.holders) && row.holders[0]?.name ? row.holders[0].name : null;
               return (
                 <div key={row.id || row.orderId} className="trow" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                    <div>
-                      <span className="orden" style={{ fontSize: 20, color: 'var(--yellow)' }}>#{row.orderId}</span>
-                      <div className="muted" style={{ fontSize: 13 }}>{row.stageName} × {row.quantity}</div>
-                      {firstHolder && (
-                        <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{firstHolder}{row.quantity > 1 ? ` +${row.quantity - 1}` : ''}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {/* Order ID */}
+                    <span className="orden" style={{ fontSize: 20, color: 'var(--yellow)', flexShrink: 0 }}>#{row.orderId}</span>
+                    {/* Col 1: buyer name */}
+                    <div style={{ flex: 2, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--cream)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {firstHolder || '—'}{firstHolder && row.quantity > 1 ? ` +${row.quantity - 1}` : ''}
+                      </div>
+                    </div>
+                    {/* Col 2: stage × qty */}
+                    <div style={{ flex: 1.5, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, color: 'var(--cream-dim)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {row.stageName} × {row.quantity}
+                      </div>
+                    </div>
+                    {/* Col 3: status label (non-actionable only; keeps layout stable) */}
+                    <div style={{ flex: 1.2, minWidth: 0 }}>
+                      {!actionable && (
+                        <div style={{ fontSize: 12, color: 'var(--cream-dim)', opacity: 0.6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {row.status === 'confirmed' ? t('ticketsIssued') : t('noActionsAvailable')}
+                        </div>
                       )}
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+                    {/* Price + status pill */}
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div className="price">{formatCurrency(row.totalAmount)}</div>
                       <span className={`pill ${meta.pill}`} style={{ marginTop: 6, height: 26 }}><span className="dot" /> {meta.label}</span>
                     </div>
                   </div>
-                  {actionable ? (
+                  {actionable && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <button className="btn sm" onClick={() => doConfirm(row)} style={{ background: 'var(--green)', boxShadow: 'none' }}>
+                      <button className="btn sm" type="button" onClick={() => handleConfirm(row)} style={{ background: 'var(--green)', boxShadow: 'none' }}>
                         <Ic n="check" s={18} /> {t('confirmPayment')}
                       </button>
-                      <SlideToConfirm label={t('slideToDelete')} onConfirm={() => doReject(row)} />
-                    </div>
-                  ) : (
-                    <div className="muted" style={{ fontSize: 13, textAlign: 'center', padding: '4px 0' }}>
-                      {row.status === 'confirmed' ? t('ticketsIssued') : t('noActionsAvailable')}
+                      <SlideToConfirm label={t('slideToDelete')} onConfirm={() => handleReject(row)} />
                     </div>
                   )}
                 </div>

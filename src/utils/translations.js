@@ -338,6 +338,11 @@ export const translations = {
     confirmPayment: "Confirmar pago",
     ticketsIssued: "Boletas emitidas",
     noActionsAvailable: "Sin acciones disponibles",
+    confirmPurchaseTitle: "¿Confirmar pago?",
+    confirmPurchaseMsg: "Se confirma el pago y se emitirán las boletas.",
+    rejectPurchaseTitle: "¿Eliminar esta orden?",
+    rejectPurchaseMsg: "Esta acción no se puede deshacer.",
+    rejectPurchaseBtn: "Eliminar orden",
 
     // ScanPage — door scanner
     doorTitle: "Puerta",
@@ -697,6 +702,11 @@ export const translations = {
     confirmPayment: "Confirm payment",
     ticketsIssued: "Tickets issued",
     noActionsAvailable: "No actions available",
+    confirmPurchaseTitle: "Confirm payment?",
+    confirmPurchaseMsg: "The payment will be confirmed and tickets will be issued.",
+    rejectPurchaseTitle: "Delete this order?",
+    rejectPurchaseMsg: "This action cannot be undone.",
+    rejectPurchaseBtn: "Delete order",
 
     // ScanPage — door scanner
     doorTitle: "Door",
