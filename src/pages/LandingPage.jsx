@@ -44,7 +44,13 @@ const FLOATS = [
 
 export function LandingPage() {
   const navigate = useNavigate();
-  const { event: ctxEvent, eventLoading } = useEvent();
+  const { event: ctxEvent, eventLoading, refreshEvent } = useEvent();
+
+  // Re-query ticket availability every time the user lands here so they
+  // never see a stale stage or accidentally try to buy a sold-out ticket.
+  useEffect(() => {
+    refreshEvent();
+  }, [refreshEvent]);
 
   // All hooks must run on every render — declare BEFORE any conditional return.
   // (Violating this triggers React error #310 when `eventLoading` flips.)
@@ -105,8 +111,9 @@ export function LandingPage() {
     };
   }, [ctxEvent]);
 
-  // While fetching the active event, show a minimal spinner.
-  if (eventLoading) {
+  // Show the full-screen spinner only on the very first load (no data yet).
+  // Background refreshes on return visits update silently — no flash.
+  if (eventLoading && !ctxEvent) {
     return (
       <div style={{ height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
         <StarField seed={2} density={34} w={430} h={880} />
