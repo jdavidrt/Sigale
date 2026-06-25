@@ -121,7 +121,9 @@ export function LandingPage() {
   const event = ctxEvent;
   const active = resolveActiveStage(event); // null when no 'active' stage
   const upcoming = (event.stages || []).filter((s) => s.status === 'upcoming');
-  const isSoldOut = !active && (event.stages || []).some((s) => s.status === 'sold_out');
+  // Only truly sold out when no active AND no upcoming stages remain.
+  // If upcoming stages still have inventory, show them as "Próximamente" with no buy button.
+  const isSoldOut = !active && upcoming.length === 0 && (event.stages || []).some((s) => s.status === 'sold_out');
   const flyerSrc = event.flyerImageUrl || flyerImg;
 
   const goBuy = () => navigate('/compra');
@@ -199,7 +201,7 @@ export function LandingPage() {
                       <div className="chip" style={{ background: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.24)', color: '#fff', marginBottom: 8 }}>Etapa activa</div>
                       <div className="label" style={{ color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>{active.name}</div>
                       <div className="serif" style={{ fontSize: 38, color: 'var(--yellow)', lineHeight: 1, marginTop: 3 }}>{formatCurrency(active.price)}</div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px', marginTop: 6 }}>✦ Toda entrada incluye pola</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px', marginTop: 6 }}>✦ Toda entrada incluye pola</div>
                     </div>
                     <div style={{ textAlign: 'center' }}>
                       <div className="serif" style={{ fontSize: 36, color: '#fff' }}>{stageCupos(active)}</div>

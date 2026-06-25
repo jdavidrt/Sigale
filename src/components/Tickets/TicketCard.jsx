@@ -109,7 +109,7 @@ export const TicketCard = ({ ticket }) => {
               <p className={s.price}>{formatCurrency(event.ticketTypes[ticket.ticketType])}</p>
             </div>
             <div className={s.detailRow}>
-              <p className={s.metaText} style={{ color: 'var(--yellow)', fontWeight: 700, fontSize: 11, letterSpacing: '0.4px' }}>✦ Toda entrada incluye pola</p>
+              <p className={s.metaText} style={{ color: 'var(--yellow)', fontWeight: 700, fontSize: 15, letterSpacing: '0.4px' }}>✦ Toda entrada incluye pola</p>
             </div>
 
             {ticket.buyerPhone !== "000" && (

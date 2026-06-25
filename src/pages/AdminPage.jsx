@@ -162,7 +162,8 @@ function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
         <OrganizerMenu onLogout={onLogout} />
       </div>
 
-      <div className="scr-body pad" style={{ zIndex: 1, overflowY: 'auto', gap: 14, display: 'flex', flexDirection: 'column', paddingBottom: 24 }}>
+      <div className="scr-body pad" style={{ zIndex: 1, overflowY: 'auto', paddingBottom: 24 }}>
+      <div style={{ maxWidth: 960, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
         {/* ─── Event hero — name, venue, address, date, quick stats ─── */}
         <div className="card" style={{ padding: 16 }}>
@@ -284,6 +285,7 @@ function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
             })}
           </div>
         )}
+      </div>
       </div>
     </Screen>
   );

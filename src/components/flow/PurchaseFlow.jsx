@@ -234,7 +234,7 @@ export function PurchaseFlow() {
             <div className="chip" style={{ background: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.24)', color: '#fff', marginBottom: 8 }}>Etapa activa</div>
             <div className="label" style={{ color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>{stage?.name || 'Etapa'}</div>
             <div className="serif" style={{ fontSize: 32, color: 'var(--yellow)', lineHeight: 1, marginTop: 3 }}>{formatCurrency(stage?.price || 0)}</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px', marginTop: 6 }}>✦ Toda entrada incluye pola</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px', marginTop: 6 }}>✦ Toda entrada incluye pola</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div className="serif" style={{ fontSize: 30, color: '#fff' }}>{cupos}</div>
