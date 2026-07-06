@@ -307,6 +307,20 @@ function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
           </button>
         </div>
 
+        {/* ─── Artistas, crew y cortesías — free-entry roster, separate from
+            ticket sales. Doesn't depend on there being an active priced
+            stage, since these entries never touch ticket_stages. ─── */}
+        <div className="card" style={{ padding: 16 }}>
+          <div className="label" style={{ color: 'var(--orange-soft)', marginBottom: 10 }}>{t('guestPassesCardLabel')}</div>
+          <button
+            className="btn sm"
+            type="button"
+            onClick={() => navigate('/guest-passes')}
+          >
+            <Ic n="plus" s={18} /> {t('addArtistBtn')}
+          </button>
+        </div>
+
         {/* Pending count */}
         {pending > 0 && (
           <div className="chip sent" style={{ alignSelf: 'flex-start', background: 'rgba(121,166,232,0.13)', borderColor: 'rgba(121,166,232,0.3)', color: 'var(--blue)' }}>

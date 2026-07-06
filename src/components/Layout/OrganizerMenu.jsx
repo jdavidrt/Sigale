@@ -19,6 +19,7 @@ const LINKS = [
   { to: '/admin', icon: 'bell', es: 'Panel de compras', en: 'Purchases panel' },
   { to: '/admin', icon: 'home', es: 'Inicio', en: 'Home' },
   { to: '/sell-tickets', icon: 'plus', es: 'Vender en taquilla', en: 'Sell at the door' },
+  { to: '/guest-passes', icon: 'user', es: 'Artistas y cortesías', en: 'Guest passes' },
   { to: '/tickets', icon: 'ticket', es: 'Boletas', en: 'Tickets' },
   { to: '/validate-qr', icon: 'check', es: 'Validar QR', en: 'Validate QR' },
   { to: '/scan', icon: 'qr', es: 'Escanear (puerta)', en: 'Scan (door)' },

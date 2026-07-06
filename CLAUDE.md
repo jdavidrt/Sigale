@@ -18,7 +18,7 @@ For depth, read `docs/architecture/PROJECT_OVERVIEW.md`. This file is the agent 
 - **Code style**: components PascalCase, hooks `useCamelCase`, all code/comments in English, Spanish UI copy.
 - **Tests must pass**: `npm test` covers TicketContext, hashGenerator, qrGenerator, storage, timeFormat, csvUtils. Don't break their public API.
 - **Do not touch `server/current-server/`**: read-only reference copy of BlackCoffe's production server. Sígale's backend lives in `server/` and connects only to the `sigale` database. Full guardrail in `docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md §3.1`.
-- **DB isolation**: Sígale migrations may only `CREATE`/`ALTER` Sígale's own tables (`organizers`, `events`, `ticket_stages`, `tickets`). Confirm `DB_NAME=sigale` before any DB command.
+- **DB isolation**: Sígale migrations may only `CREATE`/`ALTER` Sígale's own tables (`organizers`, `events`, `ticket_stages`, `tickets`, `guest_passes`). Confirm `DB_NAME=sigale` before any DB command.
 - **Sales are server-side, never localStorage-only**: every ticket that must appear at `/admin`, `/tickets`, `/dashboard`, or the door scanner has to exist as a row in the `tickets` table. Walk-in sales (`/sell-tickets` → `TicketForm`) **must** go through `admin.walkIn()` → `POST /api/admin/sales` so they mint `confirmed` row(s) under a sequential `orderId`. Do **not** use the localStorage-only `addTicket()` for real sales — `/tickets` and `/dashboard` overwrite local state with `refreshFromServer()` on mount, so anything not persisted server-side silently disappears.
 - **Dashboard stats need the live event**: `EventContext` keeps the active event in memory only (never localStorage, per 2.0), so `TicketContext.data.event` is `null`. Always call `getStats(event)` with the event from `useEvent()` — bare `getStats()` resolves every price to `0` and the dashboard reads empty.
 - **Stage `sold_out` must be toggled on every inventory path**: after any increment to `soldQuantity`/`reservedQuantity` check if the stage is now full and flip to `sold_out`; after any decrement check if spots opened up and flip back to `active`. See the "Stage status & inventory invariants" section below for the exact SQL pattern and which code paths carry each check.
@@ -26,6 +26,7 @@ For depth, read `docs/architecture/PROJECT_OVERVIEW.md`. This file is the agent 
 - **`resolveActiveStage(event)` returns `null` when no `active` stage**: it no longer falls back to `stages[0]`. Always guard on `!stage` before reading `stage.id`. LandingPage gates its "Comprar boleta" button and PurchaseFlow blocks the wizard on a null result.
 - **No JSON export/import or event-cloning tools**: these are obsolete now that event/ticket data lives in the cloud `sigale` MySQL DB — there is nothing to manually back up or transfer between devices anymore. The `/copy-event` page (JSON copy/download, ticket CSV export, PDF attendance sheet) and the "Pegar Datos del Evento" paste-to-clone button in `CreateEvent` were removed for this reason; don't reintroduce JSON/clipboard-based event transfer as a workaround for anything — fetch from the API instead.
 - **`purchases` and `tickets` are merged into one `tickets` table**: there is no more separate order-level `purchases` table. One row per seat/holder, created at *reservation* time (not confirm time), whose `status` transitions in place (`pending_payment → payment_submitted → confirmed | rejected | expired`) across every row sharing one `orderId`. Full column-by-column reference: `docs/architecture/TICKETS_SCHEMA.md`. Quantity/total for an order are no longer stored — compute `COUNT(*)`/`SUM(unitPrice)` `GROUP BY orderId`. `holdersSnapshot` is gone; holder identity lives directly on each row from creation onward. `validationHash` is still minted **only at confirm** (nullable column) — this is a security invariant the door scanner (`scan.controllers.js`) relies on, don't mint it earlier. **Status as of this writing: code-complete but not yet cut over in production** — the new schema exists as `tickets_v2` (additive, see `server/migrations/005_tickets_merge_schema.sql`); the controllers already query it under the final name `tickets`, so the data migration + `RENAME TABLE` cutover (copy existing rows from the old `purchases`/`tickets` into `tickets_v2`, verify, then rename) must ship in the same release as this code and is a separate, manually-supervised step requiring explicit go-ahead before touching production.
+- **Guest passes (`guest_passes`) are a deliberately separate table from `tickets`**: artist/crew/courtesy free-entry entries (`server/migrations/006_guest_passes.sql`) never touch `tickets`, `ticket_stages`, or the payment pipeline — no price, no `validationHash`, no QR, no scan-manifest integration. Every row has an `eventId` and a `band` (sourced from `events.artists`, the event's own lineup) so organizers can see how many free passes each band has used. Managed at `/guest-passes` (`GuestPassesPage.jsx`, reachable from the "+ Agregar un artista" card on `/admin` and from `OrganizerMenu`) via `src/api/guestPasses.js` → `GET/POST/PATCH/DELETE /api/admin/guest-passes`. Don't fold these into `/tickets`, `/dashboard`, or the door-scanner manifest — they're a manual name+ID roster for door staff, not a scannable ticket.
 
 ---
 
@@ -53,12 +54,15 @@ src/
 │   ├── purchases.js               # createPurchase, submitPayment (no get/recover — flow is one-way)
 │   ├── admin.js                   # login, listPurchases, confirm/reject, walkIn,
 │   │                              # listTickets, updateTicket
+│   ├── guestPasses.js             # list, create, bulkCreate, update, remove (artist/crew/courtesy)
 │   └── scan.js                    # getManifest, syncScans
 ├── components/
 │   ├── Common/                    # SlideToConfirm, DebugPanel, Button.module.css, StorageErrorBanner
 │   ├── Dashboard/                 # SalesDashboard, CheckInDashboard, Dashboard.shared.module.css
 │   ├── Event/                     # CreateEvent (create + edit; mode prop)
 │   ├── ErrorBoundary/
+│   ├── GuestPasses/                # GuestPassTable, GuestPassTableRow — editable roster
+│   │                              # for artist/crew/courtesy free-entry passes
 │   ├── Layout/                    # AdminLayout (organizer dark chrome + OrganizerMenu),
 │   │                              # OrganizerMenu (slide-out nav), Navbar, Layout (legacy)
 │   ├── Scanner/                   # QRScanner (html5-qrcode), ValidationResult, OfflineScanner
@@ -91,6 +95,8 @@ src/
 │   ├── TicketsPage.jsx, ValidateQRPage.jsx, DashboardPage.jsx
 │   │                              # /tickets + /dashboard hydrate from /api/admin/tickets
 │   │                              # on mount via TicketContext.refreshFromServer()
+│   ├── GuestPassesPage.jsx        # Artist/crew/courtesy roster (/guest-passes) — editable
+│   │                              # table + paste-to-bulk-add, scoped to the active event
 ├── styles/
 │   ├── tokens.css                 # Raw palette + semantic token assignments (import first)
 │   ├── global.css
@@ -120,9 +126,10 @@ server/
 ├── migrations/003_sequential_orderid.sql # orderId CHAR(3) → INT UNSIGNED, globally unique, starts at 100
 ├── migrations/004_holders_snapshot.sql   # adds purchases.holdersSnapshot JSON NULL (retired by 005)
 ├── migrations/005_tickets_merge_schema.sql # creates tickets_v2 — the merged purchases+tickets schema (see docs/architecture/TICKETS_SCHEMA.md). Additive only; cutover (rename to `tickets`) is a separate manual step.
+├── migrations/006_guest_passes.sql # creates guest_passes (artist/crew/courtesy free-entry roster) — separate from tickets, no cutover needed, brand-new table.
 ├── migrations/runMigrations.js
-├── controllers/                   # events, purchases, admin, scan
-├── routes/                        # health, events, purchases, admin, scan
+├── controllers/                   # events, purchases, admin, guestPasses, scan
+├── routes/                        # health, events, purchases, admin, guestPasses, scan
 ├── middleware/requireOrganizer.js # Re-validates credentials on every /api/admin/* request
 ├── jobs/scheduler.js              # node-cron: auto-activate stages + sweep expired holds (24h)
 ├── seed/                          # seedOrganizer, seedSampleEvent, seedFromLocalStorage
@@ -157,6 +164,7 @@ Every organizer route below requires the admin login (`isLoggedIn()`); unauthent
 | `/create-event` | CreateEvent component (create mode) — the single API-backed event form |
 | `/edit` | CreateEvent component (edit mode); `/edit-event` redirects here |
 | `/sell-tickets` | SellTicketsPage (walk-in entry). Phone field is **optional**; name and ID don't pop the "not valid" inline error until the user types ≥ 4 characters. **Persists server-side**: submitting `POST`s to `/api/admin/sales`, which mints `confirmed` row(s) under a sequential `orderId` directly (no reservation phase) — so the sale shows up at `/admin` and `/tickets` immediately. The success screen shows the order number and the ticket QR (built from the `validationHash` the API now returns). It does **not** write localStorage-only tickets. |
+| `/guest-passes` | GuestPassesPage — artist/crew/courtesy free-entry roster, scoped to the active event. Editable spreadsheet (`GuestPassTable`/`GuestPassTableRow`, inline edit/delete) + a "Pegar lista" bulk-paste flow (reuses `parseTicketRows`) + a single-add modal ("+ Agregar un artista", also reachable as a card on `/admin`). Shows a per-band count summary. No price, no QR, no scan integration — see the "Guest passes" bullet in Critical rules. |
 | `/tickets` | TicketsPage (cards / table toggle, search, CSV). Hydrates from `/api/admin/tickets` on mount; this is where the organizer edits holder data and generates / shares each QR. |
 | `/validate-qr` | ValidateQRPage (camera scanner) |
 | `/dashboard` | DashboardPage — hydrates from `/api/admin/tickets` on mount so sales and check-in stats match `/admin`. |
@@ -173,6 +181,7 @@ There is intentionally no `/copy-event` route anymore. It used to export/import 
 ```
 events → ticket_stages   (stages: name, price, totalQuantity, sortOrder, activatesAt)
 events → tickets          (one row per seat/holder, spans the full order lifecycle)
+events → guest_passes     (free-entry roster: band, holderName, holderIdNumber, type)
 organizers                (bcrypt-hashed credentials)
 ```
 
@@ -189,6 +198,8 @@ The buyer never sees these states — they're an organizer concern. The buyer's 
 `holdersSnapshot` is retired. Holder identity (`holderName`/`holderIdNumber`/`holderPhone`) lives directly on each row from the moment it's known — usually `NULL` at reservation, filled in by `submitPayment`, optionally overridden by an admin at `confirmPurchase`. Positional mapping (`holders[i]` from the client → the i-th row of the order) works because all rows of an order are always inserted together in one statement, so their ids are monotonic in submission order.
 
 `validationHash` is a **server-generated random 128-bit secret**, still minted **only when the organizer confirms** (`CHAR(64)`, nullable — `NULL` before confirm). This is a security invariant, not just a data-modeling detail: the door scanner (`scan.controllers.js` `markUsed()`) looks up a ticket by this hash, so as long as it's non-`NULL` only on `confirmed` rows, an unpaid/rejected order can never be scanned in. QR codes are NOT stored — generated on demand from the hash. Hold: `reservationExpiresAt = createdAt + 24h` (`NULL` for walk-ins, which never reserve); scheduler sweeps `pending_payment` past expiry; `payment_submitted` waits for organizer action.
+
+`guest_passes` (`id, eventId, band, holderName, holderIdNumber, type ENUM('artist','crew','courtesy'), createdAt`) is a standalone table added by `server/migrations/006_guest_passes.sql` — it has no `unitPrice`, no `validationHash`, no `status` lifecycle, and is never joined into `tickets` queries, `/dashboard` stats, or the scan manifest. `band` is free-form but the UI sources it from `events.artists` (a dropdown) so counts per band stay consistent.
 
 ---
 
@@ -250,6 +261,11 @@ Only `confirmed` rows have held `soldQuantity`; only `pending_payment` and `paym
 | PATCH | `/api/admin/tickets/:id` | Organizer — edit `holderName / holderIdNumber / holderPhone`; `validationHash` is immutable once minted |
 | GET | `/api/admin/scan/manifest` | Organizer |
 | POST | `/api/admin/scan/sync` | Organizer |
+| GET | `/api/admin/guest-passes?eventId=` | Organizer — every guest pass for one event, ordered by band |
+| POST | `/api/admin/guest-passes` | Organizer — single add, body `{ eventId, band, holderName, holderIdNumber, type }` |
+| POST | `/api/admin/guest-passes/bulk` | Organizer — paste-to-bulk-add, body `{ eventId, band, type, entries: [{ holderName, holderIdNumber }] }`, one multi-row `INSERT` |
+| PATCH | `/api/admin/guest-passes/:id` | Organizer — edit any of `band/holderName/holderIdNumber/type` |
+| DELETE | `/api/admin/guest-passes/:id` | Organizer |
 
 There is intentionally **no** `GET /api/purchases/:orderId` and **no** `GET /api/recover` — the public flow is one-way (create → submitted → terminal success), and recovery is handled by the organizer reaching out to the buyer's `deliveryContact` from `/admin` or `/tickets`.
 

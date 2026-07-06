@@ -64,6 +64,7 @@ All organizer routes require the admin login (`isLoggedIn()` in `api/admin.js`);
 | `/create-event` | CreateEvent (create mode) — the single API-backed event form |
 | `/edit` | CreateEvent (edit mode); `/edit-event` redirects here |
 | `/sell-tickets` | SellTicketsPage (walk-in registration). Phone field is **optional**; name + ID don't pop inline validation errors until the user has typed ≥ 4 characters. |
+| `/guest-passes` | GuestPassesPage — artist/crew/courtesy free-entry roster, scoped to the active event and grouped by band (sourced from `events.artists`). Editable spreadsheet (`GuestPassTable`/`GuestPassTableRow`) with inline edit/delete, a "Pegar lista" paste-to-bulk-add flow (reuses `parseTicketRows`), and a single-add modal. Deliberately separate from `tickets`: no price, no `validationHash`, no scan-manifest integration — see the Data model section below. |
 | `/tickets` | TicketsPage (cards / table view, search, CSV). Hydrates from `/api/admin/tickets` on mount via `TicketContext.refreshFromServer()` so every confirmed purchase shows up; this is where the organizer edits holder data and generates / shares each QR. |
 | `/validate-qr` | ValidateQRPage (legacy camera scanner) |
 | `/copy-event` | CopyEventPage (JSON / CSV / PDF export, import) |
@@ -98,7 +99,13 @@ purchases
 tickets
   id, purchaseId → purchases, holderName, holderIdNumber, holderPhone,
   validationHash CHAR(64) UNIQUE, isUsed, usedAt
+
+guest_passes
+  id, eventId → events, band, holderName, holderIdNumber,
+  type ENUM(artist|crew|courtesy), createdAt
 ```
+
+`guest_passes` (added by `server/migrations/006_guest_passes.sql`) is a standalone roster for people who get free entry without a ticket — performing artists, their crew, and courtesy guests. It's intentionally disconnected from the purchase/ticket pipeline: no `unitPrice`/`stageId`, no `validationHash`, no `status` lifecycle, and it's never joined into `/api/admin/tickets`, `/dashboard` stats, or the scan manifest — door staff check `holderName`/`holderIdNumber` manually rather than scanning a QR. `band` is a plain string but the UI (`GuestPassesPage`) sources it from `events.artists` as a dropdown so per-band counts (shown as a summary strip) aren't split by typos.
 
 **Purchase state machine:**
 
@@ -171,6 +178,7 @@ Public 2.0 pages (`LandingPage`, `PurchaseFlowPage`, `AdminPage`, `ScanPage`) ca
 | `events.js` | `eventsApi.{getActive, getById, create, update}` + mappers `toApiEventPayload` / `fromApiEvent` / `deriveTicketTypes`. `create`/`update` take an auth-header `opts` and round-trip `address`, `artists`, `flyerImageUrl`, `bankQrImageUrl`. |
 | `purchases.js` | `purchases.{create, submit}`. No `get` / `recover` — the public flow is one-way. |
 | `admin.js` | `admin.{login, list, confirm, reject, walkIn, listTickets, updateTicket}` + session auth helpers `getAuth` / `isLoggedIn` / `logout` (used by `RequireAuth` and the event write calls) |
+| `guestPasses.js` | `guestPasses.{list, create, bulkCreate, update, remove}` — artist/crew/courtesy roster, separate domain from tickets/purchases |
 | `scan.js` | `downloadManifest`, `syncScans` |
 
 ---
@@ -187,9 +195,11 @@ migrations/
   002_event_address.sql       # Adds events.address; idempotent via information_schema + PREPARE/EXECUTE
   003_sequential_orderid.sql  # orderId CHAR(3) → INT UNSIGNED, globally unique, starts at 100
   004_holders_snapshot.sql    # Adds purchases.holdersSnapshot JSON NULL
+  005_tickets_merge_schema.sql # Creates tickets_v2 (merged purchases+tickets schema)
+  006_guest_passes.sql        # Creates guest_passes — artist/crew/courtesy free-entry roster
   runMigrations.js            # Runs every SQL file in name order before boot
-controllers/        # events, purchases, admin, scan
-routes/             # health, events, purchases, admin, scan
+controllers/        # events, purchases, admin, guestPasses, scan
+routes/             # health, events, purchases, admin, guestPasses, scan
 middleware/
   requireOrganizer  # Validates Basic credentials on every /api/admin/* request
 jobs/
@@ -208,7 +218,7 @@ current-server/     # READ-ONLY BlackCoffe reference copy — never run or impor
 
 **Auth model:** no JWT/session. `requireOrganizer` re-validates bcrypt credentials on every `/api/admin/*` request **and** on the event write routes (`POST`/`PUT /api/events`), Basic header over HTTPS. `/api/login` is rate-limited. On the client, `RequireAuth` gates every organizer route on the session-stored login — a UX funnel only; the server check is the real boundary.
 
-**Admin endpoints (`/api/admin/*`):** `GET /purchases`, `POST /purchases/:id/confirm`, `POST /purchases/:id/reject`, `POST /sales` (walk-in), `GET /tickets` (every minted ticket joined with its stage + order — feeds `/tickets` and `/dashboard`), `PATCH /tickets/:id` (edit `holderName / holderIdNumber / holderPhone`; `validationHash` is immutable once minted), and the scan endpoints `/scan/manifest` and `/scan/sync`.
+**Admin endpoints (`/api/admin/*`):** `GET /purchases`, `POST /purchases/:id/confirm`, `POST /purchases/:id/reject`, `POST /sales` (walk-in), `GET /tickets` (every minted ticket joined with its stage + order — feeds `/tickets` and `/dashboard`), `PATCH /tickets/:id` (edit `holderName / holderIdNumber / holderPhone`; `validationHash` is immutable once minted), the scan endpoints `/scan/manifest` and `/scan/sync`, and the guest-passes endpoints `GET /guest-passes?eventId=`, `POST /guest-passes` (single add), `POST /guest-passes/bulk` (paste-to-bulk-add, one multi-row `INSERT`), `PATCH /guest-passes/:id`, `DELETE /guest-passes/:id` — a fully separate table from `tickets`, no price/QR/scan involved.
 
 **Security floor:**
 - Organizer password stored bcrypt-hashed in `organizers.passwordHash`. Seed by hashing — never store plaintext.
@@ -251,6 +261,13 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 | `TicketEditConfirm.jsx` | Diff view in the row-commit modal |
 | `QRDisplay.jsx` | On-demand QR + PNG preview + copy/share toolbar |
 | `CSVPanel.jsx` | Round-trip CSV import/export modal |
+
+### Organizer — Guest passes
+
+| File | Role |
+|------|------|
+| `GuestPassTable.jsx` | Editable spreadsheet for artist/crew/courtesy passes; toolbar picks a default band + type, then "Pegar lista" bulk-inserts pasted name/id pairs via `parseTicketRows` + `POST /api/admin/guest-passes/bulk` |
+| `GuestPassTableRow.jsx` | Inline edit-in-place per row (band/name/id/type), direct save (no diff-confirm modal — unlike `TicketEditConfirm`, a guest-pass edit has no payment/QR consequence) |
 
 ### Scanner
 
@@ -317,6 +334,8 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 
 **Walk-in registration.** `/admin` → "+ Registrar Venta" → `/sell-tickets` (`TicketForm`) → organizer enters buyer info (phone optional) → ticket is created. The legacy inline walk-in stepper on `/admin` has been removed; collecting holder name/ID/phone up front means walk-ins appear in the same `/tickets`, `/dashboard`, and scanner manifest as purchased orders.
 
+**Guest passes (artist/crew/courtesy).** `/admin` → "+ Agregar un artista" → `/guest-passes` → either the single-add modal (band + name + id + type) or "Pegar lista" to bulk-paste a whole band's list under one default band+type. Entries live in their own `guest_passes` table — they never appear on `/tickets`, `/dashboard`, or the scan manifest; door staff check the name/ID against this list manually. The per-band summary strip helps the organizer track how many free passes each band has used.
+
 **Ticket sales / bulk add.** `/tickets` → Table view → "Paste Tickets" → `parseTicketRows` splits clipboard TSV → `addTicketsFromCSV` dedupes and inserts.
 
 **Backup / handoff.** `/copy-event` exports JSON + CSV. `CreateEvent`'s "Paste from clipboard" restores a JSON export. `seedFromLocalStorage.js` in the server seeds legacy data into MySQL.
@@ -346,7 +365,7 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 
 ## BlackCoffe guardrail
 
-`server/current-server/` is a **read-only reference snapshot** of BlackCoffe's production server. Never execute it, never import from it. Sígale's backend is a separate app; its migrations touch only the `sigale` database tables (`organizers`, `events`, `ticket_stages`, `purchases`, `tickets`) and must never `CREATE`/`ALTER`/`DROP` BlackCoffe tables (`orders`, `deposits`, `clients`, `products`, `users`). Confirm `DB_NAME=sigale` before any DB command. Full policy in `docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md §3.1`.
+`server/current-server/` is a **read-only reference snapshot** of BlackCoffe's production server. Never execute it, never import from it. Sígale's backend is a separate app; its migrations touch only the `sigale` database tables (`organizers`, `events`, `ticket_stages`, `purchases`, `tickets`, `guest_passes`) and must never `CREATE`/`ALTER`/`DROP` BlackCoffe tables (`orders`, `deposits`, `clients`, `products`, `users`). Confirm `DB_NAME=sigale` before any DB command. Full policy in `docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md §3.1`.
 
 ---
 
