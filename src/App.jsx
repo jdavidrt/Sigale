@@ -32,9 +32,9 @@ import { isLoggedIn } from "./api/admin";
 
 // Organizer chrome (Astromelias topbar + OrganizerMenu sidebar) for every
 // admin-tooling route. Each child page renders inside the dark Screen.
-function OrganizerLayout({ title }) {
+function OrganizerLayout() {
   return (
-    <AdminLayout title={title}>
+    <AdminLayout>
       <Outlet />
     </AdminLayout>
   );

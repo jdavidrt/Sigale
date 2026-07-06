@@ -1,12 +1,13 @@
 /*
  * AdminLayout — the shared chrome for every organizer (admin) page.
  *
- * Renders the Astromelias dark Screen, a top bar with the event title and the
- * slide-out OrganizerMenu (the menu shown on /admin, the canonical look).
- * Every page under the /admin/* tree wraps its content in this layout so the
- * menu, background, and topbar are identical across the organizer surface.
+ * Renders the Astromelias dark Screen, a top bar with the "Sígale /
+ * Administración" brand mark (links home to /admin) and the slide-out
+ * OrganizerMenu. Every page under the /admin/* tree wraps its content in
+ * this layout so the menu, background, and topbar are identical across the
+ * organizer surface.
  *
- *   <AdminLayout title="Editar evento">
+ *   <AdminLayout>
  *     <YourPageContent />
  *   </AdminLayout>
  *
@@ -14,15 +15,13 @@
  * own the auth toggle. If you don't pass `onLogout`, the layout falls back to
  * the OrganizerMenu's default (which still calls api/admin.logout()).
  */
-import { useEvent } from '../../context/EventContext';
 import { Screen } from '../ui/Screen';
 import { OrganizerMenu } from './OrganizerMenu';
 import { StorageErrorBanner } from '../Common/StorageErrorBanner';
 import { logout as apiLogout } from '../../api/admin';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-export function AdminLayout({ title, subtitle, children, onLogout }) {
-  const { event } = useEvent();
+export function AdminLayout({ children, onLogout }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -31,17 +30,14 @@ export function AdminLayout({ title, subtitle, children, onLogout }) {
     navigate('/admin');
   };
 
-  const headerTitle = title || 'Panel';
-  const headerSubtitle = subtitle ?? event?.name ?? '';
-
   return (
     <Screen seed={11}>
       <StorageErrorBanner />
       <div className="topbar" style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--black)' }}>
-        <div>
-          <div className="serif" style={{ fontSize: 18, color: 'var(--cream)' }}>{headerTitle}</div>
-          {headerSubtitle && <div className="muted" style={{ fontSize: 12 }}>{headerSubtitle}</div>}
-        </div>
+        <Link to="/admin" style={{ textDecoration: 'none' }}>
+          <div className="serif" style={{ fontSize: 18, color: 'var(--cream)' }}>Sígale</div>
+          <div className="muted" style={{ fontSize: 12 }}>Administración</div>
+        </Link>
         <OrganizerMenu onLogout={handleLogout} />
       </div>
       <div className="scr-body pad" style={{ zIndex: 1, overflowY: 'auto', paddingBottom: 24 }}>
