@@ -85,56 +85,51 @@ const buildShareMessage = (ticket, event, language) => {
   const ticketPrice = event.ticketTypes[ticket.ticketType] || 0;
   const priceLine = ticketPrice > 0
     ? (language === 'es'
-        ? `\n💵 Precio: ${formatCurrency(ticketPrice)}`
-        : `\n💵 Price: ${formatCurrency(ticketPrice)}`)
+        ? `\n▸ Precio: ${formatCurrency(ticketPrice)}`
+        : `\n▸ Price: ${formatCurrency(ticketPrice)}`)
     : '';
   const intro = ticketPrice > 0
-    ? (language === 'es' ? '🎉 ¡Gracias por comprar tu boleta! 🎫\n' : '🎉 Thank you for purchasing your ticket! 🎫\n\n')
+    ? (language === 'es' ? '✦ ¡Gracias por comprar tu boleta! ✦\n' : '✦ Thank you for purchasing your ticket! ✦\n\n')
     : '';
 
   if (language === 'es') {
-    return `${intro}✨ ${event.name} ✨
+    return `${intro}${event.name}
 
 Hola ${(ticket.buyerName || '').split(' ')[0]},
 Tu boleta está confirmada y lista.
 
-📅 Detalles del Evento:
-━━━
-📍 Lugar: ${event.venue}
-🗺️ Dirección: ${event.address}
-📆 Fecha: ${formattedDate}
-🕐 Apertura de puertas: ${formattedTime}
-🎫 Tipo de boleta: ${ticket.ticketType.toUpperCase()}${priceLine}
-━━━
+✦ Detalles del Evento
+▸ Lugar: ${event.venue}
+▸ Dirección: ${event.address}
+▸ Fecha: ${formattedDate}
+▸ Apertura de puertas: ${formattedTime}
+▸ Tipo de boleta: ${ticket.ticketType.toUpperCase()}${priceLine}
 
-📱 Guarda esta boleta y presenta el código QR en la entrada.
+Guarda esta boleta y presenta el código QR en la entrada.
 Si tienes alguna pregunta, no dudes en contactarnos.
-¡Nos vemos pronto! 🎊💖🎊`;
+✦ ¡Nos vemos pronto! ✦`;
   }
 
-  return `${intro}✨ ${event.name} ✨
+  return `${intro}${event.name}
 
 Dear ${(ticket.buyerName || '').split(' ')[0]},
 
 We're thrilled to have you join us for this amazing event! Your ticket is confirmed and ready.
 
-📅 Event Details:
-━━━━━━━━━━━━━━━━━━━━
-📍 Venue: ${event.venue}
-🗺️  Address: ${event.address}
-📆 Date: ${formattedDate}
-🕐 Doors Open: ${formattedTime}
-🎫 Ticket Type: ${ticket.ticketType.toUpperCase()}${priceLine}
+✦ Event Details
+▸ Venue: ${event.venue}
+▸ Address: ${event.address}
+▸ Date: ${formattedDate}
+▸ Doors Open: ${formattedTime}
+▸ Ticket Type: ${ticket.ticketType.toUpperCase()}${priceLine}
 
-━━━━━━━━━━━━━━━━━━━━
+✓ Important: Please save this ticket and present the QR code at the entrance. Screenshot or download this image for easy access!
 
-📱 Important: Please save this ticket and present the QR code at the entrance. Screenshot or download this image for easy access!
-
-We can't wait to see you there! 🎊
+We can't wait to see you there!
 
 If you have any questions, feel free to reach out.
 
-See you soon! 💖`;
+✦ See you soon! ✦`;
 };
 
 /**
