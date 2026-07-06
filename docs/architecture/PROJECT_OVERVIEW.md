@@ -2,6 +2,8 @@
 
 The deep-dive technical document. For the agent quick-reference, see `/CLAUDE.md`.
 
+> **Schema update superseding this document's data-model sections:** the `purchases` + `tickets` tables described below have been merged into a single `tickets` table (one row per seat, spanning the full order lifecycle from reservation through confirm/reject/expiry). See `docs/architecture/TICKETS_SCHEMA.md` for the current schema and `/CLAUDE.md`'s "Data model" section for the quick summary. This document's narrative below still reflects the original two-table design and is kept as historical context for *why* the split existed — don't use it as the current source of truth for table shapes.
+
 Sígale is a mobile-first React 19 + Vite PWA backed by an Express + MySQL server. Public buyers browse the event landing page, reserve seats, send a payment screenshot over WhatsApp, and land on a terminal success screen telling them the boleta will arrive at their chosen contact. There is no public status page — once the wizard ends, the organizer drives the rest of the lifecycle. Organizers confirm payments, mint tickets, deliver QRs from `/tickets`, register walk-ins via `/sell-tickets`, and scan QR codes at the door (offline-capable). The Astromelias visual identity ships as a CSS layer over the existing token system.
 
 ---

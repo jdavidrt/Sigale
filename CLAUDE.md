@@ -18,13 +18,14 @@ For depth, read `docs/architecture/PROJECT_OVERVIEW.md`. This file is the agent 
 - **Code style**: components PascalCase, hooks `useCamelCase`, all code/comments in English, Spanish UI copy.
 - **Tests must pass**: `npm test` covers TicketContext, hashGenerator, qrGenerator, storage, timeFormat, csvUtils. Don't break their public API.
 - **Do not touch `server/current-server/`**: read-only reference copy of BlackCoffe's production server. Sígale's backend lives in `server/` and connects only to the `sigale` database. Full guardrail in `docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md §3.1`.
-- **DB isolation**: Sígale migrations may only `CREATE`/`ALTER` Sígale's own tables (`organizers`, `events`, `ticket_stages`, `purchases`, `tickets`). Confirm `DB_NAME=sigale` before any DB command.
-- **Sales are server-side, never localStorage-only**: every ticket that must appear at `/admin`, `/tickets`, `/dashboard`, or the door scanner has to exist in the `tickets` table. Walk-in sales (`/sell-tickets` → `TicketForm`) **must** go through `admin.walkIn()` → `POST /api/admin/sales` so they mint a `confirmed` purchase with a sequential `orderId`. Do **not** use the localStorage-only `addTicket()` for real sales — `/tickets` and `/dashboard` overwrite local state with `refreshFromServer()` on mount, so anything not persisted server-side silently disappears.
+- **DB isolation**: Sígale migrations may only `CREATE`/`ALTER` Sígale's own tables (`organizers`, `events`, `ticket_stages`, `tickets`). Confirm `DB_NAME=sigale` before any DB command.
+- **Sales are server-side, never localStorage-only**: every ticket that must appear at `/admin`, `/tickets`, `/dashboard`, or the door scanner has to exist as a row in the `tickets` table. Walk-in sales (`/sell-tickets` → `TicketForm`) **must** go through `admin.walkIn()` → `POST /api/admin/sales` so they mint `confirmed` row(s) under a sequential `orderId`. Do **not** use the localStorage-only `addTicket()` for real sales — `/tickets` and `/dashboard` overwrite local state with `refreshFromServer()` on mount, so anything not persisted server-side silently disappears.
 - **Dashboard stats need the live event**: `EventContext` keeps the active event in memory only (never localStorage, per 2.0), so `TicketContext.data.event` is `null`. Always call `getStats(event)` with the event from `useEvent()` — bare `getStats()` resolves every price to `0` and the dashboard reads empty.
 - **Stage `sold_out` must be toggled on every inventory path**: after any increment to `soldQuantity`/`reservedQuantity` check if the stage is now full and flip to `sold_out`; after any decrement check if spots opened up and flip back to `active`. See the "Stage status & inventory invariants" section below for the exact SQL pattern and which code paths carry each check.
-- **`GREATEST(INT UNSIGNED − n, 0)` is NOT safe**: when `n > col`, MySQL evaluates the subtraction as unsigned first, wrapping to ~4 294 967 295. That value violates `chkStageCapacity`. Only decrement `soldQuantity`/`reservedQuantity` for purchases whose status proves they still hold inventory — `rejected` and `expired` have already been decremented by their own handlers.
+- **`GREATEST(INT UNSIGNED − n, 0)` is NOT safe**: when `n > col`, MySQL evaluates the subtraction as unsigned first, wrapping to ~4 294 967 295. That value violates `chkStageCapacity`. Only decrement `soldQuantity`/`reservedQuantity` for ticket rows whose status proves they still hold inventory — `rejected` and `expired` have already been decremented by their own handlers.
 - **`resolveActiveStage(event)` returns `null` when no `active` stage**: it no longer falls back to `stages[0]`. Always guard on `!stage` before reading `stage.id`. LandingPage gates its "Comprar boleta" button and PurchaseFlow blocks the wizard on a null result.
 - **No JSON export/import or event-cloning tools**: these are obsolete now that event/ticket data lives in the cloud `sigale` MySQL DB — there is nothing to manually back up or transfer between devices anymore. The `/copy-event` page (JSON copy/download, ticket CSV export, PDF attendance sheet) and the "Pegar Datos del Evento" paste-to-clone button in `CreateEvent` were removed for this reason; don't reintroduce JSON/clipboard-based event transfer as a workaround for anything — fetch from the API instead.
+- **`purchases` and `tickets` are merged into one `tickets` table**: there is no more separate order-level `purchases` table. One row per seat/holder, created at *reservation* time (not confirm time), whose `status` transitions in place (`pending_payment → payment_submitted → confirmed | rejected | expired`) across every row sharing one `orderId`. Full column-by-column reference: `docs/architecture/TICKETS_SCHEMA.md`. Quantity/total for an order are no longer stored — compute `COUNT(*)`/`SUM(unitPrice)` `GROUP BY orderId`. `holdersSnapshot` is gone; holder identity lives directly on each row from creation onward. `validationHash` is still minted **only at confirm** (nullable column) — this is a security invariant the door scanner (`scan.controllers.js`) relies on, don't mint it earlier. **Status as of this writing: code-complete but not yet cut over in production** — the new schema exists as `tickets_v2` (additive, see `server/migrations/005_tickets_merge_schema.sql`); the controllers already query it under the final name `tickets`, so the data migration + `RENAME TABLE` cutover (copy existing rows from the old `purchases`/`tickets` into `tickets_v2`, verify, then rename) must ship in the same release as this code and is a separate, manually-supervised step requiring explicit go-ahead before touching production.
 
 ---
 
@@ -33,7 +34,7 @@ For depth, read `docs/architecture/PROJECT_OVERVIEW.md`. This file is the agent 
 Sígale already runs in production — merged into the shared BlackCoffe backend at `coffeserver.onrender.com` (see `docs/SIGALE_MERGE_INTO_SHARED_SERVER.md`). **Don't spin up a local Express/MySQL instance to "test" something that's already live.** The frontend dev server (`npm run dev`) is usually already running locally at `http://localhost:5173/` and proxies API calls straight to production per `.env.development.local` / `vite.config.js` — there is normally no local backend process to start for routine work.
 
 - **Production DB is queryable directly, but it's a *shared* MySQL instance.** Sígale's tables live in their own `sigale` schema on the same DigitalOcean cluster BlackCoffe uses. Credentials in `.env.local` (git-ignored, repo root) connect to BlackCoffe's `defaultdb` by default — any ad-hoc inspection script must explicitly pass `database: 'sigale'` to the client, never rely on that file's own `DB_NAME` value. Never query or touch BlackCoffe's own tables (`orders`, `deposits`, `clients`, `products`, `users`).
-- **Treat production data mutations as irreversible.** Read-only inspection first — dump the rows, check `purchases`/`tickets` references before deleting or altering anything — then confirm the exact change with the user before writing.
+- **Treat production data mutations as irreversible.** Read-only inspection first — dump the rows, check `tickets` references before deleting or altering anything — then confirm the exact change with the user before writing.
 - **Known gap: `activateDueStages` (`server/jobs/scheduler.js`) never demotes the stage it supersedes.** It flips any `upcoming` stage past its `activatesAt` straight to `active`, without checking whether another stage on the same event is already `active`. Two stages can end up simultaneously `active`; `resolveActiveStage()` (`src/utils/sampleEvent.js`) only returns the first match by `sortOrder`, so the second `active` stage becomes invisible on the landing page — not featured (it lost the "active" slot) and not listed under "Próximamente" either (its status isn't `upcoming`). This has happened in production. Don't "fix" it by flipping the superseded stage to `sold_out` without checking the restore-on-decrement invariant first — several paths (`rejectPurchase`, `sweepExpiredHolds`, `deleteAdminTicket`, `updateEvent`) auto-flip `sold_out` back to `active` once `soldQuantity + reservedQuantity < totalQuantity`, which would silently resurrect a stage that should stay closed.
 
 ---
@@ -114,10 +115,11 @@ server/
 ├── index.js                       # Express: helmet + CORS + routes + error handler + runMigrations() → listen
 ├── config.js                      # PORT
 ├── db.js                          # mysql2/promise pool → sigale DB, dateStrings:true, SSL CA cert
-├── migrations/001_init.sql        # DDL: organizers, events, ticket_stages, purchases, tickets
+├── migrations/001_init.sql        # DDL: organizers, events, ticket_stages, purchases, tickets (original two-table split)
 ├── migrations/002_event_address.sql # adds events.address (idempotent guard via information_schema)
 ├── migrations/003_sequential_orderid.sql # orderId CHAR(3) → INT UNSIGNED, globally unique, starts at 100
-├── migrations/004_holders_snapshot.sql   # adds purchases.holdersSnapshot JSON NULL
+├── migrations/004_holders_snapshot.sql   # adds purchases.holdersSnapshot JSON NULL (retired by 005)
+├── migrations/005_tickets_merge_schema.sql # creates tickets_v2 — the merged purchases+tickets schema (see docs/architecture/TICKETS_SCHEMA.md). Additive only; cutover (rename to `tickets`) is a separate manual step.
 ├── migrations/runMigrations.js
 ├── controllers/                   # events, purchases, admin, scan
 ├── routes/                        # health, events, purchases, admin, scan
@@ -154,7 +156,7 @@ Every organizer route below requires the admin login (`isLoggedIn()`); unauthent
 | `/admin/create` | (legacy) — redirects to `/admin` |
 | `/create-event` | CreateEvent component (create mode) — the single API-backed event form |
 | `/edit` | CreateEvent component (edit mode); `/edit-event` redirects here |
-| `/sell-tickets` | SellTicketsPage (walk-in entry). Phone field is **optional**; name and ID don't pop the "not valid" inline error until the user types ≥ 4 characters. **Persists server-side**: submitting `POST`s to `/api/admin/sales`, which mints a `confirmed` purchase with a sequential `orderId` + a server-minted ticket — so the sale shows up at `/admin` and `/tickets` immediately. The success screen shows the order number and the ticket QR (built from the `validationHash` the API now returns). It does **not** write localStorage-only tickets. |
+| `/sell-tickets` | SellTicketsPage (walk-in entry). Phone field is **optional**; name and ID don't pop the "not valid" inline error until the user types ≥ 4 characters. **Persists server-side**: submitting `POST`s to `/api/admin/sales`, which mints `confirmed` row(s) under a sequential `orderId` directly (no reservation phase) — so the sale shows up at `/admin` and `/tickets` immediately. The success screen shows the order number and the ticket QR (built from the `validationHash` the API now returns). It does **not** write localStorage-only tickets. |
 | `/tickets` | TicketsPage (cards / table toggle, search, CSV). Hydrates from `/api/admin/tickets` on mount; this is where the organizer edits holder data and generates / shares each QR. |
 | `/validate-qr` | ValidateQRPage (camera scanner) |
 | `/dashboard` | DashboardPage — hydrates from `/api/admin/tickets` on mount so sales and check-in stats match `/admin`. |
@@ -170,22 +172,23 @@ There is intentionally no `/copy-event` route anymore. It used to export/import 
 
 ```
 events → ticket_stages   (stages: name, price, totalQuantity, sortOrder, activatesAt)
-events → purchases        (reservation lifecycle)
-purchases → tickets       (minted at confirm, N per purchase)
+events → tickets          (one row per seat/holder, spans the full order lifecycle)
 organizers                (bcrypt-hashed credentials)
 ```
 
+There is **no separate `purchases` table** — it was merged into `tickets` (see `docs/architecture/TICKETS_SCHEMA.md` for the full column-by-column reference). An "order" is simply every `tickets` row that shares one `orderId`; a row is created at *reservation* time and transitions in place through its lifecycle rather than being spawned fresh at confirm.
+
 Event columns: `name, description, artists (JSON), eventDate, openingTime, venue, address, venueCapacity, flyerImageUrl, bankQrImageUrl, whatsappNumber, isActive`. `address` is added by `migrations/002_event_address.sql`; create/edit (`POST`/`PUT /api/events`) accept and persist it alongside `artists`, `flyerImageUrl`, and `bankQrImageUrl`.
 
-Purchase states: `pending_payment → payment_submitted → confirmed | rejected | expired`
+Order/ticket states (`tickets.status`, shared by every row of one `orderId`): `pending_payment → payment_submitted → confirmed | rejected | expired`. Walk-in sales (`createWalkInSale`) skip straight to `confirmed`.
 
-The buyer never sees these states — they're an organizer concern. The buyer's only outcome is "we got your message; we'll send the boleta to `<deliveryContact>`" (the success screen reads `purchases.deliveryMethod` + `purchases.deliveryContact`, which are persisted at step 5 via `POST /api/purchases/:orderId/submitted`).
+The buyer never sees these states — they're an organizer concern. The buyer's only outcome is "we got your message; we'll send the boleta to `<deliveryContact>`" (the success screen reads `tickets.deliveryMethod` + `tickets.deliveryContact`, which are persisted at step 5 via `POST /api/purchases/:orderId/submitted`).
 
-`orderId` is an `INT UNSIGNED`, globally unique across all purchases, assigned sequentially starting at 100. (Migration 003 converted the original `CHAR(3)` per-event random folio.)
+`orderId` is an `INT UNSIGNED`, sequential starting at 100, **shared by every row of one order** (not unique per row anymore — `orderAnchor`, set only on the first row inserted per order, is what carries the collision-detection `UNIQUE` constraint that `orderId` itself used to have). Quantity and total for an order are no longer stored columns — compute `COUNT(*)` / `SUM(unitPrice)` `GROUP BY orderId`.
 
-`holdersSnapshot` (`JSON NULL`, added by Migration 004) stores the holder names / ID numbers / phones the buyer enters during the public flow. At confirm-time `confirmPurchase` mints tickets from this snapshot unless the organizer explicitly passes overriding holder data in the request body.
+`holdersSnapshot` is retired. Holder identity (`holderName`/`holderIdNumber`/`holderPhone`) lives directly on each row from the moment it's known — usually `NULL` at reservation, filled in by `submitPayment`, optionally overridden by an admin at `confirmPurchase`. Positional mapping (`holders[i]` from the client → the i-th row of the order) works because all rows of an order are always inserted together in one statement, so their ids are monotonic in submission order.
 
-`validationHash` is a **server-generated random 128-bit secret** minted when the organizer confirms (`CHAR(64)`). QR codes are NOT stored — generated on demand from the hash. Hold: `reservationExpiresAt = createdAt + 24h`; scheduler sweeps `pending_payment` past expiry; `payment_submitted` waits for organizer action.
+`validationHash` is a **server-generated random 128-bit secret**, still minted **only when the organizer confirms** (`CHAR(64)`, nullable — `NULL` before confirm). This is a security invariant, not just a data-modeling detail: the door scanner (`scan.controllers.js` `markUsed()`) looks up a ticket by this hash, so as long as it's non-`NULL` only on `confirmed` rows, an unpaid/rejected order can never be scanned in. QR codes are NOT stored — generated on demand from the hash. Hold: `reservationExpiresAt = createdAt + 24h` (`NULL` for walk-ins, which never reserve); scheduler sweeps `pending_payment` past expiry; `payment_submitted` waits for organizer action.
 
 ---
 
@@ -211,15 +214,15 @@ UPDATE ticket_stages SET status = 'active'
     AND soldQuantity + reservedQuantity < totalQuantity;
 ```
 
-**Paths that carry this check:** `rejectPurchase` (reserved → released), `deleteAdminTicket` for a confirmed ticket (sold → released), `sweepExpiredHolds` per expired row (reserved → released), `updateEvent` when `totalQuantity` is raised (no quantity change, but the capacity ceiling moves up), `deleteAllPurchases` (batch restore via a single un-scoped UPDATE after the DELETE).
+**Paths that carry this check:** `rejectPurchase` (reserved → released, all rows of the order in one `UPDATE`), `deleteAdminTicket` for a confirmed ticket (sold → released; new since the merge — deleting a non-confirmed row is now rejected with 409 instead, since there's no designed inventory-adjustment path for partially deleting an open order), `sweepExpiredHolds` (reserved → released, grouped by stage across every expired row), `updateEvent` when `totalQuantity` is raised (no quantity change, but the capacity ceiling moves up), `deleteAllPurchases` (batch restore via a single un-scoped UPDATE after the DELETE).
 
-### `confirmPurchase` — no status transition
+### `confirmPurchase` — no stage-status transition
 
-Confirm moves `reservedQuantity − qty` and `soldQuantity + qty` simultaneously, so the net available spots are unchanged. No fill or restore check is needed.
+Confirm moves `reservedQuantity − qty` and `soldQuantity + qty` simultaneously (`qty` = row count for the order), so the net available spots are unchanged. No fill or restore check is needed on `ticket_stages`. (The `tickets.status` column itself very much does transition — every row of the order flips `→ confirmed` in one `UPDATE ... WHERE orderId = ?`.)
 
 ### `deleteAllPurchases` inventory rule
 
-Only `confirmed` purchases have held `soldQuantity`; only `pending_payment` and `payment_submitted` have held `reservedQuantity`. `rejected` and `expired` purchases already had their counters decremented by their own handlers — including them in a batch restore causes unsigned underflow (`GREATEST(0 − n, 0)` wraps to ~4 294 967 295, violating `chkStageCapacity`).
+Only `confirmed` rows have held `soldQuantity`; only `pending_payment` and `payment_submitted` rows have held `reservedQuantity`. `rejected` and `expired` rows already had their counters decremented by their own handlers — including them in a batch restore causes unsigned underflow (`GREATEST(0 − n, 0)` wraps to ~4 294 967 295, violating `chkStageCapacity`). This endpoint now runs a single `DELETE FROM tickets` (no more second table to cascade-delete) — it still wipes every status, so "Delete All Tickets" on `/tickets` clears pending/rejected/expired orders too, not just confirmed ones.
 
 ### `updateEvent` totalQuantity floor guard
 
@@ -239,11 +242,11 @@ Only `confirmed` purchases have held `soldQuantity`; only `pending_payment` and 
 | POST | `/api/purchases` | Public |
 | POST | `/api/purchases/:orderId/submitted` | Public |
 | POST | `/api/login` | Public (rate-limited) |
-| GET | `/api/admin/purchases` | Organizer |
-| POST | `/api/admin/purchases/:id/confirm` | Organizer |
-| POST | `/api/admin/purchases/:id/reject` | Organizer |
-| POST | `/api/admin/sales` | Organizer (walk-in) — body `{ eventId, stageId, quantity, holders[] }`. Draws stage inventory, mints a `confirmed` purchase with a sequential `orderId`, and mints tickets in one transaction. Returns `{ orderId, status, minted, tickets[] }` (each ticket includes its `validationHash` so the seller's screen can render the QR without a second fetch) |
-| GET | `/api/admin/tickets` | Organizer — every minted ticket from a confirmed purchase, joined with stage + order (feeds /tickets and /dashboard) |
+| GET | `/api/admin/purchases?status=&orderId=` | Organizer — `GROUP BY orderId` aggregate over `tickets` (one row per order: `quantity = COUNT(*)`, `totalAmount = SUM(unitPrice)`, plus a `holders[]` array from a second query) |
+| POST | `/api/admin/purchases/:orderId/confirm` | Organizer — note the param is `orderId`, not a row id (there's no more single-row `purchases.id` surrogate) |
+| POST | `/api/admin/purchases/:orderId/reject` | Organizer — same `:orderId` param change |
+| POST | `/api/admin/sales` | Organizer (walk-in) — body `{ eventId, stageId, quantity, holders[] }`. Draws stage inventory and inserts `confirmed` row(s) directly under a sequential `orderId` in one multi-row insert (no reservation phase). Returns `{ orderId, status, minted, tickets[] }` (each ticket includes its `validationHash` so the seller's screen can render the QR without a second fetch) |
+| GET | `/api/admin/tickets?status=` | Organizer — every ticket row, joined with its stage (feeds /tickets and /dashboard). `status` defaults to `confirmed` when omitted (load-bearing: protects `/dashboard`'s stats from silently including non-confirmed rows) — pass a comma-separated list or the literal `all` to see a wider set; this is what makes pending/rejected/expired orders visible on `/tickets`, not just `/admin` |
 | PATCH | `/api/admin/tickets/:id` | Organizer — edit `holderName / holderIdNumber / holderPhone`; `validationHash` is immutable once minted |
 | GET | `/api/admin/scan/manifest` | Organizer |
 | POST | `/api/admin/scan/sync` | Organizer |

@@ -9,6 +9,8 @@
 
 > Este documento evalúa la spec v3 y la aterriza sobre tu stack real. Los archivos `db.js`, `config.js`, `index.js` y `deposits.controllers.js` de BlackCoffe son la plantilla viva: el backend de Sígale debe hablar el mismo idioma que ese código ya en producción.
 
+> **Actualización de esquema que reemplaza el diseño de tablas descrito abajo:** `purchases` y `tickets` se fusionaron en una sola tabla `tickets` (una fila por boleta/asiento, que abarca todo el ciclo de vida de la orden desde la reserva hasta confirmar/rechazar/expirar). Ver `docs/architecture/TICKETS_SCHEMA.md` para el esquema vigente y la sección "Data model" de `/CLAUDE.md` para el resumen rápido. Este ADR se conserva como contexto histórico de la decisión original de dos tablas — no usarlo como fuente de verdad del esquema actual.
+
 ---
 
 ## 1. Contexto

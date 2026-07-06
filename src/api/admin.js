@@ -83,13 +83,16 @@ export const adminApi = {
     const qs = new URLSearchParams(clean).toString();
     return api.get(`/api/admin/purchases${qs ? `?${qs}` : ''}`, { headers: authHeader() });
   },
-  confirm: (id) => api.post(`/api/admin/purchases/${id}/confirm`, {}, { headers: authHeader() }),
-  reject: (id) => api.post(`/api/admin/purchases/${id}/reject`, undefined, { headers: authHeader() }),
+  confirm: (orderId) => api.post(`/api/admin/purchases/${orderId}/confirm`, {}, { headers: authHeader() }),
+  reject: (orderId) => api.post(`/api/admin/purchases/${orderId}/reject`, undefined, { headers: authHeader() }),
   walkIn: (payload) => api.post('/api/admin/sales', payload, { headers: authHeader() }),
-  // Confirmed-purchase tickets joined with their stage + order. The
-  // /tickets and /dashboard pages call this so the organizer sees the
-  // same minted tickets that the door scanner will accept.
-  listTickets: () => api.get('/api/admin/tickets', { headers: authHeader() }),
+  // Ticket rows joined with their stage. `status` defaults to 'confirmed'
+  // server-side when omitted — pass a comma-separated list or 'all' to see
+  // pending/rejected/expired orders too (used by /tickets' status filter).
+  listTickets: (status) => {
+    const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+    return api.get(`/api/admin/tickets${qs}`, { headers: authHeader() });
+  },
   updateTicket: (id, patch) => api.patch(`/api/admin/tickets/${id}`, patch, { headers: authHeader() }),
   deleteTicket: (id) => api.del(`/api/admin/tickets/${id}`, { headers: authHeader() }),
   deleteAllPurchases: () => api.del('/api/admin/purchases', { headers: authHeader() }),

@@ -6,6 +6,8 @@
 
 > **HARD GUARDRAIL — do not touch BlackCoffe.** `server/current-server/` is a **read-only reference copy** of BlackCoffe's live production server, kept only to mirror its conventions. **Never execute it, never run its scripts or migrations, never point it at a database.** All Sígale backend code lives in a *separate* `server/` app and connects *only* to the dedicated **`sigale`** database. Sígale migrations may only create/alter Sígale's own tables and must never `CREATE`/`ALTER`/`DROP`/write BlackCoffe's tables (`orders`, `deposits`, `clients`, `products`, `users`). Before running anything, confirm `DB_NAME=sigale` — the shared `.env.local` may hold BlackCoffe's real credentials, and one migration against the wrong database could corrupt the other project. Full detail in [§3.1](#31-hard-guardrail--isolation-from-blackcoffe).
 
+> **Schema update:** `purchases` and `tickets` (referenced throughout this plan as two separate tables) have since been merged into a single `tickets` table — one row per seat, spanning the full order lifecycle instead of being minted fresh at confirm. See `docs/architecture/TICKETS_SCHEMA.md` for the current schema and `/CLAUDE.md`'s "Data model" section for the summary. Treat any `purchases`-table references below as historical/superseded.
+
 ---
 
 ## 0. Locked decisions
