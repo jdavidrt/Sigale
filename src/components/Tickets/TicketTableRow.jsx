@@ -11,6 +11,7 @@ import { useTickets } from "../../context/TicketContext";
 import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useDialog } from "../../context/DialogContext";
+import { statusMeta } from "../../api/purchases";
 import { TicketEditConfirm } from "./TicketEditConfirm";
 import s from "./TicketTable.module.css";
 
@@ -39,6 +40,13 @@ export const TicketTableRow = ({ ticket }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(null);
   const firstInputRef = useRef(null);
+
+  // validationHash (and thus the QR) only exists once an order is confirmed
+  // — see docs/architecture/TICKETS_SCHEMA.md. Rows with no `status` are
+  // locally-added tickets that never went through the server; treat those
+  // as confirmed for backwards compatibility.
+  const isConfirmed = ticket.status ? ticket.status === "confirmed" : true;
+  const statusLabel = ticket.status && !isConfirmed ? statusMeta(ticket.status).label : null;
 
   // Snapshot the ticket into the draft when entering edit mode.
   const startEdit = () => {
@@ -114,6 +122,7 @@ export const TicketTableRow = ({ ticket }) => {
   };
 
   const handleDelete = async () => {
+    if (!isConfirmed) return; // button is disabled in this state; guard belt-and-suspenders
     const ok = await confirm({
       title: t("deleteTicketTitle"),
       message: t("deleteTicketBody")
@@ -186,6 +195,11 @@ export const TicketTableRow = ({ ticket }) => {
             {ticket.orderId != null && (
               <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "var(--yellow)" }}>
                 Orden #{ticket.orderId}
+              </span>
+            )}
+            {statusLabel && (
+              <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "var(--color-text-muted, #888)" }}>
+                {statusLabel}
               </span>
             )}
           </span>
@@ -283,7 +297,7 @@ export const TicketTableRow = ({ ticket }) => {
           type="button"
           className={`${s.iconBtn} ${s.iconBtnDanger}`}
           onClick={handleDelete}
-          disabled={isEditing}
+          disabled={isEditing || !isConfirmed}
           title={t("delete")}
           aria-label={t("delete")}
         >

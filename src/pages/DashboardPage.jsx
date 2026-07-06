@@ -15,9 +15,11 @@ export const DashboardPage = () => {
 
   // Sales/check-in stats are derived from `tickets` in TicketContext. Pull
   // the canonical list from the server on mount so the dashboard reflects
-  // every confirmed purchase, not just what was produced on this device.
+  // every confirmed order, not just what was produced on this device.
+  // Explicit 'confirmed' (not relying on the server-side default) — stats
+  // must never silently include pending/rejected/expired rows.
   useEffect(() => {
-    refreshFromServer();
+    refreshFromServer("confirmed");
   }, [refreshFromServer]);
 
   const tabs = [

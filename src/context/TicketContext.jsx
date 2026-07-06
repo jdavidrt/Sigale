@@ -6,16 +6,16 @@ import { toLocalDateString } from "../utils/timeFormat";
 import { admin, isLoggedIn } from "../api/admin";
 
 /**
- * Map a DB ticket row (joined with its purchase + stage) to the internal
- * shape every Tickets/Dashboard component already understands. The DB row
- * carries fields like holderName/isUsed/usedAt; consumers expect
+ * Map a DB ticket row (joined with its stage) to the internal shape every
+ * Tickets/Dashboard component already understands. The DB row carries
+ * fields like holderName/isUsed/usedAt; consumers expect
  * buyerName/checkedIn/checkInTime.
  *
  * `dbId` is preserved so updateTicket() can route the patch back to the
  * server when an organizer edits a server-minted ticket.
  */
 const fromServerTicket = (row) => {
-  const purchaseDate = String(row.purchaseCreatedAt || "").slice(0, 10);
+  const purchaseDate = String(row.createdAt || "").slice(0, 10);
   const phone = row.holderPhone ? String(row.holderPhone) : "000";
   return {
     ticketId: `t-${row.id}`,
@@ -34,6 +34,9 @@ const fromServerTicket = (row) => {
     folio: String(row.orderId),
     deliveryMethod: row.deliveryMethod,
     deliveryContact: row.deliveryContact,
+    // Order lifecycle status. Only 'confirmed' rows have a validationHash
+    // (and thus a scannable QR) — see docs/architecture/TICKETS_SCHEMA.md.
+    status: row.status,
   };
 };
 
@@ -185,15 +188,21 @@ export const TicketProvider = ({ children }) => {
   }, [data, setData]);
 
   /**
-   * Pull the canonical ticket list from the server (every minted ticket from
-   * a confirmed purchase) and replace the in-memory cache. Called by the
-   * Tickets and Dashboard pages on mount. Quietly no-ops if the organizer
-   * isn't logged in — falls back to whatever localStorage has.
+   * Pull the canonical ticket list from the server and replace the
+   * in-memory cache. Called by the Tickets and Dashboard pages on mount.
+   * Quietly no-ops if the organizer isn't logged in — falls back to
+   * whatever localStorage has.
+   *
+   * `status` is passed straight through to admin.listTickets() — the
+   * server defaults to 'confirmed' when omitted, so callers that need
+   * confirmed-only stats (Dashboard) can rely on the default, and callers
+   * that want the full lifecycle (Tickets' status filter) pass an
+   * explicit value or 'all'.
    */
-  const refreshFromServer = useCallback(async () => {
+  const refreshFromServer = useCallback(async (status) => {
     if (!isLoggedIn()) return { ok: false, reason: "not-logged-in" };
     try {
-      const rows = await admin.listTickets();
+      const rows = await admin.listTickets(status);
       const mapped = Array.isArray(rows) ? rows.map(fromServerTicket) : [];
       const fresh = loadFromStorage() || data;
       setData({ ...fresh, tickets: mapped });

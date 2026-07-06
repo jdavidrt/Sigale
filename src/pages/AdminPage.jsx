@@ -340,7 +340,7 @@ function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
               const actionable = row.status === 'pending_payment' || row.status === 'payment_submitted';
               const firstHolder = Array.isArray(row.holders) && row.holders[0]?.name ? row.holders[0].name : null;
               return (
-                <div key={row.id || row.orderId} className="trow" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
+                <div key={row.orderId} className="trow" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {/* Order ID */}
                     <span className="orden" style={{ fontSize: 20, color: 'var(--yellow)', flexShrink: 0 }}>#{row.orderId}</span>

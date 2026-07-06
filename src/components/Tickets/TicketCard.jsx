@@ -8,6 +8,7 @@ import { useEvent } from "../../context/EventContext";
 import { useTickets } from "../../context/TicketContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useDialog } from "../../context/DialogContext";
+import { statusMeta } from "../../api/purchases";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare, faTrash, faImage, faShareNodes, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import s from "./TicketCard.module.css";
@@ -21,6 +22,11 @@ export const TicketCard = ({ ticket }) => {
   const qrRef = useRef(null);
   const [copyStatus, setCopyStatus] = useState("");
   const qrData = generateQRData(ticket, event, eventId);
+  // validationHash is only ever set once an order is confirmed (see
+  // docs/architecture/TICKETS_SCHEMA.md) — pending/rejected/expired rows
+  // have no QR to show or share yet.
+  const isConfirmed = ticket.status ? ticket.status === "confirmed" : true;
+  const meta = ticket.status ? statusMeta(ticket.status) : null;
   // M9: dropped the per-card scroll parallax — at scale it spawned N scroll
   // listeners that stuttered phones. The effect was decorative; we can add
   // a single shared rAF-driven version later if we miss it.
@@ -38,6 +44,7 @@ export const TicketCard = ({ ticket }) => {
   };
 
   const handleDelete = async () => {
+    if (!isConfirmed) return; // button is disabled in this state; guard belt-and-suspenders
     const ok = await confirm({
       title: t("deleteTicketTitle"),
       message: t("deleteTicketBody")
@@ -97,6 +104,9 @@ export const TicketCard = ({ ticket }) => {
                 <p className={s.ticketId} style={{ color: "var(--yellow)", fontWeight: 700 }}>
                   Orden #{ticket.orderId}
                 </p>
+                {!isConfirmed && meta && (
+                  <p className={s.metaText} style={{ color: "var(--cream-dim)" }}>{meta.label}</p>
+                )}
               </div>
             )}
             <div className={s.detailRow}>
@@ -135,15 +145,30 @@ export const TicketCard = ({ ticket }) => {
             <button onClick={handleEdit} className={`${s.actionBtn} ${s.editBtn}`} title="Edit">
               <FontAwesomeIcon icon={faPenToSquare} />
             </button>
-            <button onClick={handleDelete} className={`${s.actionBtn} ${s.deleteBtn}`} title="Delete">
+            <button
+              onClick={handleDelete}
+              className={`${s.actionBtn} ${s.deleteBtn}`}
+              title="Delete"
+              disabled={!isConfirmed}
+            >
               <FontAwesomeIcon icon={faTrash} />
             </button>
           </div>
           <div className={s.actionRow}>
-            <button onClick={copyAsPNG} className={`${s.actionBtn} ${s.copyBtn}`} title="Copy as PNG">
+            <button
+              onClick={copyAsPNG}
+              className={`${s.actionBtn} ${s.copyBtn}`}
+              title="Copy as PNG"
+              disabled={!isConfirmed}
+            >
               <FontAwesomeIcon icon={faImage} />
             </button>
-            <button onClick={handleShare} className={`${s.actionBtn} ${s.shareBtn}`} title="Share">
+            <button
+              onClick={handleShare}
+              className={`${s.actionBtn} ${s.shareBtn}`}
+              title="Share"
+              disabled={!isConfirmed}
+            >
               <FontAwesomeIcon icon={faShareNodes} />
             </button>
           </div>

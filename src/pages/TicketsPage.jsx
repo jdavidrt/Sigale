@@ -61,6 +61,16 @@ const TypedConfirmBody = ({ count, requiredWord, t, onConfirm, onCancel }) => {
   );
 };
 
+// Order-status filter chips (mirrors AdminPage's FILTERS). Reuses the same
+// translation keys as AdminPage, so "all" here means the same thing there —
+// no dedicated 'expired' chip; expired orders surface under "Todas".
+const STATUS_FILTERS = [
+  { key: "confirmed", labelKey: "filterConfirmed", value: "confirmed" },
+  { key: "pending", labelKey: "filterWaiting", value: "pending_payment,payment_submitted" },
+  { key: "rejected", labelKey: "filterRejected", value: "rejected" },
+  { key: "all", labelKey: "filterAll", value: "all" },
+];
+
 export const TicketsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { event } = useEvent();
@@ -68,13 +78,15 @@ export const TicketsPage = () => {
   const { t } = useLanguage();
   const { openCustom, notify } = useDialog();
 
-  // Pull the canonical confirmed-purchase tickets from the server on mount.
-  // This is what makes /tickets show every order the organizer just
-  // confirmed on /admin — without it the page would only see whatever was
-  // produced locally on this device.
+  // Defaults to 'confirmed' — same set /tickets has always shown. The status
+  // filter below lets the organizer opt into seeing pending/rejected/expired
+  // orders too, which previously only ever appeared on /admin's queue.
+  const [statusFilter, setStatusFilter] = useState("confirmed");
+
   useEffect(() => {
-    refreshFromServer();
-  }, [refreshFromServer]);
+    const meta = STATUS_FILTERS.find((f) => f.key === statusFilter);
+    refreshFromServer(meta?.value ?? "confirmed");
+  }, [refreshFromServer, statusFilter]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState(searchParams.get("type") || "all");
@@ -173,6 +185,18 @@ export const TicketsPage = () => {
                 <option key={type} value={type}>
                   {type.toUpperCase()}
                 </option>
+              ))}
+            </select>
+          </div>
+          <div className={s.filterWrapper}>
+            <FontAwesomeIcon icon={faFilter} className={s.filterIcon} />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className={`glass-clean ${s.filterSelect}`}
+            >
+              {STATUS_FILTERS.map((f) => (
+                <option key={f.key} value={f.key}>{t(f.labelKey)}</option>
               ))}
             </select>
           </div>

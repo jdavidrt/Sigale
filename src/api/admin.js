@@ -169,15 +169,15 @@ export const admin = {
     return adminApi.listPurchases(params);
   },
   confirm: async (row) => {
-    return adminApi.confirm(row.id);
+    return adminApi.confirm(row.orderId);
   },
   reject: async (row) => {
-    return adminApi.reject(row.id);
+    return adminApi.reject(row.orderId);
   },
   walkIn: async (payload) => {
     return adminApi.walkIn(payload);
   },
-  listTickets: async () => adminApi.listTickets(),
+  listTickets: async (status) => adminApi.listTickets(status),
   updateTicket: async (id, patch) => adminApi.updateTicket(id, patch),
   deleteTicket: async (id) => adminApi.deleteTicket(id),
   deleteAllPurchases: async () => adminApi.deleteAllPurchases(),
