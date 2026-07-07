@@ -15,7 +15,7 @@ Two audiences share one app:
 - **Public buyers** need a polished, shareable URL on their phone. They never see the organizer chrome.
 - **Organizers** need fast access to the purchase queue, a walk-in form, and a door scanner that keeps working without Wi-Fi.
 
-These audiences share a server-side source of truth (MySQL) for inventory. The QR code is never stored; it is generated on demand from a server-minted random hash (`validationHash`) once the organizer confirms the purchase.
+These audiences share a server-side source of truth (MySQL) for inventory. The QR code is never stored; it is generated on demand from a server-minted deterministic-HMAC hash (`validationHash`) once the organizer confirms the purchase.
 
 ---
 
@@ -28,7 +28,7 @@ These audiences share a server-side source of truth (MySQL) for inventory. The Q
 | Styling | Plain CSS — design tokens + CSS Modules + Astromelias classes | `tokens.css → global.css → utilities.css → astromelias.css`; PostCSS runs autoprefixer only. No Tailwind. |
 | Routing | React Router v7 | Lazy-loaded; only Home and LandingPage ship with the main bundle |
 | QR generation | `qrcode.react` | SVG output; rendered to canvas for PNG export |
-| QR scanning | `html5-qrcode` | Lazy-loaded on `/validate-qr` only (~100 KB gz) |
+| QR scanning | `html5-qrcode` | Lazy-loaded on `/scan` only (~100 KB gz) |
 | PDF export | `jspdf` | Dynamic import on the export page |
 | Crypto | Web Crypto API | Client-side: ticket IDs for walk-ins only |
 | Backend | Express + `mysql2/promise` | Separate `server/` app; `dateStrings:true`, SSL CA cert |
