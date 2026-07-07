@@ -4,7 +4,6 @@ import { generateQRData } from "../../utils/qrGenerator";
 import { copySVGToClipboard, copyPNGToClipboard, shareQR } from "../../utils/qrCopy";
 import { generateTicketSVG } from "../../utils/svgTicketTemplate";
 import { useLanguage } from "../../context/LanguageContext";
-import { useEvent } from "../../context/EventContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faImage, faShareNodes } from "@fortawesome/free-solid-svg-icons";
 import s from "./QRDisplay.module.css";
@@ -15,12 +14,11 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
   const [copyStatus, setCopyStatus] = useState("");
   const [ticketSVG, setTicketSVG] = useState("");
   const { t, language } = useLanguage();
-  const { eventId } = useEvent();
-  const qrData = generateQRData(ticket, event, eventId);
+  const qrData = generateQRData(ticket);
 
   useEffect(() => {
     const generatePreview = async () => {
-      if (qrRef.current) {
+      if (qrData && qrRef.current) {
         const svg = qrRef.current.querySelector("svg");
         if (svg) {
           const canvas = document.createElement("canvas");
@@ -45,7 +43,7 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
     };
 
     generatePreview();
-  }, [ticket, event]);
+  }, [ticket, event, qrData]);
 
   const copyAsSVG = useCallback(async () => {
     if (qrRef.current) {
@@ -78,10 +76,13 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
 
   return (
     <div className={s.root}>
-      {/* Hidden QR for processing */}
-      <div ref={qrRef} className="hidden">
-        <QRCodeSVG value={qrData} size={200} level="L" marginSize={2} />
-      </div>
+      {/* Hidden QR for processing — only rendered once a validationHash exists
+          (non-confirmed tickets have none, so we never emit an unscannable QR) */}
+      {qrData && (
+        <div ref={qrRef} className="hidden">
+          <QRCodeSVG value={qrData} size={200} level="M" marginSize={2} />
+        </div>
+      )}
 
       {/* Ticket Preview */}
       {ticketSVG && (

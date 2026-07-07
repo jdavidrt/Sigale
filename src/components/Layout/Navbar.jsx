@@ -19,7 +19,7 @@ export const Navbar = () => {
     { path: "/admin/create", label: t("home"), icon: faHouse, iconClass: s.iconHome },
     { path: "/sell-tickets", label: t("sell"), icon: faTicket, iconClass: s.iconSell },
     { path: "/tickets", label: t("navTickets"), icon: faTicketSimple, iconClass: s.iconTickets },
-    { path: "/validate-qr", label: t("validate"), icon: faCircleCheck, iconClass: s.iconScan },
+    { path: "/scan", label: t("validate"), icon: faCircleCheck, iconClass: s.iconScan },
     { path: "/dashboard", label: t("dashboard"), icon: faChartLine, iconClass: s.iconDash },
     { path: "/edit", label: t("editEvent") || "Editar evento", icon: faPenToSquare, iconClass: s.iconSell },
   ];

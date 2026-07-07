@@ -115,7 +115,7 @@ pending_payment → payment_submitted → confirmed
 pending_payment → (24h sweeper)    → expired
 ```
 
-`validationHash` is a **random 128-bit server secret** minted at confirm (`crypto.randomBytes(16).toString('hex')`). QR codes are never stored — generated from the hash on demand, and rendered to the organizer on `/tickets`.
+`validationHash` is a **deterministic HMAC** minted at confirm — `HMAC_SHA256(SCAN_HASH_SECRET, "${orderId}:${seatIndex}").slice(0, 16)` (`validationHashFor()` in `admin.controllers.js`). Keying on `(orderId, seatIndex)` makes it unique per seat and stable across holder edits; `SCAN_HASH_SECRET` (env var, **must be set in production**) keeps it unguessable. QR codes are never stored — the QR encodes only this bare hash string (kept short so the code is low-density) and is rendered to the organizer on `/tickets`.
 
 **Stage status lifecycle (`ticket_stages.status`):**
 

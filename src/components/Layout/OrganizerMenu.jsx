@@ -1,7 +1,7 @@
 /*
  * OrganizerMenu — slide-out navigation for the 2.0 admin surface (/admin).
- * The organizer tools (sell, ticket list, QR validation, scan, dashboard,
- * export, edit) live on separate routes; this menu is how they are reached
+ * The organizer tools (sell, ticket list, scan, dashboard, edit) live on
+ * separate routes; this menu is how they are reached
  * from the purchases panel. Styled with the Astromelias tokens so it sits
  * naturally over the dark Screen. Logout lives here too.
  *
@@ -21,8 +21,7 @@ const LINKS = [
   { to: '/sell-tickets', icon: 'plus', es: 'Vender en taquilla', en: 'Sell at the door' },
   { to: '/guest-passes', icon: 'user', es: 'Artistas y cortesías', en: 'Guest passes' },
   { to: '/tickets', icon: 'ticket', es: 'Boletas', en: 'Tickets' },
-  { to: '/validate-qr', icon: 'check', es: 'Validar QR', en: 'Validate QR' },
-  { to: '/scan', icon: 'qr', es: 'Escanear (puerta)', en: 'Scan (door)' },
+  { to: '/scan', icon: 'qr', es: 'Escanear boletas', en: 'Scan tickets' },
   { to: '/dashboard', icon: 'sparkle', es: 'Tablero', en: 'Dashboard' },
   { to: '/edit', icon: 'cal', es: 'Editar evento', en: 'Edit event' },
 ];

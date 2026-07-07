@@ -29,9 +29,9 @@ import { BOGOTA, UTC, toSqlUtc } from '../utils/time.js';
 /**
  * GET /api/admin/scan/manifest?eventId=  (organizer)
  * Every confirmed ticket for the event, with its current used state, so the
- * device can validate locally. Joins tickets -> purchases (status confirmed).
- * usedAt is returned in Bogotá time for the scan log; the hash is the key the
- * scanner matches against.
+ * device can validate locally. Reads the merged `tickets` table (status
+ * confirmed) directly. usedAt is returned in Bogotá time for the scan log; the
+ * hash is the key the scanner matches against.
  */
 export const getScanManifest = async (req, res) => {
   try {
@@ -39,6 +39,9 @@ export const getScanManifest = async (req, res) => {
     if (!eventId) {
       return res.status(400).json({ message: 'eventId requerido' });
     }
+    // Merged schema: orderId/eventId/stageId live directly on `tickets` now
+    // (the separate `purchases` table is gone), so read from `tickets` and
+    // join only `ticket_stages` for the stage name.
     const [rows] = await pool.query(
       `SELECT t.id            AS ticketId,
               t.validationHash AS hash,
@@ -46,12 +49,11 @@ export const getScanManifest = async (req, res) => {
               t.holderIdNumber,
               t.isUsed,
               CONVERT_TZ(t.usedAt, '${UTC}', '${BOGOTA}') AS usedAt,
-              p.orderId,
+              t.orderId,
               s.name           AS stageName
        FROM tickets t
-       JOIN purchases p     ON p.id = t.purchaseId
-       JOIN ticket_stages s ON s.id = p.stageId
-       WHERE p.eventId = ? AND p.status = 'confirmed'
+       JOIN ticket_stages s ON s.id = t.stageId
+       WHERE t.eventId = ? AND t.status = 'confirmed'
        ORDER BY t.id ASC`,
       [eventId],
     );
@@ -75,7 +77,7 @@ export const getScanManifest = async (req, res) => {
  *   - already used otherwise                -> no-op,         { result: 'already_used' }
  *   - fresh                                 -> stamp usedAt,  { result: 'ok' }
  *
- * @param {string} hash    32-hex validationHash from the QR.
+ * @param {string} hash    16-hex validationHash from the QR.
  * @param {string} [clientUsedAt] ISO-8601 timestamp captured on the device
  *                         (when the scan happened offline). When absent the
  *                         server clock stamps the mark.

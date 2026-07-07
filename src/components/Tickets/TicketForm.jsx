@@ -84,7 +84,7 @@ export const TicketForm = () => {
       if (isEditMode) {
         await updateTicket(editTicket.ticketId, payload);
         notify({ message: t("ticketUpdatedFromForm"), tone: "success" });
-        navigate("/validate-qr");
+        navigate("/tickets");
       } else {
         // Walk-in / door sale. Persist through the server so the sale becomes
         // a confirmed purchase with a sequential orderId and a server-minted

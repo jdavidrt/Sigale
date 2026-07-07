@@ -15,13 +15,13 @@ import s from "./TicketCard.module.css";
 
 export const TicketCard = ({ ticket }) => {
   const navigate = useNavigate();
-  const { event, eventId } = useEvent();
+  const { event } = useEvent();
   const { deleteTicket } = useTickets();
   const { t, language } = useLanguage();
   const { confirm, notify } = useDialog();
   const qrRef = useRef(null);
   const [copyStatus, setCopyStatus] = useState("");
-  const qrData = generateQRData(ticket, event, eventId);
+  const qrData = generateQRData(ticket);
   // validationHash is only ever set once an order is confirmed (see
   // docs/architecture/TICKETS_SCHEMA.md) — pending/rejected/expired rows
   // have no QR to show or share yet.
@@ -83,10 +83,12 @@ export const TicketCard = ({ ticket }) => {
     <div
       className={`glass-clean ${s.card} ${ticket.checkedIn ? s.checkedIn : ""} hover-lift`}
     >
-      {/* Hidden QR for processing */}
-      <div ref={qrRef} className="hidden">
-        <QRCodeSVG value={qrData} size={200} level="L" marginSize={2} />
-      </div>
+      {/* Hidden QR for processing — only when a validationHash exists */}
+      {qrData && (
+        <div ref={qrRef} className="hidden">
+          <QRCodeSVG value={qrData} size={200} level="M" marginSize={2} />
+        </div>
+      )}
 
       <div className={s.inner}>
         {/* Left — Ticket Info */}

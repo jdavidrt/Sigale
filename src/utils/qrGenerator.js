@@ -1,45 +1,35 @@
 /**
- * Build a stable identifier for the currently-loaded event. We hash the
- * event name + date because events don't have a server-assigned id.
- * First 8 hex chars = 32 bits, enough for this scope (distinguishing
- * between a handful of events ever loaded on one device).
+ * Build the QR payload for a ticket. The door scanner matches purely on the
+ * validationHash (the server-minted door secret), so the QR encodes ONLY that
+ * hash — a short 16-char string. Keeping the payload tiny collapses the QR to a
+ * low version with few modules, so it scans reliably. Cross-event protection is
+ * handled by the scanner's manifest being event-scoped, not by embedding the
+ * event id here.
  */
-export const computeEventId = async (event) => {
-  if (!event || !event.name || !event.date) return null;
-  const input = `${event.name}|${event.date}`;
-  const bytes = new TextEncoder().encode(input);
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-    .substring(0, 8);
+export const generateQRData = (ticket) => {
+  return ticket?.validationHash ?? '';
 };
 
 /**
- * Generate QR code data string from ticket and event information.
- * Includes an eventId (audit M1) so a ticket from Event A scanned at
- * Event B can be rejected at the scanner.
- */
-export const generateQRData = (ticket, event, eventId = null) => {
-  return JSON.stringify({
-    id: ticket.ticketId,
-    hash: ticket.validationHash,
-    buyer: ticket.buyerName,
-    type: ticket.ticketType,
-    eventId: eventId ?? null,
-  });
-};
-
-/**
- * Parse QR code data string back into object
+ * Parse a scanned QR string back into { hash }. Accepts the current bare-hash
+ * payload; also tolerates the legacy JSON payload ({ id, hash, ... }) so codes
+ * printed before this change still scan.
  */
 export const parseQRData = (qrString) => {
-  try {
-    const data = JSON.parse(qrString);
-    if (!data.id || !data.hash) return null;
-    return data;
-  } catch (error) {
-    console.error("Error parsing QR data:", error);
-    return null;
+  if (typeof qrString !== 'string') return null;
+  const trimmed = qrString.trim();
+  if (!trimmed) return null;
+
+  // Legacy JSON payload — pull the hash out of it.
+  if (trimmed.startsWith('{')) {
+    try {
+      const data = JSON.parse(trimmed);
+      return data.hash ? { hash: data.hash } : null;
+    } catch {
+      return null;
+    }
   }
+
+  // Current payload: the hash itself.
+  return { hash: trimmed };
 };
