@@ -66,8 +66,7 @@ All organizer routes require the admin login (`isLoggedIn()` in `api/admin.js`);
 | `/sell-tickets` | SellTicketsPage (walk-in registration). Phone field is **optional**; name + ID don't pop inline validation errors until the user has typed ≥ 4 characters. |
 | `/guest-passes` | GuestPassesPage — artist/crew/courtesy free-entry roster, scoped to the active event and grouped by band (sourced from `events.artists`). Editable spreadsheet (`GuestPassTable`/`GuestPassTableRow`) with inline edit/delete, a "Pegar lista" paste-to-bulk-add flow (reuses `parseTicketRows`), and a single-add modal. Deliberately separate from `tickets`: no price, no `validationHash`, no scan-manifest integration — see the Data model section below. |
 | `/tickets` | TicketsPage (cards / table view, search, CSV). Hydrates from `/api/admin/tickets` on mount via `TicketContext.refreshFromServer()` so every confirmed purchase shows up; this is where the organizer edits holder data and generates / shares each QR. |
-| `/validate-qr` | ValidateQRPage (legacy camera scanner) |
-| `/copy-event` | CopyEventPage (JSON / CSV / PDF export, import) |
+| `/scan` | ScanPage — the single door/QR-validation surface (camera scanner, offline-first, validates against the server manifest). The former separate `/validate-qr` page was removed; `/validate-qr` now redirects here. |
 | `/dashboard` | DashboardPage — same server hydration as `/tickets`, so sales + check-in stats match `/admin`. |
 | `*` | redirect → `/` |
 
@@ -225,7 +224,7 @@ current-server/     # READ-ONLY BlackCoffe reference copy — never run or impor
 - Explicit column lists on every public `INSERT` (no `SET ?` mass-assignment).
 - Parameterized queries everywhere; `helmet` on the Express app.
 - SSL to the DB: `ssl: { ca: fs.readFileSync(process.env.DB_CA_CERT) }` — no `rejectUnauthorized:false`.
-- `validationHash` is a random secret, never derived from buyer data.
+- `validationHash` is a deterministic HMAC keyed by `SCAN_HASH_SECRET` over `(orderId, seatIndex)` — unguessable without the secret, so it functions as an entry secret even though it's not random. **`SCAN_HASH_SECRET` must be set in production;** the code falls back to an insecure dev default otherwise.
 
 ---
 
@@ -273,9 +272,7 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 
 | File | Role |
 |------|------|
-| `QRScanner.jsx` | `html5-qrcode` wrapper; camera lifecycle |
-| `OfflineScanner.jsx` | Offline-first scan UI, uses `useOfflineScan` |
-| `ValidationResult.jsx` | Color-coded result (success / duplicate / not-found / invalid) |
+| `OfflineScanner.jsx` | The single door scanner: `html5-qrcode` camera + offline-first scan UI via `useOfflineScan`, inline color-coded verdict (valid / already-used / invalid). Replaced the old `QRScanner.jsx` + `ValidationResult.jsx` pair, which were removed with `/validate-qr`. |
 
 ### UI primitives (`src/components/ui/`)
 
@@ -312,7 +309,7 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 |------|-------------|
 | `sampleEvent.js` | `SAMPLE_EVENT` (dev placeholder), `resolveActiveStage(event) → stage \| null` (**returns `null` when no stage has `status === 'active'`** — does not fall back to `stages[0]`), `stageCupos(stage) → number` |
 | `hashGenerator.js` | `generateTicketId() → "TKT-<8hex>-<ts>"` (walk-in only; server mints hashes for purchases) |
-| `qrGenerator.js` | `generateQRData(ticket, event, eventId)`, `parseQRData(text)` — `hash` arrives from API |
+| `qrGenerator.js` | `generateQRData(ticket) → bare validationHash string`, `parseQRData(text) → { hash }` (also tolerates the legacy JSON payload) — `hash` arrives from API |
 | `qrCopy.js` | `copySVGToClipboard`, `copyPNGToClipboard`, `shareQR` |
 | `svgTicketTemplate.js` | `generateTicketSVG(ticket, event, qrDataURL)`, `loadCharlyIllustration(base64)` |
 | `timeFormat.js` | `formatTo12Hour`, `parseLocalDate`, `toLocalDateString`, `checkInWindowStatus`, `formatCurrency` |
@@ -347,7 +344,7 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 | Metric | Target |
 |--------|--------|
 | Initial JS (Home + LandingPage) | ~50 KB gz |
-| `/validate-qr` (html5-qrcode chunk) | ~100 KB gz |
+| `/scan` (html5-qrcode chunk) | ~100 KB gz |
 | Concurrent reservations | Serialized by `SELECT … FOR UPDATE` at the DB |
 | orderId range | `INT UNSIGNED`, globally unique, sequential from 100 — no per-event ceiling |
 
@@ -355,7 +352,7 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 
 ## Security model
 
-- **`validationHash`**: random 128-bit secret, minted at confirm. Not derived from buyer data. The scanner looks up by hash in `tickets.validationHash` (unique index).
+- **`validationHash`**: deterministic HMAC — `HMAC_SHA256(SCAN_HASH_SECRET, "${orderId}:${seatIndex}").slice(0,16)`, minted at confirm. Unique per seat, stable across edits, and unguessable without `SCAN_HASH_SECRET` (which must be set in production). The scanner looks up by hash in `tickets.validationHash` (unique index).
 - **Inventory**: all mutations inside `BEGIN … COMMIT` with `FOR UPDATE` locks; concurrent race goes to the DB, not the app.
 - **Admin auth**: bcrypt credentials re-validated on every request by `requireOrganizer`. Rate-limited login.
 - **CSV injection guard**: `csvUtils.formatCell` prepends `'` to cells starting with `=`, `+`, `-`, `@`, tab, or CR.

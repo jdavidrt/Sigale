@@ -189,6 +189,11 @@ These are the bugs that pass every dev test and break at the actual event.
 - **M1 — QR has no eventId.** A ticket from Event A scans cleanly at Event B if the
   device hasn't been wiped. Fix: embed `eventId` (hash of name + date) in the QR JSON,
   reject mismatches at scan time.
+  *Update:* the QR was later simplified to encode **only** the `validationHash` (no
+  JSON, no `eventId`), so the cross-event guard now comes from the door scanner's
+  manifest being downloaded **per event** — a foreign ticket's hash simply isn't in
+  the loaded manifest and reads as `invalid`. Same protection, moved from the payload
+  to the manifest scope.
 - **M6 — UTC date in `purchaseDate`.** `new Date().toISOString().split("T")[0]`
   returns the *UTC* date. In UTC-5 near midnight, a ticket sold on Tuesday Bogotá time
   gets stamped Wednesday. Fix: `toLocalDateString()` formats local-timezone date parts.

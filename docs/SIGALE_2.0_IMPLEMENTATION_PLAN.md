@@ -18,7 +18,7 @@ These are resolved; do not reopen them.
 |---|----------|
 | 1 | **Astromelias palette wins.** `tokens.css` uses Astromelias tokens; the old violet palette is gone. |
 | 2 | **`orderId` in code; "folio" in Spanish UI.** Route param: `/compra/:orderId`. |
-| 3 | **`validationHash` is server-generated random 128-bit** (minted at confirm). Not derived from buyer data. |
+| 3 | **`validationHash` is server-generated** (minted at confirm). *Updated:* originally a random 128-bit secret; now a deterministic HMAC over `(orderId, seatIndex)` keyed by `SCAN_HASH_SECRET` (16 hex) — unguessable without the secret, unique per seat, stable across edits. |
 | 4 | **Hold is 24h** (`reservationExpiresAt = createdAt + 24h`). The 20-minute buyer countdown is cosmetic copy only. |
 | 5 | **Simple per-request credential check** against `organizers` (no JWT/session). Bcrypt; `/api/login` rate-limited. |
 | 6 | **Offline-first door scan.** Pre-cache confirmed hashes in IndexedDB, validate locally, sync on reconnect. |
@@ -120,7 +120,7 @@ Persist UTC (`UTC_TIMESTAMP()`, `CURRENT_TIMESTAMP` defaults). Read with `CONVER
 - **Explicit column lists** on every public `INSERT` — no `SET ?` mass-assignment.
 - Parameterized queries everywhere; `helmet` on the Express app.
 - **SSL with verification** to the DB: CA cert, no `rejectUnauthorized:false`.
-- `validationHash` is a **random secret**, never derived from buyer data (decision #3).
+- `validationHash` is a **deterministic HMAC** keyed by `SCAN_HASH_SECRET` over `(orderId, seatIndex)` — unguessable without the secret (decision #3, updated).
 
 ---
 

@@ -223,7 +223,7 @@ Then repeat Step 1 (recreate) → Step 4 (boot re-migrates) → Step 5 (re-seed)
 > Validation: the whole stack was run end to end against a real SQL engine (MariaDB 10.6,
 > as a stand-in for MySQL 8). Migrations applied cleanly (5 statements), and the full flow
 > passed: reserve (inventory held under the row lock) -> submit -> login -> confirm
-> (reserved->sold, two tickets minted with a 32-hex random validationHash) -> manifest ->
+> (reserved->sold, two tickets minted with a 16-hex deterministic HMAC validationHash) -> manifest ->
 > scan (`ok`) -> re-scan (`already_used`, idempotent). Negative paths held too: a cap-1 stage
 > returned 409 `Cupos insuficientes`, an upcoming stage 409, admin without Basic auth 401,
 > and an unknown hash 404. The authoritative run is still Step 4 on your MySQL 8.
