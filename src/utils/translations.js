@@ -330,7 +330,7 @@ export const translations = {
     doorRegistration: "Registro directo · Taquilla",
     registerSale: "Registrar Venta",
     guestPassesCardLabel: "Artistas, crew y cortesías",
-    addArtistBtn: "+ Agregar un artista",
+    addArtistBtn: "Agregar un artista",
     guestPassesTitle: "Accesos de cortesía",
     guestPassBand: "Banda",
     guestPassHolderName: "Nombre",
