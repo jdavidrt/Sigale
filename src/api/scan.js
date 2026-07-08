@@ -1,18 +1,29 @@
 /*
  * ============================================================
- * SÍGALE — SCAN API (2.0, offline-first door check-in)
- * Real client functions (Basic auth) against the server scan endpoints.
+ * SÍGALE — SCAN API (online door check-in)
+ * The door scanner validates every QR directly against the live
+ * `tickets` table via the server: one request per scan, which both
+ * checks the ticket and marks entry. No manifest, no IndexedDB, no
+ * offline cache — online-only by design.
  *
- * Validation itself never lives here — it runs against the IndexedDB cache
- * (src/utils/scanDb.js) so the door works with no network. This module only
- * (1) seeds that cache from the manifest endpoint and (2) reconciles the
- * offline queue back to the server.
+ *   POST /api/admin/scan  { hash }  -> markUsed(hash) on the server:
+ *     - ok           : first admit, usedAt stamped
+ *     - already_used : ticket was already scanned in
+ *     - invalid      : hash not found on a confirmed ticket (404)
  * ============================================================
  */
 
 import { api } from './client';
 import { getAuth } from './admin';
-import { saveManifest } from '../utils/scanDb';
+
+/** Verdict the scanner UI renders. ERROR is distinct from INVALID so a
+ *  dropped network / auth failure never reads as "boleta no válida". */
+export const SCAN_RESULT = {
+  OK: 'ok',
+  ALREADY_USED: 'already_used',
+  INVALID: 'invalid',
+  ERROR: 'error',
+};
 
 /** Basic header from the organizer credentials stored at login (admin.js). */
 function authHeader() {
@@ -20,40 +31,35 @@ function authHeader() {
   return a?.basic ? { Authorization: `Basic ${a.basic}` } : {};
 }
 
-// ── Server scan endpoints (source of truth) ───────────────────────────────────
+// ── Server scan endpoint (source of truth) ────────────────────────────────────
 export const scanApi = {
-  manifest: (eventId) =>
-    api.get(`/api/admin/scan/manifest?eventId=${encodeURIComponent(eventId)}`, {
-      headers: authHeader(),
-    }),
-  scanOne: (hash, usedAt) =>
-    api.post('/api/admin/scan', { hash, usedAt }, { headers: authHeader() }),
-  syncBatch: (scans) =>
-    api.post('/api/admin/scan/sync', { scans }, { headers: authHeader() }),
+  scanOne: (hash) =>
+    api.post('/api/admin/scan', { hash }, { headers: authHeader() }),
 };
 
 /**
- * Download the confirmed-ticket manifest into the IndexedDB cache so the door
- * can validate offline. Call once before doors open (and to refresh).
- */
-export async function downloadManifest(eventId) {
-  const data = await scanApi.manifest(eventId);
-  await saveManifest(data.eventId ?? eventId, data.tickets, data.generatedAt);
-  return { count: data.count, generatedAt: data.generatedAt };
-}
-
-/**
- * Reconcile a queue of offline scans with the server. Returns the server's
- * per-hash reconciliation plus a summary so the device can clear its queue.
+ * Validate one QR hash against the live DB and admit the holder. Online-only:
+ * the server looks up the confirmed ticket by validationHash, stamps
+ * isUsed/usedAt (idempotent), and returns the verdict.
  *
- * @param {Array<{hash:string, usedAt:string}>} scans
+ * @param {string} hash 16- or 32-hex validationHash decoded from the QR.
+ * @returns {Promise<{result:string, holderName?:string, usedAt?:string}>}
  */
-export async function syncScans(scans) {
-  if (!scans || scans.length === 0) {
-    return { synced: 0, admitted: 0, duplicates: 0, invalid: 0, reconciliation: [] };
+export async function scanAndAdmit(hash) {
+  try {
+    const outcome = await scanApi.scanOne(hash);
+    // Server returns { result: 'ok' | 'already_used', holderName, usedAt }.
+    return {
+      result: outcome.result,
+      holderName: outcome.holderName,
+      usedAt: outcome.usedAt,
+    };
+  } catch (e) {
+    // 404 == unknown/unconfirmed hash -> genuinely invalid ticket.
+    if (e?.status === 404) return { result: SCAN_RESULT.INVALID };
+    // Network (status 0), 401, 500, etc. -> retry-able error, NOT "no válida".
+    return { result: SCAN_RESULT.ERROR };
   }
-  return scanApi.syncBatch(scans);
 }
 
-export const scan = { downloadManifest, syncScans };
-export default scan;
+export default { scanAndAdmit, SCAN_RESULT };

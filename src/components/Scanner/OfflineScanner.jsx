@@ -1,16 +1,16 @@
 /*
- * OfflineScanner — the camera + result surface for the offline-first door
- * (Phase 4). Reuses html5-qrcode like the 1.0 QRScanner, but validation is
- * 100% local: it hands the decoded hash to `validate` (useOfflineScan), which
- * checks the IndexedDB cache and queues the admit. No network on the hot path.
+ * OfflineScanner — the camera + result surface for the door scanner.
+ * Reuses html5-qrcode: it decodes the QR and hands the hash to `validate`,
+ * which checks it against the live ticket DB on the server and marks entry.
  *
  * The result is large and glanceable — one .pill-coloured verdict, one-handed
- * at the door: green = adelante, red = ya ingresó, grey = no válida.
+ * at the door: green = adelante, red = ya ingresó, grey = no válida /
+ * sin conexión.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { parseQRData } from '../../utils/qrGenerator';
-import { SCAN_RESULT } from '../../hooks/useOfflineScan';
+import { SCAN_RESULT } from '../../api/scan';
 import { Ic } from '../ui/Ic';
 
 const READER_ID = 'scan-reader';
@@ -21,6 +21,7 @@ const VERDICT = {
   [SCAN_RESULT.OK]: { pill: 'ok', icon: 'check', title: 'Adelante', sub: 'Ingreso registrado' },
   [SCAN_RESULT.ALREADY_USED]: { pill: 'no', icon: 'lock', title: 'Ya ingresó', sub: 'Boleta usada' },
   [SCAN_RESULT.INVALID]: { pill: 'dead', icon: 'bell', title: 'No válida', sub: 'Boleta no encontrada' },
+  [SCAN_RESULT.ERROR]: { pill: 'dead', icon: 'bell', title: 'Sin conexión', sub: 'Reintenta el escaneo' },
 };
 
 export function OfflineScanner({ validate }) {
@@ -56,8 +57,9 @@ export function OfflineScanner({ validate }) {
         busyRef.current = false;
         return;
       }
+      // validate() returns { result, holderName?, usedAt? } straight from the server.
       const outcome = await validate(hash);
-      setResult({ ...outcome, holderName: outcome.ticket?.holderName });
+      setResult(outcome);
       busyRef.current = false;
     },
     [stop, validate],
