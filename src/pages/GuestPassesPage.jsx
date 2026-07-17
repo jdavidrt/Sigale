@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUsers, faPlus, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
+import { faUsers, faPlus, faTriangleExclamation, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useEvent } from "../context/EventContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useDialog } from "../context/DialogContext";
 import { guestPasses } from "../api/guestPasses";
 import { GuestPassTable } from "../components/GuestPasses/GuestPassTable";
+import { GuestPassCard } from "../components/GuestPasses/GuestPassCard";
+import { TicketsViewToggle } from "../components/Tickets/TicketsViewToggle";
 import { EmptyStateCard } from "../components/ui/EmptyStateCard";
+import { useLocalStorageValue } from "../hooks/useLocalStorageValue";
 import s from "./GuestPassesPage.module.css";
 import btn from "../components/Common/Button.module.css";
 
@@ -17,15 +20,16 @@ const TYPE_LABEL_KEY = {
   courtesy: "guestPassTypeCourtesy",
 };
 
-/** Single-entry add form, rendered inside the shared Modal via openCustom. */
-const GuestPassForm = ({ eventId, bandOptions, onSaved, onCancel }) => {
+/** Single-entry add/edit form, rendered inside the shared Modal via
+    openCustom. Pass `pass` to edit an existing guest pass in place. */
+const GuestPassForm = ({ eventId, bandOptions, pass = null, onSaved, onCancel }) => {
   const { t } = useLanguage();
   const { notify } = useDialog();
 
-  const [band, setBand] = useState(bandOptions[0] ?? "");
-  const [holderName, setHolderName] = useState("");
-  const [holderIdNumber, setHolderIdNumber] = useState("");
-  const [type, setType] = useState("artist");
+  const [band, setBand] = useState(pass?.band ?? (bandOptions[0] ?? ""));
+  const [holderName, setHolderName] = useState(pass?.holderName ?? "");
+  const [holderIdNumber, setHolderIdNumber] = useState(pass?.holderIdNumber ?? "");
+  const [type, setType] = useState(pass?.type ?? "artist");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -38,14 +42,19 @@ const GuestPassForm = ({ eventId, bandOptions, onSaved, onCancel }) => {
     setSubmitting(true);
     setError("");
     try {
-      await guestPasses.create({
-        eventId,
+      const payload = {
         band: band.trim(),
         holderName: holderName.trim(),
         holderIdNumber: holderIdNumber.trim(),
         type,
-      });
-      notify({ message: t("guestPassAdded"), tone: "success" });
+      };
+      if (pass) {
+        await guestPasses.update(pass.id, payload);
+        notify({ message: t("guestPassUpdatedToast"), tone: "success" });
+      } else {
+        await guestPasses.create({ eventId, ...payload });
+        notify({ message: t("guestPassAdded"), tone: "success" });
+      }
       onSaved();
     } catch (err) {
       setError(err.message || t("error"));
@@ -56,12 +65,13 @@ const GuestPassForm = ({ eventId, bandOptions, onSaved, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2 className={s.formTitle}>{t("addArtistBtn")}</h2>
+      <h2 className={s.formTitle}>{pass ? t("editGuestPassTitle") : t("addArtistBtn")}</h2>
 
       <div className={s.formField}>
         <label className={s.formLabel} htmlFor="gp-band">{t("guestPassBand")}</label>
         {bandOptions.length > 0 ? (
           <select id="gp-band" value={band} onChange={(e) => setBand(e.target.value)}>
+            {!bandOptions.includes(band) && <option value={band}>{band}</option>}
             {bandOptions.map((b) => (
               <option key={b} value={b}>{b}</option>
             ))}
@@ -109,8 +119,8 @@ const GuestPassForm = ({ eventId, bandOptions, onSaved, onCancel }) => {
           {t("cancel")}
         </button>
         <button type="submit" className={`${btn.btn} ${btn.primary} ${btn.md}`} disabled={submitting}>
-          <FontAwesomeIcon icon={faPlus} />
-          {submitting ? "…" : t("addArtistBtn")}
+          {!pass && <FontAwesomeIcon icon={faPlus} />}
+          {submitting ? "…" : (pass ? t("saveChanges") : t("addArtistBtn"))}
         </button>
       </div>
     </form>
@@ -124,8 +134,21 @@ export const GuestPassesPage = () => {
 
   const [rows, setRows] = useState([]);
   const [status, setStatus] = useState("loading"); // 'loading' | 'error' | 'ready'
+  const [searchQuery, setSearchQuery] = useState("");
+  const [view, setView] = useLocalStorageValue("sigale-guest-passes-view", "cards");
 
   const bandOptions = useMemo(() => event?.artists ?? [], [event]);
+
+  const filteredRows = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(
+      (r) =>
+        r.holderName.toLowerCase().includes(q) ||
+        r.holderIdNumber.toLowerCase().includes(q) ||
+        r.band.toLowerCase().includes(q)
+    );
+  }, [rows, searchQuery]);
 
   const load = useCallback(async () => {
     if (!event?.id) return;
@@ -163,6 +186,18 @@ export const GuestPassesPage = () => {
     ));
   };
 
+  const openEditModal = (pass) => {
+    openCustom((close) => (
+      <GuestPassForm
+        eventId={event.id}
+        bandOptions={bandOptions}
+        pass={pass}
+        onSaved={() => { load(); close(); }}
+        onCancel={close}
+      />
+    ));
+  };
+
   if (!event) {
     return (
       <EmptyStateCard
@@ -185,7 +220,7 @@ export const GuestPassesPage = () => {
             <h1 className={s.pageTitle}>{t("guestPassesTitle")}</h1>
           </div>
           <div className={s.headerRight}>
-            <div className={`glass-clean ${s.countBadge}`}>{rows.length}</div>
+            <div className={`glass-clean ${s.countBadge}`}>{filteredRows.length}</div>
             <button type="button" className={`${btn.btn} ${btn.orange} ${btn.md}`} onClick={openAddModal}>
               <FontAwesomeIcon icon={faPlus} />
               {t("addArtistBtn")}
@@ -207,7 +242,22 @@ export const GuestPassesPage = () => {
           </div>
         )}
 
-        {/* Table */}
+        {/* Search + view toggle */}
+        <div className={s.filtersRow}>
+          <div className={s.searchWrapper}>
+            <FontAwesomeIcon icon={faSearch} className={s.searchIcon} />
+            <input
+              type="text"
+              className={`glass-clean ${s.searchInput}`}
+              placeholder={t("searchGuestPasses")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <TicketsViewToggle value={view} onChange={setView} />
+        </div>
+
+        {/* Listing — table always renders (it owns the paste toolbar) */}
         {status === "error" ? (
           <div className={`glass-elevated ${s.emptyState}`}>
             <p className="text-body">{t("error")}</p>
@@ -215,8 +265,18 @@ export const GuestPassesPage = () => {
               Reintentar
             </button>
           </div>
+        ) : view === "table" ? (
+          <GuestPassTable eventId={event.id} rows={filteredRows} bandOptions={bandOptions} onChanged={load} />
+        ) : filteredRows.length === 0 ? (
+          <div className={`glass-elevated ${s.emptyState}`}>
+            <p className="text-body">{t("noGuestPasses")}</p>
+          </div>
         ) : (
-          <GuestPassTable eventId={event.id} rows={rows} bandOptions={bandOptions} onChanged={load} />
+          <div className={s.cardGrid}>
+            {filteredRows.map((pass) => (
+              <GuestPassCard key={pass.id} pass={pass} onEdit={openEditModal} onChanged={load} />
+            ))}
+          </div>
         )}
       </div>
     </div>

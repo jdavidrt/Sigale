@@ -53,13 +53,16 @@ const splitTextIntoLines = (text, maxChars) => {
  * Generate the Editorial ticket SVG.
  * @param {Object} ticket  buyer + ticket info  (buyerName, ticketType, ticketId)
  * @param {Object} event   event info           (name, venue, address, date, entranceTime, ticketTypes, flyerImageUrl?)
- * @param {string} qrDataURL  QR code as a data URL
- * @param {Object} [opts]   { flyerDataURL?: string }
+ * @param {string|null} qrDataURL  QR code as a data URL (ignored when opts.guest is set)
+ * @param {Object} [opts]   { flyerDataURL?: string, guest?: { typeLabel: string, band: string } }
+ *                          guest passes render a type badge instead of the QR,
+ *                          the type label instead of the price, and no pola line
  * @returns {string} SVG markup
  */
 export const generateTicketSVG = (ticket, event, qrDataURL, opts = {}) => {
   /* ── data ─────────────────────────────────────────────── */
-  const price = event.ticketTypes?.[ticket.ticketType] || 0;
+  const guest = opts.guest || null;
+  const price = guest ? 0 : (event.ticketTypes?.[ticket.ticketType] || 0);
   const dateStr = parseLocalDate(event.date)
     .toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
     .replace(/[.,]/g, '').toUpperCase();             // "VIE 24 JUL 2026"
@@ -84,7 +87,7 @@ export const generateTicketSVG = (ticket, event, qrDataURL, opts = {}) => {
   const footerDivY = tileY + tileS + 22;
   const footerTextY = footerDivY + 20;
   const polaY = footerTextY + 20;
-  const H = polaY + 18;
+  const H = guest ? footerTextY + 18 : polaY + 18;
 
   /* ── small text helpers ───────────────────────────────── */
   const label = (x, y, text, anchor = 'start') =>
@@ -101,6 +104,22 @@ export const generateTicketSVG = (ticket, event, qrDataURL, opts = {}) => {
   details += label(detailsX, dy, 'LUGAR'); dy += 18;
   venueLines.forEach((ln) => { details += value(detailsX, dy, ln, { size: 15 }); dy += 18; });
   details += value(detailsX, dy, event.address || '', { size: 13, fill: C.creamDim });
+
+  /* ── guest badge (replaces the QR inside the tile) ────── */
+  let guestBadge = '';
+  if (guest) {
+    const cx = tileX + tileS / 2;
+    const bandLines = splitTextIntoLines(guest.band || '', 16).slice(0, 2);
+    const by = tileY + tileS / 2 - (bandLines.length > 1 ? 14 : 6);
+    guestBadge =
+      `<text x="${cx}" y="${by}" text-anchor="middle" font-family="${SERIF}" font-size="21" font-weight="400" letter-spacing="1.2" fill="${C.black}">${escapeXml((guest.typeLabel || '').toUpperCase())}</text>` +
+      `<line x1="${cx - 34}" y1="${by + 9}" x2="${cx + 34}" y2="${by + 9}" stroke="${C.gold}" stroke-width="1.5"/>`;
+    let ly = by + 26;
+    bandLines.forEach((ln) => {
+      guestBadge += `<text x="${cx}" y="${ly}" text-anchor="middle" font-family="${SANS}" font-size="11" font-weight="700" letter-spacing="1.4" fill="${C.black}" opacity="0.75">${escapeXml(ln.toUpperCase())}</text>`;
+      ly += 14;
+    });
+  }
 
   /* ── assemble ─────────────────────────────────────────── */
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
@@ -132,14 +151,14 @@ export const generateTicketSVG = (ticket, event, qrDataURL, opts = {}) => {
     ${label(pX, fechaLabelY, 'FECHA')}
     ${value(pX, dateY, dateStr, { size: 16, track: 0.6 })}
     ${label(W - pX, fechaLabelY, ticket.ticketType?.toUpperCase() || '', 'end')}
-    ${value(W - pX, priceY, formatCurrency(price), { serif: true, size: 30, weight: 400, fill: C.gold, anchor: 'end' })}
+    ${value(W - pX, priceY, guest ? guest.typeLabel : formatCurrency(price), { serif: true, size: 30, weight: 400, fill: C.gold, anchor: 'end' })}
 
     <!-- entrance time -->
     <text x="${pX}" y="${puertasY}" font-family="${SANS}" font-size="13.5" font-weight="700" letter-spacing="2.4" fill="${C.creamFaint}">PUERTAS<tspan font-weight="600" letter-spacing="0.6" fill="${C.cream}" dx="8">${escapeXml(timeStr)}</tspan></text>
 
-    <!-- QR tile -->
+    <!-- QR tile (or the guest type badge — guest passes have no QR by design) -->
     <rect x="${tileX}" y="${tileY}" width="${tileS}" height="${tileS}" rx="12" ry="12" fill="${C.tile}"/>
-    <image x="${tileX + tilePad}" y="${tileY + tilePad}" width="${qrSize}" height="${qrSize}" href="${qrDataURL}" xlink:href="${qrDataURL}" preserveAspectRatio="xMidYMid meet"/>
+    ${guest ? guestBadge : `<image x="${tileX + tilePad}" y="${tileY + tilePad}" width="${qrSize}" height="${qrSize}" href="${qrDataURL}" xlink:href="${qrDataURL}" preserveAspectRatio="xMidYMid meet"/>`}
 
     <!-- details -->
     ${details}
@@ -148,7 +167,7 @@ export const generateTicketSVG = (ticket, event, qrDataURL, opts = {}) => {
     <line x1="${pX}" y1="${footerDivY}" x2="${W - pX}" y2="${footerDivY}" stroke="${C.hair}" stroke-width="1"/>
     <text x="${pX}" y="${footerTextY}" font-family="ui-monospace, 'Courier New', monospace" font-size="11" letter-spacing="1" fill="${C.creamDim}">${escapeXml(ticket.ticketId || '')}</text>
     <text x="${W - pX}" y="${footerTextY}" text-anchor="end" font-family="ui-monospace, 'Courier New', monospace" font-size="12" font-weight="700" letter-spacing="1" fill="${C.gold}">#${escapeXml(ticket.folio || ticket.ticketId || '')}</text>
-    <text x="${W / 2}" y="${polaY}" text-anchor="middle" font-family="${SANS}" font-size="12" font-weight="700" letter-spacing="1.5" fill="${C.gold}">✦ TODA ENTRADA INCLUYE POLA ✦</text>
+    ${guest ? '' : `<text x="${W / 2}" y="${polaY}" text-anchor="middle" font-family="${SANS}" font-size="12" font-weight="700" letter-spacing="1.5" fill="${C.gold}">✦ TODA ENTRADA INCLUYE POLA ✦</text>`}
   </g>
 </svg>`;
 

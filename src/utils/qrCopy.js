@@ -38,7 +38,7 @@ const qrToDataURL = (svgElement) => new Promise((resolve, reject) => {
  * @param {number} [scale=4] - DPI multiplier for sharpness on retina + print
  * @returns {Promise<Blob|null>} PNG blob, or null on rasterization failure
  */
-const svgToPngBlob = (svgString, scale = 4) => new Promise((resolve) => {
+export const svgToPngBlob = (svgString, scale = 4) => new Promise((resolve) => {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   const img = new Image();
@@ -133,6 +133,56 @@ If you have any questions, feel free to reach out.
 };
 
 /**
+ * Write a PNG blob to the clipboard.
+ *
+ * @param {Blob} blob
+ * @returns {Promise<boolean>}
+ */
+export const writePngBlobToClipboard = async (blob) => {
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({ "image/png": blob }),
+    ]);
+    return true;
+  } catch (error) {
+    console.error("Error copying PNG:", error);
+    return false;
+  }
+};
+
+/**
+ * Share a PNG blob as a file via the Web Share API. Handles the
+ * feature-detection guards and swallows user-cancelled shares.
+ *
+ * @param {Blob} blob
+ * @param {{ fileName: string, title: string, text: string }} meta
+ * @returns {Promise<boolean>}
+ */
+export const sharePngBlob = async (blob, { fileName, title, text }) => {
+  if (!navigator.share || !navigator.canShare) {
+    console.warn("Web Share API not supported");
+    return false;
+  }
+
+  try {
+    const file = new File([blob], fileName, { type: "image/png" });
+
+    if (!navigator.canShare({ files: [file] })) {
+      console.warn("Sharing files not supported");
+      return false;
+    }
+
+    await navigator.share({ files: [file], title, text });
+    return true;
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      console.error("Error sharing:", error);
+    }
+    return false;
+  }
+};
+
+/**
  * Copy the full ticket SVG (as text) to the clipboard.
  *
  * @param {SVGElement} qrSvgElement
@@ -164,10 +214,7 @@ export const copyPNGToClipboard = async (qrSvgElement, ticket, event) => {
     const blob = await svgToPngBlob(ticketSVG);
     if (!blob) return false;
 
-    await navigator.clipboard.write([
-      new ClipboardItem({ "image/png": blob }),
-    ]);
-    return true;
+    return await writePngBlobToClipboard(blob);
   } catch (error) {
     console.error("Error copying PNG:", error);
     return false;
@@ -185,36 +232,19 @@ export const copyPNGToClipboard = async (qrSvgElement, ticket, event) => {
  * @returns {Promise<boolean>}
  */
 export const shareQR = async (qrSvgElement, ticket, event, language = 'en') => {
-  if (!navigator.share || !navigator.canShare) {
-    console.warn("Web Share API not supported");
-    return false;
-  }
-
   try {
     const qrDataURL = await qrToDataURL(qrSvgElement);
     const ticketSVG = generateTicketSVG(ticket, event, qrDataURL);
     const blob = await svgToPngBlob(ticketSVG);
     if (!blob) return false;
 
-    const file = new File([blob], `ticket-${ticket.ticketId}.png`, {
-      type: "image/png",
-    });
-
-    if (!navigator.canShare({ files: [file] })) {
-      console.warn("Sharing files not supported");
-      return false;
-    }
-
-    await navigator.share({
-      files: [file],
+    return await sharePngBlob(blob, {
+      fileName: `ticket-${ticket.ticketId}.png`,
       title: `🎫 Your Ticket - ${event.name}`,
       text: buildShareMessage(ticket, event, language),
     });
-    return true;
   } catch (error) {
-    if (error.name !== "AbortError") {
-      console.error("Error sharing:", error);
-    }
+    console.error("Error sharing:", error);
     return false;
   }
 };
