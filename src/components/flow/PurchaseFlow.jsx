@@ -2,16 +2,22 @@
  * PurchaseFlow — the public 6-step purchase flow (the heart of 2.0).
  * Wired to the real backend via src/api/purchases.js (no localStorage).
  *
- * Steps: 1 Selección · 2 Confirmar (orden) · 3 Datos · 4 Pago · 5 WhatsApp
+ * Steps: 1 Selección · 2 Datos · 3 Confirmar (orden) · 4 Pago · 5 WhatsApp
  *        · 6 ¡Listo! (terminal success screen — buyer is told tickets will be
  *        delivered to their chosen contact and routed back to the landing).
  *
- * After "Ir a pagar" (step 4 onward) the back button is locked: buyers cannot
- * rewind to change quantity or holder data once they're at the payment step.
+ * The server-side reservation is created when leaving step 2 — i.e. AFTER the
+ * buyer's holder + delivery data is captured — so every reserved order carries
+ * that data from the moment it exists. On success a modal explains how to
+ * finish (pay via QR/Llave, send the receipt via WhatsApp).
+ *
+ * Back is locked from step 3 onward: once the order is reserved, buyers cannot
+ * rewind to change quantity or holder data.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvent } from '../../context/EventContext';
+import { useDialog } from '../../context/DialogContext';
 import { Ic } from '../ui/Ic';
 import { FlowShell } from './FlowShell';
 import { purchases, whatsappLink } from '../../api/purchases';
@@ -51,6 +57,7 @@ function mmss(total) {
 export function PurchaseFlow() {
   const navigate = useNavigate();
   const { event: ctxEvent, eventLoading } = useEvent();
+  const { openCustom } = useDialog();
 
   // All hooks first — they must run on every render in the same order.
   const [step, setStep] = useState(1);
@@ -152,12 +159,17 @@ export function PurchaseFlow() {
   };
 
   const next = async () => {
-    if (step === 1) {
+    if (step === 2) {
       try {
-        await reserve(); // reserve before showing the orden
+        await reserve(); // reserve only after the buyer's data is captured
       } catch {
-        return; // stop advancing — keep step 1 and show the error
+        return; // stop advancing — keep step 2 and show the error
       }
+      // Order is now created. Surface the "how to finish" modal, then fall
+      // through to setStep(3) so it overlays the "Orden reservada" screen.
+      // Don't await a custom-modal promise here — a backdrop close would never
+      // resolve it and would strand the wizard with the order already reserved.
+      openCustom((close) => <PaymentInfoModal onOk={close} />);
     }
     if (step === 5 && orderId) {
       // Mark the payment as submitted and patch the contact info captured
@@ -173,10 +185,10 @@ export function PurchaseFlow() {
     }
     if (step < 6) setStep((s) => s + 1);
   };
-  // Back is intentionally locked from step 4 onward — once the buyer commits
-  // to paying we don't let them rewind through the wizard. Returning null
-  // tells FlowShell to hide the back chevron entirely.
-  const back = step >= 4
+  // Back is intentionally locked from step 3 onward — once the order is
+  // reserved (on leaving step 2) we don't let them rewind through the wizard.
+  // Returning null tells FlowShell to hide the back chevron entirely.
+  const back = step >= 3
     ? null
     : () => {
       if (step > 1) setStep((s) => s - 1);
@@ -228,7 +240,7 @@ export function PurchaseFlow() {
   if (step === 1) {
     return (
       <FlowShell step={1} kicker="Selección" title="Elige tu boleta" onNext={next} onBack={back}
-        cta={reserving ? 'Reservando…' : 'Continuar'} ctaIcon={<Ic n="chevR" s={20} />} ctaDisabled={reserving}>
+        cta="Continuar" ctaIcon={<Ic n="chevR" s={20} />}>
         <div className="tile purple" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div className="chip" style={{ background: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.24)', color: '#fff', marginBottom: 8 }}>Etapa activa</div>
@@ -258,49 +270,12 @@ export function PurchaseFlow() {
           <div className="label" style={{ color: 'var(--cream-dim)' }}>Total</div>
           <div className="serif" style={{ fontSize: 28, color: 'var(--yellow)' }}>{formatCurrency(total)}</div>
         </div>
-
-        {reserveError && (
-          <div className="card" style={{ marginTop: 14, padding: 12, borderColor: 'rgba(248,113,113,0.4)' }}>
-            <p style={{ margin: 0, color: 'var(--red, #f87171)', fontSize: 14 }}>{reserveError}</p>
-          </div>
-        )}
       </FlowShell>
     );
   }
 
-  // ── Step 2 · Confirmar → reserved (orden) ──────────────────────────────────────
+  // ── Step 2 · Datos ──────────────────────────────────────────────────────────────
   if (step === 2) {
-    return (
-      <FlowShell step={2} kicker="Confirmar compra" title="Tu cupo está reservado" onNext={next} onBack={back}
-        cta="Continuar con mis datos" ctaIcon={<Ic n="chevR" s={20} />}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 8 }}>
-          <div className="charly" style={{ width: 76, height: 76, fontSize: 34 }}>✦</div>
-          <div className="serif" style={{ fontSize: 22, color: 'var(--cream)', marginTop: 16 }}>Apartamos {qty} boleta{qty > 1 ? 's' : ''} para ti</div>
-          <p className="muted" style={{ fontSize: 15, marginTop: 6, maxWidth: 270 }}>
-            Guardamos tu lugar mientras completas el pago. Este es tu número de orden:
-          </p>
-          <div className="tile" style={{ background: 'linear-gradient(150deg,var(--purple),var(--purple-deep))', padding: '18px 30px', marginTop: 16, textAlign: 'center' }}>
-            <div className="label" style={{ color: 'rgba(255,255,255,0.7)' }}>Orden</div>
-            <div className="orden" style={{ fontSize: 38, color: 'var(--yellow)' }}>#{orderId}</div>
-          </div>
-          <div className="chip lilac" style={{ marginTop: 18 }}><Ic n="lock" s={14} /> Guárdala, no la compartas</div>
-        </div>
-
-        <div className="card" style={{ padding: 16, marginTop: 22 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div>
-              <div className="label" style={{ color: 'var(--cream-dim)' }}>{stage?.name} × {qty}</div>
-            </div>
-            <div className="serif" style={{ fontSize: 26, color: 'var(--yellow)' }}>{formatCurrency(total)}</div>
-          </div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px', marginTop: 10, textAlign: 'center' }}>✦ Toda entrada incluye pola</div>
-        </div>
-      </FlowShell>
-    );
-  }
-
-  // ── Step 3 · Datos ──────────────────────────────────────────────────────────────
-  if (step === 3) {
     const contactPlaceholder = delivery.method === 'whatsapp'
       ? '+57 · número de WhatsApp'
       : 'tu@correo.com';
@@ -319,8 +294,8 @@ export function PurchaseFlow() {
       : delivery.contact.length > 0 && !validators.phone(delivery.contact);
 
     return (
-      <FlowShell step={3} kicker="Datos de boletas" title="¿Para quién son?" onNext={next} onBack={back}
-        cta="Ir a pagar" ctaIcon={<Ic n="chevR" s={20} />} ctaDisabled={!datosValid}>
+      <FlowShell step={2} kicker="Datos de boletas" title="¿Para quién son?" onNext={next} onBack={back}
+        cta={reserving ? 'Reservando…' : 'Continuar'} ctaIcon={<Ic n="chevR" s={20} />} ctaDisabled={!datosValid || reserving}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {holders.map((h, i) => {
             const nameInvalid = h.name.length >= 4 && !validators.name(h.name);
@@ -382,6 +357,42 @@ export function PurchaseFlow() {
               </p>
             )}
           </div>
+          {reserveError && (
+            <div className="card" style={{ padding: 12, borderColor: 'rgba(248,113,113,0.4)' }}>
+              <p style={{ margin: 0, color: 'var(--red, #f87171)', fontSize: 14 }}>{reserveError}</p>
+            </div>
+          )}
+        </div>
+      </FlowShell>
+    );
+  }
+
+  // ── Step 3 · Confirmar → reserved (orden) ──────────────────────────────────────
+  if (step === 3) {
+    return (
+      <FlowShell step={3} kicker="Confirmar compra" title="Tu cupo está reservado" onNext={next} onBack={back}
+        cta="Ir a pagar" ctaIcon={<Ic n="chevR" s={20} />}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 8 }}>
+          <div className="charly" style={{ width: 76, height: 76, fontSize: 34 }}>✦</div>
+          <div className="serif" style={{ fontSize: 22, color: 'var(--cream)', marginTop: 16 }}>Apartamos {qty} boleta{qty > 1 ? 's' : ''} para ti</div>
+          <p className="muted" style={{ fontSize: 15, marginTop: 6, maxWidth: 270 }}>
+            Guardamos tu lugar mientras completas el pago. Este es tu número de orden:
+          </p>
+          <div className="tile" style={{ background: 'linear-gradient(150deg,var(--purple),var(--purple-deep))', padding: '18px 30px', marginTop: 16, textAlign: 'center' }}>
+            <div className="label" style={{ color: 'rgba(255,255,255,0.7)' }}>Orden</div>
+            <div className="orden" style={{ fontSize: 38, color: 'var(--yellow)' }}>#{orderId}</div>
+          </div>
+          <div className="chip lilac" style={{ marginTop: 18 }}><Ic n="lock" s={14} /> Guárdala, no la compartas</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, marginTop: 22 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div>
+              <div className="label" style={{ color: 'var(--cream-dim)' }}>{stage?.name} × {qty}</div>
+            </div>
+            <div className="serif" style={{ fontSize: 26, color: 'var(--yellow)' }}>{formatCurrency(total)}</div>
+          </div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px', marginTop: 10, textAlign: 'center' }}>✦ Toda entrada incluye pola</div>
         </div>
       </FlowShell>
     );
@@ -533,6 +544,25 @@ function Step6({ orderId, stage, qty, total, delivery, navigate }) {
         </div>
       </div>
     </FlowShell>
+  );
+}
+
+// Shown once the reservation is created (leaving step 2). Makes it explicit
+// that the order isn't done until the buyer pays and sends the receipt — so we
+// don't accumulate reserved orders the buyer thinks are already complete.
+function PaymentInfoModal({ onOk }) {
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div className="charly" style={{ width: 64, height: 64, fontSize: 28, margin: '0 auto' }}>✦</div>
+      <div className="serif" style={{ fontSize: 22, color: 'var(--cream)', marginTop: 14 }}>Completa tu pago</div>
+      <p className="muted" style={{ fontSize: 15, marginTop: 8, lineHeight: 1.5 }}>
+        Para completar tu compra, realiza el pago con <b>QR o Llave</b> y envíanos el
+        comprobante por <b>WhatsApp</b>. Tu cupo queda reservado mientras tanto.
+      </p>
+      <button className="btn" style={{ marginTop: 18, width: '100%' }} onClick={onOk}>
+        <Ic n="wa" s={18} fill /> Entendido, ir a pagar
+      </button>
+    </div>
   );
 }
 

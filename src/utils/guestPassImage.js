@@ -14,7 +14,7 @@ import { svgToPngBlob, writePngBlobToClipboard, sharePngBlob } from './qrCopy';
 export const GUEST_TYPE_LABEL_ES = {
   artist: 'Artista',
   crew: 'Crew',
-  courtesy: 'Cortesía',
+  courtesy: 'Invitadx',
 };
 
 /** Map a guest pass to the ticket-shaped object the SVG template expects. */
