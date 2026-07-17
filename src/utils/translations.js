@@ -4,24 +4,15 @@ export const translations = {
   es: {
     // Navbar
     home: "Inicio",
-    sell: "Vender",
     validate: "Validar",
     dashboard: "Panel",
-    event: "Evento",
 
     // Common
-    save: "Guardar",
     cancel: "Cancelar",
     delete: "Eliminar",
-    edit: "Editar",
-    create: "Crear",
-    update: "Actualizar",
-    search: "Buscar",
-    close: "Cerrar",
     loading: "Cargando",
     error: "Error",
     success: "Éxito",
-    required: "Requerido",
     optional: "Opcional",
 
     // Event Creation
@@ -29,33 +20,16 @@ export const translations = {
     setupEventDetails: "Configure los detalles de su evento y tipos de boletas",
     sellTicketsTitle: "Vender Boletas",
     manageTicketSales: "Crear y administrar ventas de boletas para su evento",
-    validateTicketsTitle: "Validar Boletas",
-    scanValidateTickets: "Escanear y validar boletas en el evento",
     editEventTitle: "Editar Evento",
-    updateEventDetails: "Actualizar los detalles de su evento y tipos de boletas",
-    checkInValidation: "Validación de Registro",
-    scanQRValidate: "Escanear códigos QR para validar y registrar asistentes",
-    scanner: "Escáner",
-    ticketList: "Lista de Boletas",
     eventDetails: "Detalles del Evento",
     eventName: "Nombre del Evento",
     date: "Fecha",
-    venue: "Lugar",
     venueName: "Nombre del Lugar",
-    address: "Dirección",
     fullAddress: "Dirección Completa",
     entranceTime: "Hora de Entrada",
-    location: "Ubicación",
-    noAddress: "Sin dirección",
-    dateAndTime: "Fecha y Hora",
-    revenue: "Ingresos",
     ticketTypes: "Tipos de Boletas",
-    ticketTypesDesc: "Se requiere al menos un tipo de boleta",
-    typeName: "Nombre del Tipo",
     price: "Precio",
-    addType: "Agregar Tipo",
     removeType: "Eliminar",
-    addNewTicketType: "Agregar Nuevo Tipo de Boleta",
     // 2.0 — extended event form
     additionalDetails: "Detalles Adicionales",
     description: "Descripción",
@@ -69,7 +43,6 @@ export const translations = {
     flyerImageUrl: "URL del flyer",
     bankQrImageUrl: "URL del QR bancario",
     stages: "Etapas de Boletas",
-    stagesDesc: "Cada etapa tiene precio y cupo; la suma no puede superar el aforo",
     stageName: "Nombre de la etapa",
     quantity: "Cupo",
     activatesAt: "Se activa el (opcional)",
@@ -81,9 +54,6 @@ export const translations = {
     updateEvent: "Actualizar Evento",
 
     // Ticket Form
-    newTicketSale: "Nueva Venta de Boleta",
-    buyerInfo: "Información del Comprador",
-    buyerInfoDesc: "Complete la información del comprador para generar una boleta",
     pasteNameAndId: "Pegar Nombre y Cédula",
     buyerName: "Nombre",
     idNumber: "ID",
@@ -91,76 +61,38 @@ export const translations = {
     ticketType: "Tipo de Boleta",
     selectTicketType: "Seleccione un tipo de boleta",
     createTicket: "Crear Boleta",
-    creatingTicket: "Creando Boleta...",
 
     // Ticket Display
     ticketCreated: "¡Boleta Creada!",
     ticketFor: "Boleta para",
-    ticketId: "ID de Boleta",
-    validationHash: "Hash de Validación",
     purchaseDate: "Fecha de Compra",
-    qrCode: "Código QR",
-    copyAsSVG: "Copiar como SVG",
-    copyAsPNG: "Copiar como PNG",
     share: "Compartir",
     createAnother: "Crear Otra Boleta",
     copiedToClipboard: "Copiado al portapapeles",
-    shareTicket: "Compartir Boleta",
 
     // QR Scanner
-    scanQR: "Escanear Código QR",
-    scannerLoading: "Cargando escáner...",
-    scannerError: "Error al cargar el escáner",
-    pointCamera: "Apunte la cámara al código QR",
 
     // Validation Results
-    validTicket: "¡Boleta Válida!",
-    invalidTicket: "Boleta Inválida",
-    duplicateCheckIn: "Check-in Duplicado",
-    ticketNotFound: "Boleta No Encontrada",
-    alreadyCheckedIn: "Ya registrado el",
-    checkedInAt: "Registrado a las",
-    scanAnother: "Escanear Otra",
 
     // Ticket List
     allTickets: "Todas las Boletas",
     searchTickets: "Buscar boletas por nombre, ID o teléfono",
     noTickets: "No hay boletas",
     noTicketsDesc: "Aún no se han creado boletas",
-    ticketsFound: "boletas encontradas",
     checkedIn: "Registrado",
-    notCheckedIn: "No Registrado",
     clearAllTickets: "Eliminar Todas las Boletas",
-    confirmResetCheckIns: "¿Está seguro de que desea eliminar todas las boletas? Esta acción no se puede deshacer.",
-    confirmResetCheckInsRetype: "Escriba DELETE para confirmar la eliminación de todas las boletas:",
-    enterPasswordToReset: "Ingrese la contraseña para eliminar todas las boletas:",
-    incorrectPassword: "Contraseña incorrecta. Eliminación cancelada.",
-    deletionCancelled: "Eliminación cancelada.",
-    checkInsReset: "Todas las boletas han sido eliminadas.",
-    confirmDeleteTicket: "¿Eliminar esta boleta?\n\nComprador: {buyer}\nID de Boleta: {id}\n\nEsta acción no se puede deshacer.",
     filterAll: "Todas",
-    cannotRemoveTicketTypeInUse: "No se puede eliminar el tipo de boleta — ya existen {count} boleta(s) de este tipo. Reasigne o elimine esas boletas primero.",
-    navTickets: "Boletas",
-    purchasesPanel: "Compras",
 
     // Home Page
-    welcome: "Bienvenido a",
     noEvent: "No hay eventos configurados",
     noEventDesc: "Cree un evento para comenzar a vender boletas",
-    setupEvent: "Configurar Evento",
-    eventInfo: "Información del Evento",
     editEvent: "Editar Evento",
-    sellTicketTypes: "Vender Tipos de Boletas",
-    viewAnalytics: "Ver análisis y estadísticas",
-    madeIn: "Hecho en Colombia con Amor - ARMA",
-    toggleLanguage: "Cambiar idioma",
 
     // Dashboard (placeholder for Stage 3)
     salesDashboard: "Panel de Ventas",
     checkInDashboard: "Panel de Registro",
     totalSold: "Total Vendidas",
     totalRevenue: "Ingresos Totales",
-    totalCheckedIn: "Total Registrados",
     attendanceRate: "Tasa de Asistencia",
     salesByType: "Ventas por Tipo de Boleta",
     sold: "vendidas",
@@ -176,28 +108,17 @@ export const translations = {
     venuePlaceholder: "Estadio Nacional",
     addressPlaceholder: "Calle 123, Ciudad, Estado, Código Postal",
     enterFullName: "Ingrese nombre completo",
-    enterIdNumber: "Ingrese número de identificación",
-    phoneNumberPlaceholder: "+57 300 1234567",
-    ticketTypeExample: "ej., VIP, General",
 
     // Alerts
     atLeastOneTicketType: "Por favor agregue al menos un tipo de boleta",
-    ticketTypeExists: "Este tipo de boleta ya existe",
-    enterTicketTypeName: "Por favor ingrese un nombre de tipo de boleta",
-    ticketTypeNameEmpty: "El nombre del tipo de boleta no puede estar vacío",
-    ticketTypeNameExists: "Ya existe un tipo de boleta con este nombre",
     mustHaveOneTicketType: "Debe tener al menos un tipo de boleta",
-    failedToCreateTicket: "Error al crear la boleta. Por favor intente de nuevo.",
 
     // Delete Event
     dangerZone: "Zona de Peligro",
     deleteEvent: "Eliminar Evento",
     deleteEventWarning: "Esta acción es IRREVERSIBLE. Se eliminarán permanentemente todos los datos del evento y todas las boletas vendidas.",
     slideToDelete: "Desliza para eliminar",
-    confirmDeleteTitle: "¿Eliminar evento permanentemente?",
     confirmDeleteMessage: "Estás a punto de eliminar el evento y todas sus boletas. Esta acción NO se puede deshacer.",
-    confirmDeleteButton: "Sí, eliminar todo",
-    cancelDelete: "Cancelar",
     eventDeleted: "Evento eliminado exitosamente",
 
     // CSV Import/Export
@@ -217,7 +138,6 @@ export const translations = {
     pasteTickets: "Pegar Boletas",
     pasteTicketsHint: "Pegue nombres + cédulas desde Excel o un mensaje. Cada fila se convertirá en una boleta nueva.",
     defaultTypeForPasted: "Tipo por defecto",
-    addEmptyRow: "Agregar Fila",
     pasteResultAdded: "{n} boletas agregadas",
     pasteResultSkipped: "{n} duplicadas omitidas",
     pasteResultIgnored: "{n} filas ignoradas (sin nombre o cédula)",
@@ -234,7 +154,6 @@ export const translations = {
     colActions: "Acciones",
     statusCheckedIn: "Registrado",
     statusPending: "Pendiente",
-    confirmCheckInUndo: "¿Marcar esta boleta como NO registrada y borrar la hora de registro?",
 
     // Dialogs / table edit confirm
     confirm: "Confirmar",
@@ -247,8 +166,6 @@ export const translations = {
     editConfirmBody: "Revise los cambios antes de guardar.",
     editNoChanges: "No hay cambios que guardar",
     editConfirmFor: "Boleta de {buyer}",
-    fieldOriginal: "Original",
-    fieldNew: "Nuevo",
     saveChanges: "Guardar cambios",
     ticketUpdatedToast: "Boleta actualizada",
     ticketDeletedToast: "Boleta eliminada",
@@ -258,15 +175,11 @@ export const translations = {
     deleteAllBody: "Esto eliminará {count} boleta(s) y no se puede deshacer. Escriba \"BORRAR\" para confirmar.",
     deleteAllConfirmWord: "BORRAR",
     deleteAllInputPlaceholder: "Escriba BORRAR",
-    deleteAllMismatch: "Texto incorrecto. Cancelado.",
     deleteAllSuccess: "Todas las boletas fueron eliminadas",
     failedToCreateToast: "No se pudo crear la boleta",
     ticketUpdatedFromForm: "Boleta actualizada exitosamente",
 
     // H5 — check-in window warnings (soft, confirm-to-proceed)
-    checkInEarlyWarning: "La fecha del evento es en {days} día(s). ¿Continuar con el registro?",
-    checkInLateWarning: "La fecha del evento fue hace {days} día(s). ¿Continuar con el registro?",
-    checkInCancelledOutsideWindow: "Registro cancelado (fuera de la ventana del evento)",
 
     allTicketTypesMustHavePrice: "Todos los tipos de boleta deben tener un precio válido (0 o positivo).",
     type: "Tipo",
@@ -274,7 +187,6 @@ export const translations = {
 
     // N2 — Ticket Form success state + update mode
     updateTicket: "Actualizar Boleta",
-    ticketUpdated: "¡Boleta actualizada exitosamente!",
     readyToGo: "¡Lista!",
     ticketGenerated: "La boleta ha sido generada.",
     detailType: "TIPO",
@@ -287,24 +199,8 @@ export const translations = {
     shareNotSupported: "Compartir no disponible",
 
     // Scanner flow — QRScanner.jsx status messages
-    qrInvalidFormat: "Formato de código QR inválido",
-    ticketForDifferentEvent: "Esta boleta fue emitida para un evento diferente",
-    ticketNotFoundInDb: "Boleta no encontrada en la base de datos",
-    alreadyCheckedInMessage: "Esta boleta ya ha sido registrada",
-    checkInSuccessful: "¡Registro exitoso!",
-    checkInSaveFailed: "No se pudo guardar el registro. Verifique el almacenamiento e intente de nuevo.",
-    stopCamera: "Detener Cámara",
-    cameraPermissionDenied: "Se denegó el acceso a la cámara. Permita el permiso de cámara en la configuración de su navegador y recargue la página.",
-    positionQRCode: "Coloque el código QR dentro del marco",
 
     // Scanner flow — ValidationResult.jsx labels
-    checkInSuccessTitle: "¡Registro Exitoso!",
-    checkInFailedTitle: "Registro Fallido",
-    resultBuyer: "Comprador",
-    originalCheckIn: "Registro original",
-    qrDataLabel: "Datos QR",
-    continueAction: "Continuar",
-    tryAgain: "Intentar de nuevo",
 
     // TicketForm — inline validation errors + order number label
     nameInvalid: "Nombre no válido. Solo letras y espacios.",
@@ -323,7 +219,6 @@ export const translations = {
 
     // AdminPage — post-login panel
     loadingEvent: "Cargando evento…",
-    adminPanel: "Panel",
     noAddressRegistered: "Sin dirección registrada",
     ticketsSold: "Vendidas",
     collected: "Recaudado",
@@ -345,12 +240,10 @@ export const translations = {
     pasteGuestPassesHint: "Copia nombres e identificaciones desde una hoja de cálculo y pégalos aquí.",
     selectBandFirst: "Selecciona una banda primero",
     noGuestPasses: "Sin accesos registrados",
-    noGuestPassesDesc: "Agrega artistas, crew o cortesías para este evento.",
     deleteGuestPassTitle: "Eliminar acceso",
     deleteGuestPassBody: "¿Eliminar el acceso de {name}? Esta acción no se puede deshacer.",
     guestPassDeletedToast: "Acceso eliminado",
     guestPassNameInvalid: "Nombre inválido",
-    guestPassIdInvalid: "Identificación inválida",
     searchOrder: "Buscar orden",
     noOrdersForFilter: "No hay órdenes para este filtro.",
     filterWaiting: "Esperando",
@@ -368,46 +261,22 @@ export const translations = {
 
     // ScanPage — door scanner
     doorTitle: "Puerta",
-    ticketsCached: "Boletas en caché",
-    lastUpdated: "Actualizado:",
-    downloading: "Descargando…",
-    download: "Descargar",
-    downloadFirstDesc: "Descarga la lista de boletas confirmadas antes de abrir puertas. Luego el escáner funciona sin internet.",
-    pendingSyncMsg: "{n} ingreso(s) por sincronizar",
-    syncAutomatic: "Se sincronizan automáticamente",
-    syncOnReconnect: "Se enviarán al recuperar conexión",
-    synchronizing: "Sincronizando…",
-    synchronize: "Sincronizar",
-    entryLog: "Registro de ingresos",
-    entryDefault: "Boleta",
     online: "En línea",
     offline: "Sin conexión",
-    scanAdelante: "Adelante",
-    scanAlreadyIn: "Ya ingresó",
-    scanNotValid: "No válida",
   },
 
   en: {
     // Navbar
     home: "Home",
-    sell: "Sell",
     validate: "Validate",
     dashboard: "Dashboard",
-    event: "Event",
 
     // Common
-    save: "Save",
     cancel: "Cancel",
     delete: "Delete",
-    edit: "Edit",
-    create: "Create",
-    update: "Update",
-    search: "Search",
-    close: "Close",
     loading: "Loading",
     error: "Error",
     success: "Success",
-    required: "Required",
     optional: "Optional",
 
     // Event Creation
@@ -415,33 +284,16 @@ export const translations = {
     setupEventDetails: "Set up your event details and ticket types",
     sellTicketsTitle: "Sell Tickets",
     manageTicketSales: "Create and manage ticket sales for your event",
-    validateTicketsTitle: "Validate Tickets",
-    scanValidateTickets: "Scan and validate tickets at the event",
     editEventTitle: "Edit Event",
-    updateEventDetails: "Update your event details and ticket types",
-    checkInValidation: "Check-In Validation",
-    scanQRValidate: "Scan QR codes to validate and check in attendees",
-    scanner: "Scanner",
-    ticketList: "Ticket List",
     eventDetails: "Event Details",
     eventName: "Event Name",
     date: "Date",
-    venue: "Venue",
     venueName: "Venue Name",
-    address: "Address",
     fullAddress: "Full Address",
     entranceTime: "Entrance Time",
-    location: "Location",
-    noAddress: "No address",
-    dateAndTime: "Date & Time",
-    revenue: "Revenue",
     ticketTypes: "Ticket Types",
-    ticketTypesDesc: "At least one ticket type is required",
-    typeName: "Type Name",
     price: "Price",
-    addType: "Add Type",
     removeType: "Remove",
-    addNewTicketType: "Add New Ticket Type",
     // 2.0 — extended event form
     additionalDetails: "Additional Details",
     description: "Description",
@@ -455,7 +307,6 @@ export const translations = {
     flyerImageUrl: "Flyer image URL",
     bankQrImageUrl: "Bank QR image URL",
     stages: "Ticket Stages",
-    stagesDesc: "Each stage has a price and a quota; the sum cannot exceed capacity",
     stageName: "Stage name",
     quantity: "Quota",
     activatesAt: "Activates on (optional)",
@@ -467,9 +318,6 @@ export const translations = {
     updateEvent: "Update Event",
 
     // Ticket Form
-    newTicketSale: "New Ticket Sale",
-    buyerInfo: "Buyer Information",
-    buyerInfoDesc: "Fill in the buyer information to generate a ticket",
     pasteNameAndId: "Paste Name & ID",
     buyerName: "Buyer Name",
     idNumber: "ID Number",
@@ -477,76 +325,38 @@ export const translations = {
     ticketType: "Ticket Type",
     selectTicketType: "Select a ticket type",
     createTicket: "Create Ticket",
-    creatingTicket: "Creating Ticket...",
 
     // Ticket Display
     ticketCreated: "Ticket Created!",
     ticketFor: "Ticket for",
-    ticketId: "Ticket ID",
-    validationHash: "Validation Hash",
     purchaseDate: "Purchase Date",
-    qrCode: "QR Code",
-    copyAsSVG: "Copy as SVG",
-    copyAsPNG: "Copy as PNG",
     share: "Share",
     createAnother: "Create Another Ticket",
     copiedToClipboard: "Copied to clipboard",
-    shareTicket: "Share Ticket",
 
     // QR Scanner
-    scanQR: "Scan QR Code",
-    scannerLoading: "Loading scanner...",
-    scannerError: "Error loading scanner",
-    pointCamera: "Point camera at QR code",
 
     // Validation Results
-    validTicket: "Valid Ticket!",
-    invalidTicket: "Invalid Ticket",
-    duplicateCheckIn: "Duplicate Check-In",
-    ticketNotFound: "Ticket Not Found",
-    alreadyCheckedIn: "Already checked in on",
-    checkedInAt: "Checked in at",
-    scanAnother: "Scan Another",
 
     // Ticket List
     allTickets: "All Tickets",
     searchTickets: "Search tickets by name, ID, or phone",
     noTickets: "No tickets",
     noTicketsDesc: "No tickets have been created yet",
-    ticketsFound: "tickets found",
     checkedIn: "Checked In",
-    notCheckedIn: "Not Checked In",
     clearAllTickets: "Delete All Tickets",
-    confirmResetCheckIns: "Are you sure you want to delete all tickets? This action cannot be undone.",
-    confirmResetCheckInsRetype: "Type DELETE to confirm deleting all tickets:",
-    enterPasswordToReset: "Enter password to delete all tickets:",
-    incorrectPassword: "Incorrect password. Deletion cancelled.",
-    deletionCancelled: "Deletion cancelled.",
-    checkInsReset: "All tickets have been deleted.",
-    confirmDeleteTicket: "Delete this ticket?\n\nBuyer: {buyer}\nTicket ID: {id}\n\nThis action cannot be undone.",
     filterAll: "All",
-    cannotRemoveTicketTypeInUse: "Cannot remove ticket type — {count} ticket(s) of this type already exist. Reassign or delete those tickets first.",
-    navTickets: "Tickets",
-    purchasesPanel: "Purchases",
 
     // Home Page
-    welcome: "Welcome to",
     noEvent: "No event configured",
     noEventDesc: "Create an event to start selling tickets",
-    setupEvent: "Setup Event",
-    eventInfo: "Event Information",
     editEvent: "Edit Event",
-    sellTicketTypes: "Sell Ticket Types",
-    viewAnalytics: "View analytics and statistics",
-    madeIn: "Made in Colombia with Love - ARMA",
-    toggleLanguage: "Toggle language",
 
     // Dashboard (placeholder for Stage 3)
     salesDashboard: "Sales Dashboard",
     checkInDashboard: "Check-In Dashboard",
     totalSold: "Total Sold",
     totalRevenue: "Total Revenue",
-    totalCheckedIn: "Total Checked In",
     attendanceRate: "Attendance Rate",
     salesByType: "Sales by Ticket Type",
     sold: "sold",
@@ -562,28 +372,17 @@ export const translations = {
     venuePlaceholder: "National Stadium",
     addressPlaceholder: "123 Main Street, City, State, ZIP",
     enterFullName: "Enter full name",
-    enterIdNumber: "Enter ID number",
-    phoneNumberPlaceholder: "+1 555 123 4567",
-    ticketTypeExample: "e.g., VIP, General",
 
     // Alerts
     atLeastOneTicketType: "Please add at least one ticket type",
-    ticketTypeExists: "This ticket type already exists",
-    enterTicketTypeName: "Please enter a ticket type name",
-    ticketTypeNameEmpty: "Ticket type name cannot be empty",
-    ticketTypeNameExists: "A ticket type with this name already exists",
     mustHaveOneTicketType: "You must have at least one ticket type",
-    failedToCreateTicket: "Failed to create ticket. Please try again.",
 
     // Delete Event
     dangerZone: "Danger Zone",
     deleteEvent: "Delete Event",
     deleteEventWarning: "This action is IRREVERSIBLE. All event data and sold tickets will be permanently deleted.",
     slideToDelete: "Slide to delete",
-    confirmDeleteTitle: "Delete event permanently?",
     confirmDeleteMessage: "You are about to delete the event and all its tickets. This action CANNOT be undone.",
-    confirmDeleteButton: "Yes, delete everything",
-    cancelDelete: "Cancel",
     eventDeleted: "Event deleted successfully",
 
     // CSV Import/Export
@@ -603,7 +402,6 @@ export const translations = {
     pasteTickets: "Paste Tickets",
     pasteTicketsHint: "Paste names + IDs from Excel or a message. Each row becomes a new ticket.",
     defaultTypeForPasted: "Default type",
-    addEmptyRow: "Add Row",
     pasteResultAdded: "{n} tickets added",
     pasteResultSkipped: "{n} duplicates skipped",
     pasteResultIgnored: "{n} rows ignored (no name or ID)",
@@ -620,7 +418,6 @@ export const translations = {
     colActions: "Actions",
     statusCheckedIn: "Checked in",
     statusPending: "Pending",
-    confirmCheckInUndo: "Mark this ticket as NOT checked in and clear the check-in time?",
 
     // Dialogs / table edit confirm
     confirm: "Confirm",
@@ -633,8 +430,6 @@ export const translations = {
     editConfirmBody: "Review the changes below before saving.",
     editNoChanges: "No changes to save",
     editConfirmFor: "Ticket for {buyer}",
-    fieldOriginal: "Original",
-    fieldNew: "New",
     saveChanges: "Save changes",
     ticketUpdatedToast: "Ticket updated",
     ticketDeletedToast: "Ticket deleted",
@@ -644,15 +439,11 @@ export const translations = {
     deleteAllBody: "This will delete {count} ticket(s) and cannot be undone. Type \"DELETE\" to confirm.",
     deleteAllConfirmWord: "DELETE",
     deleteAllInputPlaceholder: "Type DELETE",
-    deleteAllMismatch: "Text didn't match. Cancelled.",
     deleteAllSuccess: "All tickets deleted",
     failedToCreateToast: "Could not create ticket",
     ticketUpdatedFromForm: "Ticket updated successfully",
 
     // H5 — check-in window warnings (soft, confirm-to-proceed)
-    checkInEarlyWarning: "Event date is in {days} day(s). Continue with check-in?",
-    checkInLateWarning: "Event date was {days} day(s) ago. Continue with check-in?",
-    checkInCancelledOutsideWindow: "Check-in cancelled (outside event window)",
 
     allTicketTypesMustHavePrice: "All ticket types must have a valid price (0 or positive).",
     type: "Type",
@@ -660,7 +451,6 @@ export const translations = {
 
     // N2 — Ticket Form success state + update mode
     updateTicket: "Update Ticket",
-    ticketUpdated: "Ticket updated successfully!",
     readyToGo: "Ready to Go!",
     ticketGenerated: "Ticket has been generated.",
     detailType: "TYPE",
@@ -673,24 +463,8 @@ export const translations = {
     shareNotSupported: "Share not supported",
 
     // Scanner flow — QRScanner.jsx status messages
-    qrInvalidFormat: "Invalid QR code format",
-    ticketForDifferentEvent: "This ticket was issued for a different event",
-    ticketNotFoundInDb: "Ticket not found in database",
-    alreadyCheckedInMessage: "This ticket has already been checked in",
-    checkInSuccessful: "Check-in successful!",
-    checkInSaveFailed: "Check-in could not be saved. Check storage and try again.",
-    stopCamera: "Stop Camera",
-    cameraPermissionDenied: "Camera access was denied. Please allow camera permission in your browser settings and reload the page.",
-    positionQRCode: "Position the QR code within the frame",
 
     // Scanner flow — ValidationResult.jsx labels
-    checkInSuccessTitle: "Check-In Successful!",
-    checkInFailedTitle: "Check-In Failed",
-    resultBuyer: "Buyer",
-    originalCheckIn: "Original check-in",
-    qrDataLabel: "QR Data",
-    continueAction: "Continue",
-    tryAgain: "Try Again",
 
     // TicketForm — inline validation errors + order number label
     nameInvalid: "Invalid name. Letters and spaces only.",
@@ -709,7 +483,6 @@ export const translations = {
 
     // AdminPage — post-login panel
     loadingEvent: "Loading event…",
-    adminPanel: "Panel",
     noAddressRegistered: "No address on file",
     ticketsSold: "Sold",
     collected: "Collected",
@@ -731,12 +504,10 @@ export const translations = {
     pasteGuestPassesHint: "Copy names and IDs from a spreadsheet and paste them here.",
     selectBandFirst: "Select a band first",
     noGuestPasses: "No guest passes yet",
-    noGuestPassesDesc: "Add artists, crew, or courtesy guests for this event.",
     deleteGuestPassTitle: "Delete pass",
     deleteGuestPassBody: "Delete {name}'s pass? This can't be undone.",
     guestPassDeletedToast: "Pass deleted",
     guestPassNameInvalid: "Invalid name",
-    guestPassIdInvalid: "Invalid ID",
     searchOrder: "Search order",
     noOrdersForFilter: "No orders for this filter.",
     filterWaiting: "Waiting",
@@ -754,23 +525,8 @@ export const translations = {
 
     // ScanPage — door scanner
     doorTitle: "Door",
-    ticketsCached: "Cached tickets",
-    lastUpdated: "Updated:",
-    downloading: "Downloading…",
-    download: "Download",
-    downloadFirstDesc: "Download the confirmed ticket list before opening doors. The scanner then works offline.",
-    pendingSyncMsg: "{n} check-in(s) to sync",
-    syncAutomatic: "Syncing automatically",
-    syncOnReconnect: "Will send when connection is restored",
-    synchronizing: "Synchronizing…",
-    synchronize: "Sync",
-    entryLog: "Entry log",
-    entryDefault: "Ticket",
     online: "Online",
     offline: "Offline",
-    scanAdelante: "Go ahead",
-    scanAlreadyIn: "Already in",
-    scanNotValid: "Not valid",
   }
 };
 

@@ -29,14 +29,6 @@
 
 /* ── Sizes ──────────────────────────────────────────────── */
 
-/* Small — icon actions, compact toolbars */
-.sm {
-  padding: var(--space-4) var(--space-7);
-  font-size: var(--text-md);
-  border-radius: var(--radius-md);
-  min-height: auto;
-}
-
 /* Medium — secondary actions, inline buttons */
 .md {
   padding: var(--space-5) var(--space-7);

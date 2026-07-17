@@ -28,7 +28,6 @@
 
 
 /* ── Shadow Helpers ─────────────────────────────────────── */
-.shadow-soft     { box-shadow: var(--shadow-soft); }
 .shadow-elevated { box-shadow: var(--shadow-elevated); }
 .shadow-floating { box-shadow: var(--shadow-floating); }
 
@@ -44,34 +43,9 @@
   box-shadow: var(--shadow-hover-card);
 }
 
-/* Scale-up for buttons and small interactive elements */
-.hover-scale {
-  transition: var(--transition-base);
-}
-
-.hover-scale:hover {
-  transform: scale(1.02);
-}
-
 
 /* ── Typography Scale ───────────────────────────────────── */
 /* These classes are used directly in JSX className props    */
-
-.text-display {
-  font-size: var(--text-5xl);
-  font-weight: var(--weight-bold);
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-tight);
-  color: var(--color-text-heading);
-}
-
-.text-title {
-  font-size: var(--text-4xl);
-  font-weight: var(--weight-bold);
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-tight);
-  color: var(--color-text-heading);
-}
 
 .text-heading {
   font-size: var(--text-3xl);
@@ -89,24 +63,6 @@
   margin: 0;
 }
 
-.text-caption {
-  font-size: var(--text-body);
-  font-weight: var(--weight-normal);
-  line-height: var(--leading-tight);
-  color: var(--color-text-secondary);
-  opacity: 0.70;
-}
-
-.text-label {
-  font-size: var(--text-md);
-  font-weight: var(--weight-semibold);
-  line-height: var(--leading-tight);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-  color: var(--color-text-secondary);
-  margin: 0;
-}
-
 .text-mono {
   font-family: var(--font-mono);
 }
@@ -114,9 +70,6 @@
 
 /* ── Accent Colors (className shortcuts) ────────────────── */
 .color-primary { color: var(--color-primary); }
-.color-success { color: var(--color-success); }
-.color-warning { color: var(--color-accent-orange); }
-.color-error   { color: var(--color-error); }
 
 
 /* ── Section Accent Bar ─────────────────────────────────── */
@@ -153,53 +106,6 @@
   font-size: 14px;
 }
 
-/* Larger icon-box variant — 16 px for scanners / camera UI */
-.icon-box-icon-lg {
-  color: white;
-  font-size: 16px;
-}
-
-/* Small icon decorating a text link or inline element */
-.link-icon {
-  font-size: 14px;
-}
-
-
-/* ── Flex Helpers ───────────────────────────────────────── */
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.flex-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.flex-col {
-  display: flex;
-  flex-direction: column;
-}
-
-
-/* ── Progress Bar ───────────────────────────────────────── */
-/* Used in SalesDashboard and any future progress indicators */
-.progress-track {
-  height: 4px;
-  border-radius: var(--radius-xs);
-  background: var(--color-tint-white-md);
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: var(--radius-xs);
-  background: var(--gradient-progress);
-  transition: width var(--duration-data) var(--ease-out);
-}
-
 
 /* ── Divider ────────────────────────────────────────────── */
 .divider {
@@ -215,57 +121,6 @@
   font-size: var(--icon-md);
   color: var(--color-primary);
   opacity: 0.80;
-}
-
-
-/* ── Card Wrappers ──────────────────────────────────────── */
-/* Outer padded wrapper giving glass cards their breathing room */
-.card-outer {
-  border-radius: var(--radius-4xl);
-  padding: var(--space-3);
-}
-
-.card-header {
-  padding: var(--space-6) var(--space-7);
-  background: var(--color-section-tint);
-  border-radius: var(--radius-3xl);
-  margin-bottom: var(--space-3);
-}
-
-.card-section {
-  border-radius: var(--radius-3xl);
-  padding: var(--space-4) var(--space-6);
-}
-
-
-/* ── Badge ──────────────────────────────────────────────── */
-/* Count / type badge — e.g. ticket count in Home */
-.badge-primary {
-  min-width: var(--space-9);
-  height: var(--space-7);
-  border-radius: var(--radius-3);
-  background: var(--gradient-primary);
-  color: white;
-  font-weight: var(--weight-bold);
-  font-size: var(--text-md);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 var(--space-2);
-}
-
-
-/* ── Empty State ────────────────────────────────────────── */
-.empty-state {
-  text-align: center;
-  padding: var(--space-9);
-  opacity: 0.40;
-}
-
-.empty-state-emoji {
-  font-size: 48px;
-  display: block;
-  margin-bottom: var(--space-7);
 }
 
 

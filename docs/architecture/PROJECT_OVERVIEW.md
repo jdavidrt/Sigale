@@ -311,7 +311,7 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 | `hashGenerator.js` | `generateTicketId() → "TKT-<8hex>-<ts>"` (walk-in only; server mints hashes for purchases) |
 | `qrGenerator.js` | `generateQRData(ticket) → bare validationHash string`, `parseQRData(text) → { hash }` (also tolerates the legacy JSON payload) — `hash` arrives from API |
 | `qrCopy.js` | `copySVGToClipboard`, `copyPNGToClipboard`, `shareQR` |
-| `svgTicketTemplate.js` | `generateTicketSVG(ticket, event, qrDataURL)`, `loadCharlyIllustration(base64)` |
+| `svgTicketTemplate.js` | `generateTicketSVG(ticket, event, qrDataURL)`, `loadFlyerImage(base64)` |
 | `timeFormat.js` | `formatTo12Hour`, `parseLocalDate`, `toLocalDateString`, `checkInWindowStatus`, `formatCurrency` |
 | `csvUtils.js` | `ticketsToCSV` (round-trip), `ticketsToHumanCSV` (price column; not re-importable), `csvToTickets` |
 | `ticketPasteParser.js` | `parseSingleNameAndId`, `parseTicketRows` (TSV-aware multi-row) |
