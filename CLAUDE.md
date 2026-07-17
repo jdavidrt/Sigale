@@ -46,7 +46,7 @@ Sígale already runs in production — merged into the shared BlackCoffe backend
 src/
 ├── App.jsx                        # Routes + provider tree; two groups: public (Astromelias) + organizer (Layout)
 ├── assets/
-│   ├── charlyIllustration.js      # Base64 mascot embedded at build time
+│   ├── flyerImage.js              # Base64 flyer embedded at build time
 │   └── flyer.png
 ├── api/                           # Thin fetch wrappers — one file per domain
 │   ├── client.js                  # Base fetch (GET/POST/PUT/PATCH/DEL); reads VITE_API_URL
@@ -57,16 +57,16 @@ src/
 │   ├── guestPasses.js             # list, create, bulkCreate, update, remove (artist/crew/courtesy)
 │   └── scan.js                    # getManifest, syncScans
 ├── components/
-│   ├── Common/                    # SlideToConfirm, DebugPanel, Button.module.css, StorageErrorBanner
+│   ├── Common/                    # SlideToConfirm, Button.module.css, StorageErrorBanner
 │   ├── Dashboard/                 # SalesDashboard, CheckInDashboard, Dashboard.shared.module.css
 │   ├── Event/                     # CreateEvent (create + edit; mode prop)
 │   ├── ErrorBoundary/
 │   ├── GuestPasses/                # GuestPassTable, GuestPassTableRow — editable roster
 │   │                              # for artist/crew/courtesy free-entry passes
 │   ├── Layout/                    # AdminLayout (organizer dark chrome + OrganizerMenu),
-│   │                              # OrganizerMenu (slide-out nav), Navbar, Layout (legacy)
+│   │                              # OrganizerMenu (slide-out nav)
 │   ├── Scanner/                   # OfflineScanner (html5-qrcode) — the single door scanner
-│   ├── Tickets/                   # TicketForm, TicketCard, TicketList, QRDisplay,
+│   ├── Tickets/                   # TicketForm, TicketCard, QRDisplay,
 │   │                              # TicketTable, TicketTableRow, TicketsViewToggle,
 │   │                              # TicketEditConfirm, CSVPanel
 │   ├── flow/                      # FlowShell, PurchaseFlow — 6-step public purchase wizard
@@ -107,7 +107,7 @@ src/
     ├── qrGenerator.js             # QR encodes the bare validationHash string; parseQRData also
     │                              # tolerates the legacy JSON payload. Hash arrives from API after confirm
     ├── qrCopy.js                  # copySVGToClipboard, copyPNGToClipboard, shareQR
-    ├── svgTicketTemplate.js       # PNG ticket template with Charly
+    ├── svgTicketTemplate.js       # PNG ticket template with the event flyer
     ├── timeFormat.js              # formatTo12Hour, parseLocalDate, toLocalDateString,
     │                              # checkInWindowStatus, formatCurrency
     ├── csvUtils.js                # ticketsToCSV (round-trip) + ticketsToHumanCSV (price)

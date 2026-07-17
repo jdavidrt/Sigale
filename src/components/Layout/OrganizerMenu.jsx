@@ -5,8 +5,8 @@
  * from the purchases panel. Styled with the Astromelias tokens so it sits
  * naturally over the dark Screen. Logout lives here too.
  *
- * The same destination list is mirrored by the 1.0 Navbar (organizer Layout);
- * keep the two in sync when adding a tool.
+ * This is the single organizer nav surface; update the LINKS list below when
+ * adding a tool.
  */
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';

@@ -24,7 +24,6 @@
   --cream-dim: var(--am-cream-dim);
   --cream-faint: var(--am-cream-faint);
   --yellow: var(--am-yellow);
-  --yellow-soft: var(--am-yellow-soft);
   --lilac: var(--am-lilac);
   --lilac-deep: var(--am-lilac-deep);
   --purple: var(--am-purple);
@@ -33,10 +32,8 @@
   --orange: var(--am-orange);
   --orange-soft: var(--am-orange-soft);
   --green: var(--am-green);
-  --green-deep: #2f7a48;
   --red: var(--am-red);
   --blue: var(--am-blue);
-  --pink: #e6c6cc;
   --frame: var(--am-frame);
   --hair: var(--am-hair);
   --hair-2: var(--am-hair-2);
@@ -44,7 +41,6 @@
   --font-ui: var(--font-base);
 
   /* Prototype radii scale (kept distinct from the app's --radius-* set). */
-  --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 16px;
   --r-xl: 20px;

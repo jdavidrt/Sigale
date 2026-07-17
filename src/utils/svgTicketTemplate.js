@@ -19,23 +19,10 @@ export const loadFlyerImage = (base64Data) => {
 };
 
 /* ── Embedded fonts ───────────────────────────────────────────
-   The ticket is rasterised to a PNG to be shared, so the fonts
-   MUST travel inside the SVG — a bare font-family name won't be
-   available to the canvas/Image rasteriser. Grab the two woff2
-   files (DM Serif Display, Barlow Semi Condensed) and pass them
-   base64-encoded once at startup. Until then the SVG falls back
-   to serif / sans-serif so it still renders. */
-let FONT_FACE_CSS = '';
-export const loadTicketFonts = ({ serifWoff2Base64, sansWoff2Base64 } = {}) => {
-  const faces = [];
-  if (serifWoff2Base64) faces.push(
-    `@font-face{font-family:'DM Serif Display';font-style:normal;font-weight:400;` +
-    `src:url(data:font/woff2;base64,${cleanBase64(serifWoff2Base64)}) format('woff2');}`);
-  if (sansWoff2Base64) faces.push(
-    `@font-face{font-family:'Barlow Semi Condensed';font-style:normal;font-weight:400 700;` +
-    `src:url(data:font/woff2;base64,${cleanBase64(sansWoff2Base64)}) format('woff2');}`);
-  FONT_FACE_CSS = faces.join('');
-};
+   The SVG falls back to serif / sans-serif system fonts so it
+   still renders when rasterised to a PNG. Font embedding was never
+   wired up, so this stays empty. */
+const FONT_FACE_CSS = '';
 
 /* ── Palette (Astromelias tokens) ─────────────────────────── */
 const C = {
