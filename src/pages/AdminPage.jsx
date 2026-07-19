@@ -278,158 +278,158 @@ function Home({ event, onLogout, onRefreshEvent }) {
       </div>
 
       <div className="scr-body pad" style={{ zIndex: 1, overflowY: 'auto', paddingBottom: 24 }}>
-      <div style={{ maxWidth: 960, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ maxWidth: 960, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-        {/* ─── Event hero — name, venue, address, date, quick stats ─── */}
-        <div className="card" style={{ padding: 16 }}>
-          <div className="serif" style={{ fontSize: 22, color: 'var(--cream)', marginBottom: 6 }}>{event.name}</div>
-          <div className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
-            <Ic n="cal" s={14} /> {dateFmt} · {formatTo12Hour(event.entranceTime || '00:00')}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 12 }}>
-            <span style={{ color: 'var(--lilac)', marginTop: 2 }}><Ic n="map" s={16} /></span>
-            <div>
-              <div style={{ fontWeight: 600 }}>{event.venue || '—'}</div>
-              <div className="muted" style={{ fontSize: 13 }}>{event.address || t('noAddressRegistered')}</div>
+          {/* ─── Event hero — name, venue, address, date, quick stats ─── */}
+          <div className="card" style={{ padding: 16 }}>
+            <div className="serif" style={{ fontSize: 22, color: 'var(--cream)', marginBottom: 6 }}>{event.name}</div>
+            <div className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+              <Ic n="cal" s={14} /> {dateFmt} · {formatTo12Hour(event.entranceTime || '00:00')}
             </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div className="tile" style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.04)' }}>
-              <div className="label" style={{ color: 'var(--cream-dim)' }}>{t('ticketsSold')}</div>
-              <div className="serif" style={{ fontSize: 24, color: 'var(--yellow)' }}>{totalSold}</div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 12 }}>
+              <span style={{ color: 'var(--lilac)', marginTop: 2 }}><Ic n="map" s={16} /></span>
+              <div>
+                <div style={{ fontWeight: 600 }}>{event.venue || '—'}</div>
+                <div className="muted" style={{ fontSize: 13 }}>{event.address || t('noAddressRegistered')}</div>
+              </div>
             </div>
-            <div className="tile" style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.04)' }}>
-              <div className="label" style={{ color: 'var(--cream-dim)' }}>{t('collected')}</div>
-              <div className="serif" style={{ fontSize: 24, color: 'var(--yellow)' }}>{formatCurrency(totalRevenue)}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="tile" style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.04)' }}>
+                <div className="label" style={{ color: 'var(--cream-dim)' }}>{t('ticketsSold')}</div>
+                <div className="serif" style={{ fontSize: 24, color: 'var(--yellow)' }}>{totalSold}</div>
+              </div>
+              <div className="tile" style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.04)' }}>
+                <div className="label" style={{ color: 'var(--cream-dim)' }}>{t('collected')}</div>
+                <div className="serif" style={{ fontSize: 24, color: 'var(--yellow)' }}>{formatCurrency(totalRevenue)}</div>
+              </div>
             </div>
+            <Link
+              to="/edit"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 12,
+                color: 'var(--lilac)', textDecoration: 'none', fontSize: 13, fontWeight: 600,
+              }}
+            >
+              <Ic n="pen" s={14} /> {t('editEvent')}
+            </Link>
           </div>
-          <Link
-            to="/edit"
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 12,
-              color: 'var(--lilac)', textDecoration: 'none', fontSize: 13, fontWeight: 600,
-            }}
-          >
-            <Ic n="pen" s={14} /> {t('editEvent')}
-          </Link>
-        </div>
 
-        {/* ─── Registrar Venta — walk-in entry point ───
+          {/* ─── Registrar Venta — walk-in entry point ───
             Sends the organizer to /sell-tickets where they collect the
             buyer's name/ID/phone. The inline walk-in (qty stepper + instant
             commit) is gone; ticket-holder data is required up front so the
             confirmation list, the dashboard, and the door scanner all see
             the same holder names. */}
-        <div className="card" style={{ padding: 16 }}>
-          <div className="label" style={{ color: 'var(--orange-soft)', marginBottom: 10 }}>{t('doorRegistration')}</div>
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontWeight: 600 }}>{activeStage?.name || '—'}</div>
-            <div className="price">{formatCurrency(Number(activeStage?.price) || 0)}</div>
+          <div className="card" style={{ padding: 16 }}>
+            <div className="label" style={{ color: 'var(--orange-soft)', marginBottom: 10 }}>{t('doorRegistration')}</div>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontWeight: 600 }}>{activeStage?.name || '—'}</div>
+              <div className="price">{formatCurrency(Number(activeStage?.price) || 0)}</div>
+            </div>
+            <button
+              className="btn sm"
+              type="button"
+              onClick={() => navigate('/sell-tickets')}
+              disabled={!activeStage}
+            >
+              <Ic n="plus" s={18} /> {t('registerSale')}
+            </button>
           </div>
-          <button
-            className="btn sm"
-            type="button"
-            onClick={() => navigate('/sell-tickets')}
-            disabled={!activeStage}
-          >
-            <Ic n="plus" s={18} /> {t('registerSale')}
-          </button>
-        </div>
 
-        {/* ─── Artistas, crew y cortesías — free-entry roster, separate from
+          {/* ─── Artistas, crew y cortesías — free-entry roster, separate from
             ticket sales. Doesn't depend on there being an active priced
             stage, since these entries never touch ticket_stages. ─── */}
-        <div className="card" style={{ padding: 16 }}>
-          <div className="label" style={{ color: 'var(--orange-soft)', marginBottom: 10 }}>{t('guestPassesCardLabel')}</div>
-          <button
-            className="btn sm"
-            type="button"
-            onClick={() => navigate('/guest-passes')}
-          >
-            <Ic n="plus" s={18} /> {t('addArtistBtn')}
-          </button>
-        </div>
-
-        {/* Pending count */}
-        {pending > 0 && (
-          <div className="chip sent" style={{ alignSelf: 'flex-start', background: 'rgba(121,166,232,0.13)', borderColor: 'rgba(121,166,232,0.3)', color: 'var(--blue)' }}>
-            {t('paymentsToReview').replace('{n}', pending)}
-          </div>
-        )}
-
-        {/* Order search + filters */}
-        <div className="field">
-          <div className="flabel"><span className="label" style={{ color: 'var(--cream-dim)' }}>{t('searchOrder')}</span></div>
-          <input className="input" inputMode="numeric" placeholder="#123" value={query} onChange={(e) => setQuery(e.target.value.replace(/[^0-9]/g, ''))} />
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {FILTERS.map((f) => (
-            <button key={f.key} type="button" onClick={() => setFilter(f.key)}
-              className="chip" style={filter === f.key
-                ? { background: 'var(--purple)', borderColor: 'var(--purple)', color: '#fff' }
-                : { background: 'transparent', borderColor: 'var(--frame)', color: 'var(--cream-dim)' }}>
-              {t(f.labelKey)}
+          <div className="card" style={{ padding: 16 }}>
+            <div className="label" style={{ color: 'var(--purple-2)', marginBottom: 10 }}>{t('guestPassesCardLabel')}</div>
+            <button
+              className="btn sm"
+              type="button"
+              onClick={() => navigate('/guest-passes')}
+            >
+              <Ic n="plus" s={18} /> {t('addArtistBtn')}
             </button>
-          ))}
-        </div>
-
-        {/* Purchases list */}
-        {visible.length === 0 ? (
-          <p className="muted" style={{ textAlign: 'center', padding: '24px 0' }}>{t('noOrdersForFilter')}</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {visible.map((row) => {
-              const meta = statusMeta(row.status);
-              const actionable = row.status === 'pending_payment' || row.status === 'payment_submitted';
-              const firstHolder = Array.isArray(row.holders) && row.holders[0]?.name ? row.holders[0].name : null;
-              return (
-                <div key={row.orderId} className="trow" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10, padding: '14px 16px' }}>
-                  {/* Row 1: order id + total */}
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
-                    <span className="orden" style={{ fontSize: 18, color: 'var(--yellow)' }}>#{row.orderId}</span>
-                    <div className="price" style={{ fontSize: 17 }}>{formatCurrency(row.totalAmount)}</div>
-                  </div>
-
-                  {/* Row 2: buyer name — full width so it stays readable on a phone */}
-                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--cream)', lineHeight: 1.3, wordBreak: 'break-word' }}>
-                    {firstHolder || '—'}
-                    {firstHolder && row.quantity > 1 && (
-                      <span style={{ color: 'var(--cream-dim)', fontWeight: 600 }}> +{row.quantity - 1}</span>
-                    )}
-                  </div>
-
-                  {/* Row 3: stage · qty + status pill */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                    <div style={{ fontSize: 13, color: 'var(--cream-dim)' }}>
-                      {row.stageName} · ×{row.quantity}
-                    </div>
-                    <span className={`pill ${meta.pill}`} style={{ height: 26 }}><span className="dot" /> {meta.label}</span>
-                  </div>
-
-                  {/* Row 4: actions — confirm/reject while pending, share once confirmed */}
-                  {actionable ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <button className="btn sm" type="button" onClick={() => handleConfirm(row)} style={{ background: 'var(--green)', boxShadow: 'none' }}>
-                        <Ic n="check" s={18} /> {t('confirmPayment')}
-                      </button>
-                      <SlideToConfirm label={t('slideToDelete')} onConfirm={() => handleReject(row)} />
-                    </div>
-                  ) : row.status === 'confirmed' ? (
-                    <button
-                      className="btn sm"
-                      type="button"
-                      onClick={() => setShareOrder(row)}
-                      style={{ background: 'transparent', border: '1px solid var(--frame)', color: 'var(--lilac)', boxShadow: 'none' }}
-                    >
-                      <Ic n="share" s={18} /> {t('shareTicket')}
-                    </button>
-                  ) : null}
-                </div>
-              );
-            })}
           </div>
-        )}
-      </div>
+
+          {/* Pending count */}
+          {pending > 0 && (
+            <div className="chip sent" style={{ alignSelf: 'flex-start', background: 'rgba(121,166,232,0.13)', borderColor: 'rgba(121,166,232,0.3)', color: 'var(--blue)' }}>
+              {t('paymentsToReview').replace('{n}', pending)}
+            </div>
+          )}
+
+          {/* Order search + filters */}
+          <div className="field">
+            <div className="flabel"><span className="label" style={{ color: 'var(--cream-dim)' }}>{t('searchOrder')}</span></div>
+            <input className="input" inputMode="numeric" placeholder="#123" value={query} onChange={(e) => setQuery(e.target.value.replace(/[^0-9]/g, ''))} />
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {FILTERS.map((f) => (
+              <button key={f.key} type="button" onClick={() => setFilter(f.key)}
+                className="chip" style={filter === f.key
+                  ? { background: 'var(--purple)', borderColor: 'var(--purple)', color: '#fff' }
+                  : { background: 'transparent', borderColor: 'var(--frame)', color: 'var(--cream-dim)' }}>
+                {t(f.labelKey)}
+              </button>
+            ))}
+          </div>
+
+          {/* Purchases list */}
+          {visible.length === 0 ? (
+            <p className="muted" style={{ textAlign: 'center', padding: '24px 0' }}>{t('noOrdersForFilter')}</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {visible.map((row) => {
+                const meta = statusMeta(row.status);
+                const actionable = row.status === 'pending_payment' || row.status === 'payment_submitted';
+                const firstHolder = Array.isArray(row.holders) && row.holders[0]?.name ? row.holders[0].name : null;
+                return (
+                  <div key={row.orderId} className="trow" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10, padding: '14px 16px' }}>
+                    {/* Row 1: order id + total */}
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+                      <span className="orden" style={{ fontSize: 18, color: 'var(--yellow)' }}>#{row.orderId}</span>
+                      <div className="price" style={{ fontSize: 17 }}>{formatCurrency(row.totalAmount)}</div>
+                    </div>
+
+                    {/* Row 2: buyer name — full width so it stays readable on a phone */}
+                    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--cream)', lineHeight: 1.3, wordBreak: 'break-word' }}>
+                      {firstHolder || '—'}
+                      {firstHolder && row.quantity > 1 && (
+                        <span style={{ color: 'var(--cream-dim)', fontWeight: 600 }}> +{row.quantity - 1}</span>
+                      )}
+                    </div>
+
+                    {/* Row 3: stage · qty + status pill */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                      <div style={{ fontSize: 13, color: 'var(--cream-dim)' }}>
+                        {row.stageName} · ×{row.quantity}
+                      </div>
+                      <span className={`pill ${meta.pill}`} style={{ height: 26 }}><span className="dot" /> {meta.label}</span>
+                    </div>
+
+                    {/* Row 4: actions — confirm/reject while pending, share once confirmed */}
+                    {actionable ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <button className="btn sm" type="button" onClick={() => handleConfirm(row)} style={{ background: 'var(--green)', boxShadow: 'none' }}>
+                          <Ic n="check" s={18} /> {t('confirmPayment')}
+                        </button>
+                        <SlideToConfirm label={t('slideToDelete')} onConfirm={() => handleReject(row)} />
+                      </div>
+                    ) : row.status === 'confirmed' ? (
+                      <button
+                        className="btn sm"
+                        type="button"
+                        onClick={() => setShareOrder(row)}
+                        style={{ background: 'transparent', border: '1px solid var(--frame)', color: 'var(--lilac)', boxShadow: 'none' }}
+                      >
+                        <Ic n="share" s={18} /> {t('shareTicket')}
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Loading overlay — shown while a confirm/reject is in flight, then the
