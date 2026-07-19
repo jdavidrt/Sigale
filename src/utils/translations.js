@@ -11,6 +11,7 @@ export const translations = {
     cancel: "Cancelar",
     delete: "Eliminar",
     loading: "Cargando",
+    processing: "Procesando…",
     error: "Error",
     success: "Éxito",
     optional: "Opcional",
@@ -67,6 +68,7 @@ export const translations = {
     ticketFor: "Boleta para",
     purchaseDate: "Fecha de Compra",
     share: "Compartir",
+    shareTicket: "Compartir boleta",
     createAnother: "Crear Otra Boleta",
     copiedToClipboard: "Copiado al portapapeles",
 
@@ -277,6 +279,7 @@ export const translations = {
     cancel: "Cancel",
     delete: "Delete",
     loading: "Loading",
+    processing: "Processing…",
     error: "Error",
     success: "Success",
     optional: "Optional",
@@ -333,6 +336,7 @@ export const translations = {
     ticketFor: "Ticket for",
     purchaseDate: "Purchase Date",
     share: "Share",
+    shareTicket: "Share ticket",
     createAnother: "Create Another Ticket",
     copiedToClipboard: "Copied to clipboard",
 

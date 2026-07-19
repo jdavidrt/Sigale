@@ -16,9 +16,11 @@ import { Ic } from '../components/ui/Ic';
 import { SlideToConfirm } from '../components/Common/SlideToConfirm';
 import { OrganizerMenu } from '../components/Layout/OrganizerMenu';
 import { StorageErrorBanner } from '../components/Common/StorageErrorBanner';
+import { QRDisplay } from '../components/Tickets/QRDisplay';
 import { useEvent } from '../context/EventContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useDialog } from '../context/DialogContext';
+import { fromServerTicket } from '../context/TicketContext';
 import { admin, isLoggedIn, logout } from '../api/admin';
 import { statusMeta } from '../api/purchases';
 import { formatCurrency, formatTo12Hour, parseLocalDate } from '../utils/timeFormat';
@@ -111,7 +113,7 @@ function Panel({ onLogout }) {
 }
 
 // ── Home (event hero + purchases panel) ────────────────────────────────────────
-function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
+function Home({ event, onLogout, onRefreshEvent }) {
   const { t } = useLanguage();
   const { openCustom } = useDialog();
   const navigate = useNavigate();
@@ -120,12 +122,29 @@ function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
   const [rows, setRows] = useState([]);
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
+  // `working` drives the full-screen loading overlay while a confirm/reject is
+  // in flight; `ticketsByOrder` holds the confirmed seats (with validationHash)
+  // that back the share drawer; `shareOrder` is the order whose drawer is open.
+  const [working, setWorking] = useState(false);
+  const [ticketsByOrder, setTicketsByOrder] = useState({});
+  const [shareOrder, setShareOrder] = useState(null);
 
   // Always fetch the full list from the server; we filter on the client so
   // "Todas" really means all rows (the server's status param defaults to no
-  // filter only when omitted, never when passed as undefined).
+  // filter only when omitted, never when passed as undefined). In parallel we
+  // pull the confirmed ticket rows — the purchases aggregate has no
+  // validationHash, so the share drawer needs the per-seat rows to build QRs.
   const load = useCallback(async () => {
-    setRows(await admin.list());
+    const [purchaseRows, ticketRows] = await Promise.all([
+      admin.list(),
+      admin.listTickets('confirmed').catch(() => []),
+    ]);
+    setRows(purchaseRows);
+    const map = {};
+    for (const r of (Array.isArray(ticketRows) ? ticketRows : [])) {
+      (map[r.orderId] ||= []).push(fromServerTicket(r));
+    }
+    setTicketsByOrder(map);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -140,8 +159,18 @@ function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
     return q ? byStatus.filter((r) => String(r.orderId).includes(q)) : byStatus;
   }, [rows, query, filter]);
 
-  const doConfirm = async (row) => { await admin.confirm(row); load(); };
-  const doReject  = async (row) => { await admin.reject(row);  load(); };
+  // Confirm/reject show a loading overlay, then refetch the list and refresh
+  // the event so the hero stats + active-stage cupos reflect the change.
+  const doConfirm = async (row) => {
+    setWorking(true);
+    try { await admin.confirm(row); await load(); onRefreshEvent?.(); }
+    finally { setWorking(false); }
+  };
+  const doReject = async (row) => {
+    setWorking(true);
+    try { await admin.reject(row); await load(); onRefreshEvent?.(); }
+    finally { setWorking(false); }
+  };
 
   // Green confirmation modal — fires before confirming a payment
   const handleConfirm = (row) => {
@@ -354,44 +383,47 @@ function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
               const actionable = row.status === 'pending_payment' || row.status === 'payment_submitted';
               const firstHolder = Array.isArray(row.holders) && row.holders[0]?.name ? row.holders[0].name : null;
               return (
-                <div key={row.orderId} className="trow" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {/* Order ID */}
-                    <span className="orden" style={{ fontSize: 20, color: 'var(--yellow)', flexShrink: 0 }}>#{row.orderId}</span>
-                    {/* Col 1: buyer name */}
-                    <div style={{ flex: 2, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--cream)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {firstHolder || '—'}{firstHolder && row.quantity > 1 ? ` +${row.quantity - 1}` : ''}
-                      </div>
-                    </div>
-                    {/* Col 2: stage × qty */}
-                    <div style={{ flex: 1.5, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, color: 'var(--cream-dim)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {row.stageName} × {row.quantity}
-                      </div>
-                    </div>
-                    {/* Col 3: status label (non-actionable only; keeps layout stable) */}
-                    <div style={{ flex: 1.2, minWidth: 0 }}>
-                      {!actionable && (
-                        <div style={{ fontSize: 12, color: 'var(--cream-dim)', opacity: 0.6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {row.status === 'confirmed' ? t('ticketsIssued') : t('noActionsAvailable')}
-                        </div>
-                      )}
-                    </div>
-                    {/* Price + status pill */}
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div className="price">{formatCurrency(row.totalAmount)}</div>
-                      <span className={`pill ${meta.pill}`} style={{ marginTop: 6, height: 26 }}><span className="dot" /> {meta.label}</span>
-                    </div>
+                <div key={row.orderId} className="trow" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10, padding: '14px 16px' }}>
+                  {/* Row 1: order id + total */}
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+                    <span className="orden" style={{ fontSize: 18, color: 'var(--yellow)' }}>#{row.orderId}</span>
+                    <div className="price" style={{ fontSize: 17 }}>{formatCurrency(row.totalAmount)}</div>
                   </div>
-                  {actionable && (
+
+                  {/* Row 2: buyer name — full width so it stays readable on a phone */}
+                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--cream)', lineHeight: 1.3, wordBreak: 'break-word' }}>
+                    {firstHolder || '—'}
+                    {firstHolder && row.quantity > 1 && (
+                      <span style={{ color: 'var(--cream-dim)', fontWeight: 600 }}> +{row.quantity - 1}</span>
+                    )}
+                  </div>
+
+                  {/* Row 3: stage · qty + status pill */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: 13, color: 'var(--cream-dim)' }}>
+                      {row.stageName} · ×{row.quantity}
+                    </div>
+                    <span className={`pill ${meta.pill}`} style={{ height: 26 }}><span className="dot" /> {meta.label}</span>
+                  </div>
+
+                  {/* Row 4: actions — confirm/reject while pending, share once confirmed */}
+                  {actionable ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <button className="btn sm" type="button" onClick={() => handleConfirm(row)} style={{ background: 'var(--green)', boxShadow: 'none' }}>
                         <Ic n="check" s={18} /> {t('confirmPayment')}
                       </button>
                       <SlideToConfirm label={t('slideToDelete')} onConfirm={() => handleReject(row)} />
                     </div>
-                  )}
+                  ) : row.status === 'confirmed' ? (
+                    <button
+                      className="btn sm"
+                      type="button"
+                      onClick={() => setShareOrder(row)}
+                      style={{ background: 'transparent', border: '1px solid var(--frame)', color: 'var(--lilac)', boxShadow: 'none' }}
+                    >
+                      <Ic n="share" s={18} /> {t('shareTicket')}
+                    </button>
+                  ) : null}
                 </div>
               );
             })}
@@ -399,7 +431,100 @@ function Home({ event, onLogout, onRefreshEvent: _onRefreshEvent }) {
         )}
       </div>
       </div>
+
+      {/* Loading overlay — shown while a confirm/reject is in flight, then the
+          list + event stats refresh underneath it. */}
+      {working && (
+        <div
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 60,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12,
+            background: 'rgba(8,6,14,0.72)', backdropFilter: 'blur(2px)',
+          }}
+        >
+          <div className="spinner" aria-hidden="true">
+            <span className="spinner-ring" />
+            <span className="spinner-core"><Ic n="ticket" /></span>
+          </div>
+          <p className="muted" style={{ fontSize: 14 }}>{t('processing')}</p>
+        </div>
+      )}
+
+      {/* Share drawer — bottom sheet listing each confirmed seat of an order,
+          each shareable via the reused QRDisplay (Copy / Share). */}
+      {shareOrder && (
+        <ShareDrawer
+          order={shareOrder}
+          tickets={ticketsByOrder[shareOrder.orderId] || []}
+          event={event}
+          onClose={() => setShareOrder(null)}
+        />
+      )}
     </Screen>
+  );
+}
+
+// ── ShareDrawer — bottom sheet for sharing a confirmed order's ticket(s) ────────
+// Adapts the OrganizerMenu overlay pattern (fixed inset + backdrop + panel) into
+// a bottom sheet. Renders one QRDisplay per seat so each holder's QR can be
+// shared straight from /admin without visiting /tickets.
+function ShareDrawer({ order, tickets, event, onClose }) {
+  const { t } = useLanguage();
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 55, display: 'flex', alignItems: 'flex-end' }}>
+      <div
+        onClick={onClose}
+        style={{ position: 'absolute', inset: 0, background: 'rgba(8,6,14,0.6)', backdropFilter: 'blur(2px)' }}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxHeight: '85vh',
+          background: 'var(--ink, #16121f)',
+          borderTop: '1px solid var(--frame)',
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          padding: '14px 16px calc(20px + env(safe-area-inset-bottom, 0px))',
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 14,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <span className="serif" style={{ fontSize: 18, color: 'var(--cream)' }}>
+            {t('shareTicket')} · #{order.orderId}
+          </span>
+          <button
+            type="button"
+            className="tb-btn"
+            onClick={onClose}
+            aria-label={t('cancel')}
+          >
+            <Ic n="plus" s={18} style={{ transform: 'rotate(45deg)' }} />
+          </button>
+        </div>
+
+        {tickets.length === 0 ? (
+          <p className="muted" style={{ textAlign: 'center', padding: '20px 0' }}>{t('loading')}</p>
+        ) : (
+          tickets.map((ticket) => (
+            <div key={ticket.dbId} style={{ borderTop: '1px solid var(--hair-2)', paddingTop: 12 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--cream)', marginBottom: 8 }}>
+                {ticket.buyerName || '—'}
+              </div>
+              <QRDisplay ticket={ticket} event={event} />
+            </div>
+          ))
+        )}
+      </div>
+    </div>
   );
 }
 

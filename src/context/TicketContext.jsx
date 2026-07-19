@@ -14,7 +14,7 @@ import { admin, isLoggedIn } from "../api/admin";
  * `dbId` is preserved so updateTicket() can route the patch back to the
  * server when an organizer edits a server-minted ticket.
  */
-const fromServerTicket = (row) => {
+export const fromServerTicket = (row) => {
   const purchaseDate = String(row.createdAt || "").slice(0, 10);
   const phone = row.holderPhone ? String(row.holderPhone) : "000";
   return {
