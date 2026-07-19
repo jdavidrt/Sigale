@@ -344,6 +344,7 @@ function Home({ event, onLogout, onRefreshEvent }) {
             <button
               className="btn sm"
               type="button"
+              style={{ color: 'var(--purple-2)' }}
               onClick={() => navigate('/guest-passes')}
             >
               <Ic n="plus" s={18} /> {t('addArtistBtn')}
