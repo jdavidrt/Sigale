@@ -130,7 +130,7 @@ export function LandingPage() {
   const upcoming = (event.stages || []).filter((s) => s.status === 'upcoming');
   // Only truly sold out when no active AND no upcoming stages remain.
   // If upcoming stages still have inventory, show them as "Próximamente" with no buy button.
-  const isSoldOut = !active && upcoming.length === 0 && (event.stages || []).some((s) => s.status === 'sold_out');
+  const isSoldOut = !active && upcoming.length === 0 && (event.stages || []).some((s) => s.status === 'sold_out' || s.status === 'closed');
   const flyerSrc = event.flyerImageUrl || flyerImg;
 
   const goBuy = () => navigate('/compra');

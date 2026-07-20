@@ -305,8 +305,18 @@ export const updateEvent = async (req, res) => {
         );
         if (Number(cnt) === 0) {
           await conn.query('DELETE FROM ticket_stages WHERE id = ?', [id]);
+        } else {
+          // Tickets exist — can't delete, but it must never stay sellable: a
+          // stage left 'active' after being dropped from the form silently
+          // forks inventory from any same-named replacement inserted below
+          // (this is how a duplicate "active" stage reached production).
+          // 'closed' (not 'sold_out') — this stage is permanently retired,
+          // and 'sold_out' auto-reopens elsewhere once inventory frees up.
+          await conn.query(
+            "UPDATE ticket_stages SET status = 'closed' WHERE id = ? AND status != 'closed'",
+            [id],
+          );
         }
-        // If purchases exist, leave the orphaned stage in place.
       }
     }
 
@@ -352,7 +362,15 @@ export const updateEvent = async (req, res) => {
           ['active', stageId, 'sold_out'],
         );
       } else {
-        // INSERT — brand new stage, starts with zero sold/reserved.
+        // INSERT — brand new stage, starts with zero sold/reserved. Only one
+        // stage per event may be 'active'; demote any other before this one
+        // claims the slot. 'closed', not 'sold_out' — see migration 007.
+        if (i === 0) {
+          await conn.query(
+            "UPDATE ticket_stages SET status = 'closed' WHERE eventId = ? AND status = 'active'",
+            [eventId],
+          );
+        }
         await conn.query(
           `INSERT INTO ticket_stages
              (eventId, name, price, totalQuantity, soldQuantity, reservedQuantity, sortOrder, activatesAt, status)

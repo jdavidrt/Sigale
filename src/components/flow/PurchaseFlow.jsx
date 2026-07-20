@@ -552,14 +552,29 @@ function Step6({ orderId, stage, qty, total, delivery, navigate }) {
 // don't accumulate reserved orders the buyer thinks are already complete.
 function PaymentInfoModal({ onOk }) {
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div
+      style={{
+        textAlign: 'center',
+        // Full-bleed orange panel (the modal body's own -space-6 padding gets
+        // cancelled out, so this fills the card edge-to-edge and relies on
+        // the card's own overflow:hidden + radius to keep the corners round)
+        // to read as an unmissable "pay now" alert against the dark page.
+        margin: 'calc(var(--space-6) * -1)',
+        padding: '28px 20px',
+        background: 'var(--am-orange)',
+      }}
+    >
       <div className="charly" style={{ width: 64, height: 64, fontSize: 28, margin: '0 auto' }}>✦</div>
-      <div className="serif" style={{ fontSize: 22, color: 'var(--cream)', marginTop: 14 }}>Completa tu pago</div>
-      <p className="muted" style={{ fontSize: 15, marginTop: 8, lineHeight: 1.5 }}>
-        Para completar tu compra, realiza el pago con <b>QR o Llave</b> y envíanos el
-        comprobante por <b>WhatsApp</b>. Tu cupo queda reservado mientras tanto.
+      <div className="serif" style={{ fontSize: 22, color: '#fff', marginTop: 14, fontWeight: 700 }}>Completa tu pago</div>
+      <p style={{ fontSize: 15, marginTop: 8, lineHeight: 1.5, color: 'rgba(255, 255, 255, 0.88)' }}>
+        Para completar tu compra, realiza el pago con <b style={{ color: '#fff' }}>QR o Llave</b> y envíanos el
+        comprobante por <b style={{ color: '#fff' }}>WhatsApp</b>. Tu cupo queda reservado mientras tanto.
       </p>
-      <button className="btn" style={{ marginTop: 18, width: '100%' }} onClick={onOk}>
+      <button
+        className="btn"
+        style={{ marginTop: 18, width: '100%', background: '#fff', color: 'var(--am-orange)', boxShadow: 'none' }}
+        onClick={onOk}
+      >
         <Ic n="wa" s={18} fill /> Entendido, ir a pagar
       </button>
     </div>

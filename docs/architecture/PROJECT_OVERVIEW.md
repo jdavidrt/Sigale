@@ -118,15 +118,18 @@ pending_payment → (24h sweeper)    → expired
 
 **Stage status lifecycle (`ticket_stages.status`):**
 
-The ENUM is `('upcoming', 'active', 'sold_out')`. The scheduler promotes `upcoming → active` on a timer (`activatesAt`). Every other transition is owned by the code path that mutates inventory:
+The ENUM is `('upcoming', 'active', 'sold_out', 'closed')` — `closed` added by `migrations/007_single_active_stage.sql`. The scheduler promotes `upcoming → active` on a timer (`activatesAt`). Every other transition is owned by the code path that mutates inventory:
 
 | Transition | When | Who |
 |------------|------|-----|
 | `active → sold_out` | After incrementing `soldQuantity` or `reservedQuantity` fills the stage (`sold + reserved >= total`) | `createPurchase`, `createWalkInSale` |
 | `sold_out → active` | After decrementing `soldQuantity` or `reservedQuantity` opens spots (`sold + reserved < total`) | `rejectPurchase`, `deleteAdminTicket` (confirmed ticket), `sweepExpiredHolds`, `updateEvent` (totalQuantity raised), `deleteAllPurchases` (batch) |
 | `upcoming → active` | `activatesAt` reached | `scheduler.activateDueStages` |
+| `active → closed` | This stage is being superseded (scheduler promoting the next one) or orphaned (dropped from an event edit while tickets still reference it) | `activateDueStages`, `updateEvent` |
 
 `confirmPurchase` moves `reservedQuantity − qty` / `soldQuantity + qty` simultaneously — net available spots unchanged, no transition needed.
+
+`sold_out` and `closed` both mean "not buyable," but only `sold_out` is ever auto-restored to `active` (by the row directly above) — that's correct for "temporarily full," wrong for a stage that's been deliberately superseded or orphaned, which must never resurrect. `closed` is the terminal status for that case; nothing restores from it. A DB-level unique index, `uqOneActiveStagePerEvent` on `ticket_stages(eventId, activeFlag)` (`activeFlag` generated as `1` only when `status = 'active'`), guarantees at most one `active` stage per event — added after two same-named stages both reached `active` in production simultaneously (`updateEvent` left an orphaned stage `active` instead of demoting it). Any code promoting a stage to `active` must demote whatever else is `active` for that event to `closed` first, in the same transaction, or the write throws `ER_DUP_ENTRY`.
 
 **Inventory arithmetic safety (`INT UNSIGNED`):**
 
@@ -196,6 +199,8 @@ migrations/
   004_holders_snapshot.sql    # Adds purchases.holdersSnapshot JSON NULL
   005_tickets_merge_schema.sql # Creates tickets_v2 (merged purchases+tickets schema)
   006_guest_passes.sql        # Creates guest_passes — artist/crew/courtesy free-entry roster
+  007_single_active_stage.sql # Adds `closed` stage status + uqOneActiveStagePerEvent unique
+                               # constraint (ticket_stages.activeFlag) — at most one active stage/event
   runMigrations.js            # Runs every SQL file in name order before boot
 controllers/        # events, purchases, admin, guestPasses, scan
 routes/             # health, events, purchases, admin, guestPasses, scan
