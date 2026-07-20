@@ -383,7 +383,7 @@ function Home({ event, onLogout, onRefreshEvent }) {
                 const meta = statusMeta(row.status);
                 const actionable = row.status === 'pending_payment' || row.status === 'payment_submitted';
                 const firstHolder = Array.isArray(row.holders) && row.holders[0]?.name ? row.holders[0].name : null;
-                const firstPhone = Array.isArray(row.holders) && row.holders[0]?.phone ? row.holders[0].phone : null;
+                const hasContact = row.deliveryContact && row.deliveryMethod !== 'taquilla';
                 return (
                   <div key={row.orderId} className="trow" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10, padding: '14px 16px' }}>
                     {/* Row 1: order id + total */}
@@ -400,12 +400,17 @@ function Home({ event, onLogout, onRefreshEvent }) {
                       )}
                     </div>
 
-                    {/* Row 2b: buyer phone + reservation time — lets the organizer
-                        follow up directly on orders that never complete payment. */}
+                    {/* Row 2b: buyer contact (WhatsApp/email logged at purchase) +
+                        reservation time — lets the organizer follow up directly
+                        on orders that never complete payment. */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontSize: 13, color: 'var(--cream-dim)' }}>
-                      {firstPhone && (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                          <Ic n="phone" s={13} /> {firstPhone}
+                      {hasContact && (
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 5, wordBreak: 'break-all',
+                          color: row.deliveryMethod === 'whatsapp' ? 'var(--green)' : 'var(--lilac)',
+                        }}>
+                          {row.deliveryMethod === 'whatsapp' ? <Ic n="wa" s={13} fill /> : '✉'}
+                          {row.deliveryContact}
                         </span>
                       )}
                       {row.createdAt && (
