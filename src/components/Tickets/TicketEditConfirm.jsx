@@ -41,7 +41,7 @@ export const TicketEditConfirm = ({ ticket, draft, onConfirm, onCancel }) => {
   };
 
   return (
-    <>
+    <div className="modal-light">
       <h2 className={s.confirmTitle}>
         {t("editConfirmTitle")}
       </h2>
@@ -80,6 +80,6 @@ export const TicketEditConfirm = ({ ticket, draft, onConfirm, onCancel }) => {
           {t("saveChanges")}
         </button>
       </div>
-    </>
+    </div>
   );
 };

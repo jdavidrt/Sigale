@@ -137,3 +137,43 @@
   padding: var(--space-8);
   text-align: center;
 }
+
+
+/* ── Modal Light Panel ──────────────────────────────────── */
+/* Full-bleed cream surface for a modal's content, matching the payment
+   flow's PaymentInfoModal treatment (PurchaseFlow.jsx). Bleeds past
+   Modal.jsx's own .body padding (--space-6) so it fills the dark card
+   edge-to-edge — relies on the card's own overflow:hidden + radius to
+   keep the corners round, same trick PaymentInfoModal uses.
+   Re-themes the text/border/surface tokens that CSS Modules and inline
+   styles read (both the semantic --color-* set and the Astromelias
+   --cream/--frame/--hair short aliases) so nested content — buttons,
+   inputs, diff rows — reads correctly without per-component overrides. */
+.modal-light {
+  margin: calc(var(--space-6) * -1);
+  padding: var(--space-6);
+  background: var(--am-cream);
+  color: var(--am-black-2);
+
+  /* Astromelias short aliases (consumed by inline styles) */
+  --cream: var(--am-black-2);
+  --cream-dim: rgba(18, 12, 20, 0.62);
+  --cream-faint: rgba(18, 12, 20, 0.36);
+  --frame: rgba(70, 41, 76, 0.25);
+  --hair: rgba(70, 41, 76, 0.16);
+  --hair-2: rgba(70, 41, 76, 0.10);
+
+  /* Semantic tokens (consumed by CSS Modules) */
+  --color-text-primary: var(--am-black-2);
+  --color-text-heading: var(--am-black-2);
+  --color-text-secondary: var(--am-purple-deep);
+  --color-text-muted: rgba(18, 12, 20, 0.6);
+  --color-input-bg: rgba(70, 41, 76, 0.05);
+  --color-input-bg-solid: rgba(70, 41, 76, 0.06);
+  --color-border-subtle: rgba(70, 41, 76, 0.14);
+  --color-border-medium: rgba(70, 41, 76, 0.22);
+  --color-tint-primary: rgba(139, 74, 145, 0.08);
+  --color-tint-primary-md: rgba(139, 74, 145, 0.10);
+  --color-tint-primary-lg: rgba(139, 74, 145, 0.16);
+  --color-tint-white-md: rgba(70, 41, 76, 0.05);
+}

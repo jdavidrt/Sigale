@@ -64,7 +64,7 @@ const GuestPassForm = ({ eventId, bandOptions, pass = null, onSaved, onCancel })
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="modal-light" onSubmit={handleSubmit}>
       <h2 className={s.formTitle}>{pass ? t("editGuestPassTitle") : t("addArtistBtn")}</h2>
 
       <div className={s.formField}>

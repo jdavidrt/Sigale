@@ -25,7 +25,7 @@ const TypedConfirmBody = ({ count, requiredWord, t, onConfirm, onCancel }) => {
   const matches = typed.trim().toUpperCase() === requiredWord;
 
   return (
-    <>
+    <div className="modal-light">
       <h2 className={s.confirmTitle}>
         {t("deleteAllTitle")}
       </h2>
@@ -57,7 +57,7 @@ const TypedConfirmBody = ({ count, requiredWord, t, onConfirm, onCancel }) => {
           {t("delete")}
         </button>
       </div>
-    </>
+    </div>
   );
 };
 

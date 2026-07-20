@@ -176,7 +176,7 @@ function Home({ event, onLogout, onRefreshEvent }) {
   const handleConfirm = (row) => {
     const firstHolder = Array.isArray(row.holders) && row.holders[0]?.name ? row.holders[0].name : null;
     openCustom((close) => (
-      <div>
+      <div className="modal-light">
         <div style={{
           margin: '-12px -12px 20px', padding: '24px 16px',
           background: 'var(--color-tint-success-md)',
@@ -218,7 +218,7 @@ function Home({ event, onLogout, onRefreshEvent }) {
   const handleReject = (row) => {
     const firstHolder = Array.isArray(row.holders) && row.holders[0]?.name ? row.holders[0].name : null;
     openCustom((close) => (
-      <div>
+      <div className="modal-light">
         <div style={{
           margin: '-12px -12px 20px', padding: '24px 16px',
           background: 'var(--color-tint-error-md)',

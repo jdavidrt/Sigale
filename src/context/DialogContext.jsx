@@ -78,14 +78,20 @@ export const DialogProvider = ({ children }) => {
     <DialogContext.Provider value={value}>
       {children}
 
-      {/* Active modal */}
+      {/* Active modal — full-bleed cream panel, matching PaymentInfoModal's
+          treatment in the payment flow (PurchaseFlow.jsx). */}
       {modal?.kind === "confirm" && (
-        <Modal
-          open
-          title={modal.props.title}
-          onClose={() => resolveConfirm(false)}
-          footer={
-            <>
+        <Modal open onClose={() => resolveConfirm(false)} title={null} showClose={false}>
+          <div className="modal-light">
+            {modal.props.title && (
+              <h2 style={{ margin: "0 0 var(--space-3) 0", fontSize: "var(--text-lg)", fontWeight: 600 }}>
+                {modal.props.title}
+              </h2>
+            )}
+            {typeof modal.props.message === "string"
+              ? <p>{modal.props.message}</p>
+              : modal.props.message}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-3)", marginTop: "var(--space-6)" }}>
               <button
                 type="button"
                 className={`${btn.btn} ${btn.secondary} ${btn.md}`}
@@ -100,12 +106,8 @@ export const DialogProvider = ({ children }) => {
               >
                 {modal.props.confirmLabel ?? "Confirm"}
               </button>
-            </>
-          }
-        >
-          {typeof modal.props.message === "string"
-            ? <p>{modal.props.message}</p>
-            : modal.props.message}
+            </div>
+          </div>
         </Modal>
       )}
 
