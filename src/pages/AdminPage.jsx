@@ -23,7 +23,7 @@ import { useDialog } from '../context/DialogContext';
 import { fromServerTicket } from '../context/TicketContext';
 import { admin, isLoggedIn, logout } from '../api/admin';
 import { statusMeta } from '../api/purchases';
-import { formatCurrency, formatTo12Hour, parseLocalDate } from '../utils/timeFormat';
+import { formatCurrency, formatDateTime, formatTo12Hour, parseLocalDate } from '../utils/timeFormat';
 
 // Filter groups for the admin queue. labelKey maps to translations.js.
 // "Esperando" collapses both pre-payment states (pending_payment +
@@ -344,7 +344,7 @@ function Home({ event, onLogout, onRefreshEvent }) {
             <button
               className="btn sm"
               type="button"
-              style={{ color: 'var(--purple-2)' }}
+              style={{ background: 'var(--purple-2)', color: '#fff' }}
               onClick={() => navigate('/guest-passes')}
             >
               <Ic n="plus" s={18} /> {t('addArtistBtn')}
@@ -383,6 +383,7 @@ function Home({ event, onLogout, onRefreshEvent }) {
                 const meta = statusMeta(row.status);
                 const actionable = row.status === 'pending_payment' || row.status === 'payment_submitted';
                 const firstHolder = Array.isArray(row.holders) && row.holders[0]?.name ? row.holders[0].name : null;
+                const firstPhone = Array.isArray(row.holders) && row.holders[0]?.phone ? row.holders[0].phone : null;
                 return (
                   <div key={row.orderId} className="trow" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10, padding: '14px 16px' }}>
                     {/* Row 1: order id + total */}
@@ -396,6 +397,21 @@ function Home({ event, onLogout, onRefreshEvent }) {
                       {firstHolder || '—'}
                       {firstHolder && row.quantity > 1 && (
                         <span style={{ color: 'var(--cream-dim)', fontWeight: 600 }}> +{row.quantity - 1}</span>
+                      )}
+                    </div>
+
+                    {/* Row 2b: buyer phone + reservation time — lets the organizer
+                        follow up directly on orders that never complete payment. */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontSize: 13, color: 'var(--cream-dim)' }}>
+                      {firstPhone && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                          <Ic n="phone" s={13} /> {firstPhone}
+                        </span>
+                      )}
+                      {row.createdAt && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                          <Ic n="clock" s={13} /> {t('reservedAt')} {formatDateTime(row.createdAt)}
+                        </span>
                       )}
                     </div>
 

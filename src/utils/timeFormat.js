@@ -51,6 +51,24 @@ export const toLocalDateString = (date = new Date()) => {
 };
 
 /**
+ * Format a server timestamp ("YYYY-MM-DD HH:MM:SS", already converted to
+ * Bogotá local time via CONVERT_TZ) as a short "20 jul, 2:30 p. m." string.
+ * The space is swapped for "T" so the browser parses it as local time per
+ * the ISO 8601 date-time-without-offset rule, instead of the non-standard
+ * space-separated form some engines treat inconsistently.
+ * @param {string|null|undefined} value
+ * @returns {string}
+ */
+export const formatDateTime = (value) => {
+  if (!value) return '';
+  const d = new Date(String(value).replace(' ', 'T'));
+  if (Number.isNaN(d.getTime())) return '';
+  const datePart = d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  const timePart = d.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return `${datePart}, ${timePart}`;
+};
+
+/**
  * Format a number as a $-prefixed currency string with locale-aware
  * thousands separators. Co-located here while there's only one formatter;
  * split to a dedicated `formatters.js` when a second one shows up.
