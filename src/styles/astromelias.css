@@ -412,6 +412,45 @@
   color: var(--cream-faint);
 }
 
+/* checkbox row — global.css applies `appearance: none` to every input, which
+   strips the native tick, so the box is drawn here (SVG check on :checked). */
+.checkrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* touch target */
+  min-height: 44px;
+  cursor: pointer;
+  user-select: none;
+}
+.checkrow input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid var(--frame);
+  background: rgba(255, 255, 255, 0.045);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.checkrow input[type='checkbox']:checked {
+  background-color: var(--lilac);
+  border-color: var(--lilac);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23140c1f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 14px 14px;
+}
+.checkrow .checklabel {
+  font-size: 14px;
+  color: var(--cream-dim);
+}
+
 /* segmented control (delivery method) */
 .seg {
   display: grid;

@@ -82,16 +82,13 @@ function Login({ onIn }) {
             <div className="flabel"><span style={{ color: 'var(--lilac)' }}><Ic n="lock" s={16} /></span><span className="label" style={{ color: 'var(--cream-dim)' }}>{t('password')}</span></div>
             <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
           </div>
-          <label
-            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', minHeight: 44, cursor: 'pointer' }}
-          >
+          <label className="checkrow">
             <input
               type="checkbox"
               checked={persist}
               onChange={(e) => setPersist(e.target.checked)}
-              style={{ width: 18, height: 18, accentColor: 'var(--lilac)' }}
             />
-            <span className="muted" style={{ fontSize: 14 }}>{t('keepSignedIn')}</span>
+            <span className="checklabel">{t('keepSignedIn')}</span>
           </label>
           {err && <p style={{ color: 'var(--red, #f87171)', fontSize: 13, margin: 0 }}>{err}</p>}
           <button className="btn" type="submit" disabled={busy}>{busy ? t('loggingIn') : t('logIn')}</button>
