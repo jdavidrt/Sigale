@@ -15,19 +15,74 @@
 import { api } from './client';
 
 const LS_PURCHASES = 'sigale-purchases';
-const SS_AUTH = 'sigale-admin'; // sessionStorage: { username, basic }
+const AUTH_KEY = 'sigale-admin'; // { username, basic, ttlMs, expiresAt } — in either store
+// Both sliding (refreshed on every read). The persisted session gets the full 24h;
+// a tab-scoped one gets 10h, so a device that opted out can't stay authenticated
+// for a whole day on a tab someone left open.
+const PERSIST_TTL_MS = 24 * 60 * 60 * 1000;
+const SESSION_TTL_MS = 10 * 60 * 60 * 1000;
 
 // ── credential storage (for the Basic header on cutover) ───────────────────────
-export function getAuth() {
+// Two stores on purpose: localStorage when the organizer ticked "mantener sesión
+// iniciada" (survives tab close / browser restart), sessionStorage otherwise
+// (dies with the tab — the safe default on a shared door device).
+function clearAuth() {
   try {
-    return JSON.parse(sessionStorage.getItem(SS_AUTH) || 'null');
+    localStorage.removeItem(AUTH_KEY);
+  } catch {
+    /* non-fatal */
+  }
+  try {
+    sessionStorage.removeItem(AUTH_KEY);
+  } catch {
+    /* non-fatal */
+  }
+}
+function readStore(store) {
+  try {
+    return JSON.parse(store.getItem(AUTH_KEY) || 'null');
   } catch {
     return null;
   }
 }
-function setAuth(auth) {
-  if (auth) sessionStorage.setItem(SS_AUTH, JSON.stringify(auth));
-  else sessionStorage.removeItem(SS_AUTH);
+export function getAuth() {
+  let store = localStorage;
+  let auth = readStore(store);
+  if (!auth) {
+    store = sessionStorage;
+    auth = readStore(store);
+  }
+  if (!auth) return null;
+
+  // Expired → purge both stores so a stale record can't resurrect.
+  if (auth.expiresAt && Date.now() > auth.expiresAt) {
+    clearAuth();
+    return null;
+  }
+
+  // Slide the window forward. Every organizer API call routes through
+  // authHeader() → getAuth(), so ordinary use keeps the session alive.
+  // A failed write (Safari private mode) must not break the read.
+  // Slide by the record's own TTL so a 10h tab session never widens to 24h.
+  const ttl = auth.ttlMs || (store === localStorage ? PERSIST_TTL_MS : SESSION_TTL_MS);
+  const touched = { ...auth, ttlMs: ttl, expiresAt: Date.now() + ttl };
+  try {
+    store.setItem(AUTH_KEY, JSON.stringify(touched));
+  } catch {
+    /* non-fatal */
+  }
+  return touched;
+}
+function setAuth(auth, { persist = false } = {}) {
+  clearAuth();
+  if (!auth) return;
+  const store = persist ? localStorage : sessionStorage;
+  const ttlMs = persist ? PERSIST_TTL_MS : SESSION_TTL_MS;
+  try {
+    store.setItem(AUTH_KEY, JSON.stringify({ ...auth, ttlMs, expiresAt: Date.now() + ttlMs }));
+  } catch {
+    /* non-fatal */
+  }
 }
 export function isLoggedIn() {
   return !!getAuth();
@@ -160,9 +215,9 @@ const localAdmin = {
 
 // ── Facade the UI imports. Flipped to real API (backend now live). ─────────────
 export const admin = {
-  login: async (username, password) => {
+  login: async (username, password, { persist = false } = {}) => {
     await adminApi.login(username, password); // throws ApiError on wrong creds
-    setAuth({ username, basic: btoa(`${username}:${password}`) });
+    setAuth({ username, basic: btoa(`${username}:${password}`) }, { persist });
     return { ok: true, username };
   },
   list: async (params) => {

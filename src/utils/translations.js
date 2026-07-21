@@ -218,6 +218,7 @@ export const translations = {
     loggingIn: "Ingresando…",
     logIn: "Ingresar",
     invalidCredentials: "Credenciales inválidas",
+    keepSignedIn: "Mantener sesión iniciada",
 
     // AdminPage — post-login panel
     loadingEvent: "Cargando evento…",
@@ -487,6 +488,7 @@ export const translations = {
     loggingIn: "Logging in…",
     logIn: "Log in",
     invalidCredentials: "Invalid credentials",
+    keepSignedIn: "Keep me signed in",
 
     // AdminPage — post-login panel
     loadingEvent: "Loading event…",
