@@ -217,7 +217,7 @@ export function LandingPage() {
                   </div>
                 )}
                 {upcoming.length > 0 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: upcoming.length === 1 ? '1fr' : '1fr 1fr', gap: 12 }}>
                     {upcoming.slice(0, 2).map((s, i) => (
                       <div className={`tile ${i === 0 ? 'yellow' : 'orange'}`} key={i}>
                         <div className="label" style={i === 0 ? undefined : { color: 'rgba(255,255,255,0.85)' }}>{s.name}</div>

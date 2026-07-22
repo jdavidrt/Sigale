@@ -291,9 +291,18 @@ export const TicketForm = () => {
                     </FieldLabel>
                     <select required value={formData.ticketType} onChange={(e) => setFormData({ ...formData, ticketType: e.target.value })}>
                       <option value="">{t("selectTicketType")}</option>
-                      {Object.entries(event.ticketTypes).map(([type, price]) => (
-                        <option key={type} value={type}>{type.toUpperCase()} - {formatCurrency(price)}</option>
-                      ))}
+                      {/* Only the currently active stage is sellable. Superseded
+                          (closed / sold_out) or not-yet-open (upcoming) stages
+                          must not be offered — the server rejects them anyway
+                          (createWalkInSale requires status = 'active'). */}
+                      {(event.stages || [])
+                        .filter((st) => st.status === "active")
+                        .map((st) => {
+                          const type = String(st.name).toLowerCase().trim();
+                          return (
+                            <option key={st.id} value={type}>{type.toUpperCase()} - {formatCurrency(st.price)}</option>
+                          );
+                        })}
                     </select>
                     <FontAwesomeIcon icon={faChevronDown} className={s.selectChevron} />
                   </div>
