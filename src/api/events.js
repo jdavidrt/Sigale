@@ -53,6 +53,13 @@ export function toApiEventPayload(event) {
     bankQrImageUrl: event.bankQrImageUrl || null,
     whatsappNumber: event.whatsappNumber || null,
     stages: (event.stages || []).map((s, i) => ({
+      // id is load-bearing on edit: updateEvent matches submitted stages to
+      // existing rows by id (UPDATE in place, preserving sold/reserved/status).
+      // Dropping it makes every edit look like "all stages removed + new ones
+      // added" — the server then inserts a duplicate 'active' stage next to the
+      // still-active original (ER_DUP_ENTRY on uqOneActiveStagePerEvent) and
+      // forks inventory onto fresh rows. Undefined on create — harmless.
+      id: s.id ?? undefined,
       name: s.name,
       price: Number(s.price) || 0,
       totalQuantity: Number(s.totalQuantity) || 0,
