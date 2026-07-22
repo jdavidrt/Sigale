@@ -356,11 +356,22 @@ export const updateEvent = async (req, res) => {
           ],
         );
         // If the organizer raised totalQuantity above the sold+reserved floor,
-        // reopen a sold_out stage so buyers can reserve the new spots.
-        await conn.query(
-          'UPDATE ticket_stages SET status = ? WHERE id = ? AND status = ? AND soldQuantity + reservedQuantity < totalQuantity',
-          ['active', stageId, 'sold_out'],
+        // reopen a sold_out stage so buyers can reserve the new spots — but only
+        // when no OTHER stage of this event is currently active. Promoting this
+        // one while another is active would create a second active stage and
+        // violate uqOneActiveStagePerEvent (ER_DUP_ENTRY). The count runs inside
+        // this transaction, so it reflects demotions from earlier iterations.
+        // See migration 007.
+        const [[{ activeCount }]] = await conn.query(
+          "SELECT COUNT(*) AS activeCount FROM ticket_stages WHERE eventId = ? AND status = 'active' AND id <> ?",
+          [eventId, stageId],
         );
+        if (Number(activeCount) === 0) {
+          await conn.query(
+            "UPDATE ticket_stages SET status = 'active' WHERE id = ? AND status = 'sold_out' AND soldQuantity + reservedQuantity < totalQuantity",
+            [stageId],
+          );
+        }
       } else {
         // INSERT — brand new stage, starts with zero sold/reserved. Only one
         // stage per event may be 'active'; demote any other before this one

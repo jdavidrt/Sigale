@@ -88,7 +88,7 @@ events
 
 ticket_stages
   id, eventId → events, name, price, totalQuantity, soldQuantity,
-  reservedQuantity, sortOrder, activatesAt, status (upcoming|active|sold_out)
+  reservedQuantity, sortOrder, activatesAt, status (upcoming|active|sold_out|closed)
 
 purchases
   id, eventId, stageId, quantity, totalAmount, orderId INT UNSIGNED (sequential, globally unique, starts at 100),
@@ -124,8 +124,9 @@ The ENUM is `('upcoming', 'active', 'sold_out', 'closed')` — `closed` added by
 |------------|------|-----|
 | `active → sold_out` | After incrementing `soldQuantity` or `reservedQuantity` fills the stage (`sold + reserved >= total`) | `createPurchase`, `createWalkInSale` |
 | `sold_out → active` | After decrementing `soldQuantity` or `reservedQuantity` opens spots (`sold + reserved < total`) | `rejectPurchase`, `deleteAdminTicket` (confirmed ticket), `sweepExpiredHolds`, `updateEvent` (totalQuantity raised), `deleteAllPurchases` (batch) |
-| `upcoming → active` | `activatesAt` reached | `scheduler.activateDueStages` |
+| `upcoming → active` | `activatesAt` reached, **or** the previous stage sold out and this one has no `activatesAt` (sold-out cascade) | `scheduler.activateDueStages`, `createPurchase` / `createWalkInSale` |
 | `active → closed` | This stage is being superseded (scheduler promoting the next one) or orphaned (dropped from an event edit while tickets still reference it) | `activateDueStages`, `updateEvent` |
+| `sold_out → closed` | The sold-out cascade just promoted the next `upcoming` stage to `active`, so the filled stage is superseded and must never reopen | `createPurchase`, `createWalkInSale` |
 
 `confirmPurchase` moves `reservedQuantity − qty` / `soldQuantity + qty` simultaneously — net available spots unchanged, no transition needed.
 
@@ -334,7 +335,7 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 
 **Door scan.** Before doors open, organizer opens `/scan` and taps Download to seed the IndexedDB cache. At the door, scanned hashes validate locally (no network). Scans queue offline; on reconnect the queue reconciles with the server.
 
-**Walk-in registration.** `/admin` → "+ Registrar Venta" → `/sell-tickets` (`TicketForm`) → organizer enters buyer info (phone optional) → ticket is created. The legacy inline walk-in stepper on `/admin` has been removed; collecting holder name/ID/phone up front means walk-ins appear in the same `/tickets`, `/dashboard`, and scanner manifest as purchased orders.
+**Walk-in registration.** `/admin` → "+ Registrar Venta" → `/sell-tickets` (`TicketForm`) → organizer enters buyer info (phone optional) → ticket is created. The legacy inline walk-in stepper on `/admin` has been removed; collecting holder name/ID/phone up front means walk-ins appear in the same `/tickets`, `/dashboard`, and scanner manifest as purchased orders. Walk-ins sell **only from the currently `active` stage**: `createWalkInSale` locks the stage `WHERE status = 'active'` (409 otherwise), and the ticket-type dropdown lists only active stages — a superseded/`closed` etapa can never be sold at the door.
 
 **Guest passes (artist/crew/courtesy).** `/admin` → "+ Agregar un artista" → `/guest-passes` → either the single-add modal (band + name + id + type) or "Pegar lista" to bulk-paste a whole band's list under one default band+type. Entries live in their own `guest_passes` table — they never appear on `/tickets`, `/dashboard`, or the scan manifest; door staff check the name/ID against this list manually. The per-band summary strip helps the organizer track how many free passes each band has used.
 

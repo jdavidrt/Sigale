@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faImage, faShareNodes } from "@fortawesome/free-solid-svg-icons";
 import s from "./QRDisplay.module.css";
 
-export const QRDisplay = ({ ticket, event, showActions = true }) => {
+export const QRDisplay = ({ ticket, event, showActions = true, compact = false }) => {
   const qrRef = useRef(null);
   const ticketPreviewRef = useRef(null);
   const [copyStatus, setCopyStatus] = useState("");
@@ -84,8 +84,10 @@ export const QRDisplay = ({ ticket, event, showActions = true }) => {
         </div>
       )}
 
-      {/* Ticket Preview */}
-      {ticketSVG && (
+      {/* Ticket Preview — hidden in compact mode. The hidden QR above is still
+          rendered, so Copy/Share (which rebuild the full ticket from it) work
+          exactly the same; only this large visible image is dropped. */}
+      {!compact && ticketSVG && (
         <div
           ref={ticketPreviewRef}
           className={s.preview}

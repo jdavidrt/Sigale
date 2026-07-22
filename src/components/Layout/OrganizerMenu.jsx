@@ -17,7 +17,6 @@ import { useLanguage } from '../../context/LanguageContext';
 // single organizer home — there's no longer a separate /admin/create page.
 const LINKS = [
   { to: '/admin', icon: 'bell', es: 'Panel de compras', en: 'Purchases panel' },
-  { to: '/admin', icon: 'home', es: 'Inicio', en: 'Home' },
   { to: '/sell-tickets', icon: 'plus', es: 'Vender en taquilla', en: 'Sell at the door' },
   { to: '/guest-passes', icon: 'user', es: 'Artistas y cortesías', en: 'Guest passes' },
   { to: '/tickets', icon: 'ticket', es: 'Boletas', en: 'Tickets' },

@@ -35,6 +35,15 @@ const FILTERS = [
   { key: 'rejected', labelKey: 'filterRejected', statuses: ['rejected'] },
 ];
 
+// Normalize a buyer contact number to a wa.me target: digits only, and prefix
+// Colombia's +57 for bare 10-digit local numbers so organizers can tap through
+// to WhatsApp even when the buyer typed the number without a country code.
+function waHref(contact) {
+  const digits = String(contact || '').replace(/\D/g, '');
+  const num = digits.length === 10 ? `57${digits}` : digits;
+  return `https://wa.me/${num}`;
+}
+
 export function AdminPage() {
   const [authed, setAuthed] = useState(isLoggedIn());
   if (!authed) return <Login onIn={() => setAuthed(true)} />;
@@ -414,13 +423,27 @@ function Home({ event, onLogout, onRefreshEvent }) {
                         on orders that never complete payment. */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontSize: 13, color: 'var(--cream-dim)' }}>
                       {hasContact && (
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 5, wordBreak: 'break-all',
-                          color: row.deliveryMethod === 'whatsapp' ? 'var(--green)' : 'var(--lilac)',
-                        }}>
-                          {row.deliveryMethod === 'whatsapp' ? <Ic n="wa" s={13} fill /> : '✉'}
-                          {row.deliveryContact}
-                        </span>
+                        row.deliveryMethod === 'whatsapp' ? (
+                          <a
+                            href={waHref(row.deliveryContact)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 5, wordBreak: 'break-all',
+                              color: 'var(--green)', textDecoration: 'underline', cursor: 'pointer',
+                            }}
+                          >
+                            <Ic n="wa" s={13} fill />
+                            {row.deliveryContact}
+                          </a>
+                        ) : (
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 5, wordBreak: 'break-all',
+                            color: 'var(--lilac)',
+                          }}>
+                            ✉ {row.deliveryContact}
+                          </span>
+                        )
                       )}
                       {row.createdAt && (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
@@ -545,12 +568,23 @@ function ShareDrawer({ order, tickets, event, onClose }) {
         {tickets.length === 0 ? (
           <p className="muted" style={{ textAlign: 'center', padding: '20px 0' }}>{t('loading')}</p>
         ) : (
-          tickets.map((ticket) => (
-            <div key={ticket.dbId} style={{ borderTop: '1px solid var(--hair-2)', paddingTop: 12 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--cream)', marginBottom: 8 }}>
-                {ticket.buyerName || '—'}
+          tickets.map((ticket, i) => (
+            <div
+              key={ticket.dbId}
+              style={{
+                border: '1px solid var(--frame)', borderRadius: 12,
+                padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--cream)', wordBreak: 'break-word' }}>
+                  {ticket.buyerName || '—'}
+                </span>
+                <span style={{ fontSize: 12, color: 'var(--cream-dim)', whiteSpace: 'nowrap' }}>
+                  {t('ticketWord')} {i + 1}/{tickets.length}
+                </span>
               </div>
-              <QRDisplay ticket={ticket} event={event} />
+              <QRDisplay ticket={ticket} event={event} compact />
             </div>
           ))
         )}

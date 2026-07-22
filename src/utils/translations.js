@@ -69,6 +69,7 @@ export const translations = {
     purchaseDate: "Fecha de Compra",
     share: "Compartir",
     shareTicket: "Compartir boleta",
+    ticketWord: "Boleta",
     createAnother: "Crear Otra Boleta",
     copiedToClipboard: "Copiado al portapapeles",
 
@@ -339,6 +340,7 @@ export const translations = {
     purchaseDate: "Purchase Date",
     share: "Share",
     shareTicket: "Share ticket",
+    ticketWord: "Ticket",
     createAnother: "Create Another Ticket",
     copiedToClipboard: "Copied to clipboard",
 
