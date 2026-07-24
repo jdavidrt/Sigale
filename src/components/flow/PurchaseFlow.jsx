@@ -24,6 +24,7 @@ import { purchases, whatsappLink } from '../../api/purchases';
 import { Screen } from '../ui/Screen';
 import { SAMPLE_EVENT, resolveActiveStage, stageCupos } from '../../utils/sampleEvent';
 import { formatCurrency } from '../../utils/timeFormat';
+import { ONLINE_SALES_OPEN } from '../../config';
 
 const MAX_QTY = 6;
 const COUNTDOWN_SECONDS = 20 * 60; // cosmetic only (real hold is 24h server-side)
@@ -210,6 +211,23 @@ export function PurchaseFlow() {
 
   // Early returns AFTER all hooks (rules of hooks). Block the flow until the
   // real event finishes loading; show a friendly message if none exists.
+
+  // Online sales are closed — tickets are box-office only. Guard the direct
+  // /compra URL (there's no longer a link to it from the landing page).
+  if (!ONLINE_SALES_OPEN) {
+    return (
+      <Screen seed={42}>
+        <div className="scr-body pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12, zIndex: 1 }}>
+          <div className="charly" style={{ width: 64, height: 64, fontSize: 28 }}>✦</div>
+          <div className="serif" style={{ fontSize: 22 }}>Adquiere tu entrada en taquilla</div>
+          <p className="muted" style={{ maxWidth: 280 }}>
+            La venta en línea está cerrada. Las entradas se adquieren únicamente en la puerta el día del evento.
+          </p>
+          <button className="btn ghost sm" onClick={() => navigate('/')}>Volver al inicio</button>
+        </div>
+      </Screen>
+    );
+  }
   if (eventLoading) {
     return (
       <Screen seed={42}>

@@ -12,6 +12,7 @@ import { Ic } from '../components/ui/Ic';
 import { SAMPLE_EVENT, resolveActiveStage, stageCupos } from '../utils/sampleEvent';
 import { formatCurrency, formatTo12Hour, parseLocalDate } from '../utils/timeFormat';
 import { whatsappLink } from '../api/purchases';
+import { ONLINE_SALES_OPEN } from '../config';
 import flyerImg from '../assets/flyer.png';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -227,11 +228,21 @@ export function LandingPage() {
                     ))}
                   </div>
                 )}
-                {active ? (
-                  <button className="btn btn-buy" onClick={goBuy}><Ic n="ticket" s={20} /> Comprar boleta</button>
-                ) : isSoldOut ? (
-                  <button className="btn btn-buy" disabled style={{ opacity: 0.55, cursor: 'not-allowed' }}><Ic n="x" s={20} /> ¡Agotado!</button>
-                ) : null}
+                {ONLINE_SALES_OPEN ? (
+                  active ? (
+                    <button className="btn btn-buy" onClick={goBuy}><Ic n="ticket" s={20} /> Comprar boleta</button>
+                  ) : isSoldOut ? (
+                    <button className="btn btn-buy" disabled style={{ opacity: 0.55, cursor: 'not-allowed' }}><Ic n="x" s={20} /> ¡Agotado!</button>
+                  ) : null
+                ) : (
+                  <div className="tile yellow" role="status" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px' }}>
+                    <Ic n="ticket" s={26} />
+                    <div>
+                      <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.12 }}>Adquiere tu entrada en taquilla</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, marginTop: 3, opacity: 0.72 }}>Venta únicamente en la puerta el día del evento</div>
+                    </div>
+                  </div>
+                )}
                 <div className="card" style={{ padding: 16 }}>
                   <div style={{ display: 'flex', gap: 14 }}>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flex: 1 }}>
