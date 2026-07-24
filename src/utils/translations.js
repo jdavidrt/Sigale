@@ -172,6 +172,11 @@ export const translations = {
     saveChanges: "Guardar cambios",
     ticketUpdatedToast: "Boleta actualizada",
     ticketDeletedToast: "Boleta eliminada",
+    // Stage-move edit on /tickets
+    moveStageHint: "Cambiar la etapa de esta boleta",
+    stageStatusSoldOut: "agotada",
+    stageStatusClosed: "cerrada",
+    stageStatusUpcoming: "próxima",
     deleteTicketTitle: "¿Eliminar boleta?",
     deleteTicketBody: "Eliminar la boleta de {buyer} ({id}). Esta acción no se puede deshacer.",
     deleteAllTitle: "¿Eliminar todas las boletas?",
@@ -455,6 +460,11 @@ export const translations = {
     saveChanges: "Save changes",
     ticketUpdatedToast: "Ticket updated",
     ticketDeletedToast: "Ticket deleted",
+    // Stage-move edit on /tickets
+    moveStageHint: "Change this ticket's stage",
+    stageStatusSoldOut: "sold out",
+    stageStatusClosed: "closed",
+    stageStatusUpcoming: "upcoming",
     deleteTicketTitle: "Delete ticket?",
     deleteTicketBody: "Delete the ticket for {buyer} ({id}). This cannot be undone.",
     deleteAllTitle: "Delete all tickets?",
