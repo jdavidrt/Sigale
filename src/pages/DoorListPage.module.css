@@ -126,6 +126,20 @@
   margin: 12px 0 4px;
 }
 
+/* Per-type sub-group inside a band (artist / crew / courtesy). */
+.typeGroup {
+  margin: 6px 0 10px;
+}
+
+.typeHead {
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 6px 0 3px;
+}
+
 /* ── Roster table ────────────────────────────────────────────────── */
 .table {
   width: 100%;
@@ -222,7 +236,8 @@
     break-inside: avoid;
   }
   .listTitle,
-  .bandHead {
+  .bandHead,
+  .typeHead {
     break-after: avoid;
   }
 }

@@ -17,6 +17,9 @@ const TYPE_LABEL_KEY = {
   courtesy: "guestPassTypeCourtesy",
 };
 
+// Preferred order for the per-band type sub-groups on the printed roster.
+const TYPE_ORDER = ["artist", "crew", "courtesy"];
+
 // Case-insensitive, accent-tolerant name sort for door lookup.
 const byName = (a, b) =>
   (a.holderName || "").localeCompare(b.holderName || "", "es", { sensitivity: "base" });
@@ -86,33 +89,37 @@ function DoorListSheets({ event, paid, guestGroups, guestCount, t, language }) {
         {guestCount === 0 ? (
           <p className={s.empty}>{t("doorListNoGuests")}</p>
         ) : (
-          guestGroups.map(([band, rows]) => (
+          guestGroups.map(([band, typeGroups]) => (
             <div key={band} className={s.group}>
               <h3 className={s.bandHead}>{band}</h3>
-              <table className={s.table}>
-                <thead>
-                  <tr>
-                    <th className={s.checkCol}>{" "}</th>
-                    <th className={s.numCol}>#</th>
-                    <th>{t("doorListName")}</th>
-                    <th>{t("doorListId")}</th>
-                    <th className={s.typeCol}>{t("doorListType")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r, i) => (
-                    <tr key={r.id}>
-                      <td className={s.checkCell}><span className={s.box} /></td>
-                      <td className={s.numCol}>{i + 1}</td>
-                      <td>{r.holderName || "—"}</td>
-                      <td>{r.holderIdNumber || "—"}</td>
-                      <td className={s.typeCol}>
-                        {t(TYPE_LABEL_KEY[r.type] || "guestPassTypeCourtesy")}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {typeGroups.map(({ type, rows }) => (
+                <div key={type} className={s.typeGroup}>
+                  <h4 className={s.typeHead}>
+                    {t(TYPE_LABEL_KEY[type] || "guestPassTypeCourtesy")}{" "}
+                    <span className={s.count}>({rows.length})</span>
+                  </h4>
+                  <table className={s.table}>
+                    <thead>
+                      <tr>
+                        <th className={s.checkCol}>{" "}</th>
+                        <th className={s.numCol}>#</th>
+                        <th>{t("doorListName")}</th>
+                        <th>{t("doorListId")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((r, i) => (
+                        <tr key={r.id}>
+                          <td className={s.checkCell}><span className={s.box} /></td>
+                          <td className={s.numCol}>{i + 1}</td>
+                          <td>{r.holderName || "—"}</td>
+                          <td>{r.holderIdNumber || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
             </div>
           ))
         )}
@@ -157,7 +164,9 @@ export const DoorListPage = () => {
 
   const sortedPaid = useMemo(() => [...paid].sort(byName), [paid]);
 
-  // Group guests by band (alpha), names alpha within each band.
+  // Group guests by band (alpha), then sub-group each band by pass type
+  // (artist → crew → courtesy), names alpha within each type sub-group.
+  // Shape: [ [band, [ { type, rows[] }, ... ] ], ... ]
   const guestGroups = useMemo(() => {
     const byBand = new Map();
     for (const g of guests) {
@@ -165,11 +174,28 @@ export const DoorListPage = () => {
       if (!byBand.has(band)) byBand.set(band, []);
       byBand.get(band).push(g);
     }
-    const groups = Array.from(byBand.entries()).sort((a, b) =>
+    const bands = Array.from(byBand.entries()).sort((a, b) =>
       a[0].localeCompare(b[0], "es", { sensitivity: "base" }),
     );
-    for (const [, rows] of groups) rows.sort(byName);
-    return groups;
+    return bands.map(([band, bandRows]) => {
+      const byType = new Map();
+      for (const r of bandRows) {
+        const type = r.type || "courtesy";
+        if (!byType.has(type)) byType.set(type, []);
+        byType.get(type).push(r);
+      }
+      // Known types first in the preferred order, then any unexpected ones.
+      const orderedTypes = [
+        ...TYPE_ORDER.filter((tp) => byType.has(tp)),
+        ...Array.from(byType.keys()).filter((tp) => !TYPE_ORDER.includes(tp)),
+      ];
+      const typeGroups = orderedTypes.map((type) => {
+        const rows = byType.get(type);
+        rows.sort(byName);
+        return { type, rows };
+      });
+      return [band, typeGroups];
+    });
   }, [guests]);
 
   if (!event) {
