@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaste, faCircleCheck, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 import { useLanguage } from "../../context/LanguageContext";
@@ -27,7 +27,7 @@ const TYPE_LABEL_KEY = {
  *   4. The parsed rows are bulk-inserted under the chosen band + type via
  *      POST /api/admin/guest-passes/bulk.
  */
-export const GuestPassTable = ({ eventId, rows, bandOptions, onChanged }) => {
+export const GuestPassTable = ({ eventId, groups, bandOptions, onChanged }) => {
   const { t } = useLanguage();
 
   const [defaultBand, setDefaultBand] = useState(() => bandOptions[0] ?? "");
@@ -155,8 +155,8 @@ export const GuestPassTable = ({ eventId, rows, bandOptions, onChanged }) => {
         </div>
       )}
 
-      {/* Table */}
-      {rows.length === 0 ? (
+      {/* Table — rows clustered by pass type, one header row per group */}
+      {groups.length === 0 ? (
         <div className={s.empty}>{t("noGuestPasses")}</div>
       ) : (
         <div className={s.scrollWrap}>
@@ -168,8 +168,15 @@ export const GuestPassTable = ({ eventId, rows, bandOptions, onChanged }) => {
             <div className={s.headerCell}>{t("guestPassType")}</div>
             <div className={s.headerCell}>{t("colActions")}</div>
 
-            {rows.map((pass) => (
-              <GuestPassTableRow key={pass.id} pass={pass} bandOptions={bandOptions} onChanged={onChanged} />
+            {groups.map(({ type, rows: groupRows }) => (
+              <Fragment key={type}>
+                <div className={s.groupRow} role="row">
+                  {t(TYPE_LABEL_KEY[type])} <span className={s.groupRowCount}>({groupRows.length})</span>
+                </div>
+                {groupRows.map((pass) => (
+                  <GuestPassTableRow key={pass.id} pass={pass} bandOptions={bandOptions} onChanged={onChanged} />
+                ))}
+              </Fragment>
             ))}
           </div>
         </div>

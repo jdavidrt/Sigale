@@ -221,7 +221,7 @@ export function PurchaseFlow() {
           <div className="charly" style={{ width: 64, height: 64, fontSize: 28 }}>✦</div>
           <div className="serif" style={{ fontSize: 22 }}>Adquiere tu entrada en taquilla</div>
           <p className="muted" style={{ maxWidth: 280 }}>
-            La venta en línea está cerrada. Las entradas se adquieren únicamente en la puerta el día del evento.
+            La venta en línea está cerrada. Las entradas se adquieren únicamente en la puerta del evento.
           </p>
           <button className="btn ghost sm" onClick={() => navigate('/')}>Volver al inicio</button>
         </div>

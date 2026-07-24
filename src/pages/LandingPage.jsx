@@ -211,10 +211,14 @@ export function LandingPage() {
                       <div className="serif" style={{ fontSize: 38, color: 'var(--yellow)', lineHeight: 1, marginTop: 3 }}>{formatCurrency(active.price)}</div>
                       <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px', marginTop: 6 }}>✦ Toda entrada incluye pola</div>
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div className="serif" style={{ fontSize: 36, color: '#fff' }}>{stageCupos(active)}</div>
-                      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.75)' }}>{stageCupos(active) === 1 ? 'cupo' : 'cupos'}</div>
-                    </div>
+                    {/* Cupos count only means something while online sales are open.
+                        With box-office-only sales it would read a misleading "0 cupos". */}
+                    {ONLINE_SALES_OPEN && (
+                      <div style={{ textAlign: 'center' }}>
+                        <div className="serif" style={{ fontSize: 36, color: '#fff' }}>{stageCupos(active)}</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.75)' }}>{stageCupos(active) === 1 ? 'cupo' : 'cupos'}</div>
+                      </div>
+                    )}
                   </div>
                 )}
                 {upcoming.length > 0 && (
@@ -239,7 +243,7 @@ export function LandingPage() {
                     <Ic n="ticket" s={26} />
                     <div>
                       <div style={{ fontSize: 18, fontWeight: 800, lineHeight: 1.12 }}>Adquiere tu entrada en taquilla</div>
-                      <div style={{ fontSize: 13, fontWeight: 600, marginTop: 3, opacity: 0.72 }}>Venta únicamente en la puerta el día del evento</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, marginTop: 3, opacity: 0.72 }}>Venta únicamente en la puerta.</div>
                     </div>
                   </div>
                 )}

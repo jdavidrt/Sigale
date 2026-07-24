@@ -150,6 +150,16 @@ export const GuestPassesPage = () => {
     );
   }, [rows, searchQuery]);
 
+  // Cluster the roster by pass type (artist → crew → courtesy), keeping the
+  // API's band ordering within each group. Empty groups are dropped.
+  const groupedRows = useMemo(
+    () =>
+      TYPES.map((type) => ({ type, rows: filteredRows.filter((r) => r.type === type) })).filter(
+        (g) => g.rows.length > 0
+      ),
+    [filteredRows]
+  );
+
   const load = useCallback(async () => {
     if (!event?.id) return;
     setStatus("loading");
@@ -266,15 +276,25 @@ export const GuestPassesPage = () => {
             </button>
           </div>
         ) : view === "table" ? (
-          <GuestPassTable eventId={event.id} rows={filteredRows} bandOptions={bandOptions} onChanged={load} />
+          <GuestPassTable eventId={event.id} groups={groupedRows} bandOptions={bandOptions} onChanged={load} />
         ) : filteredRows.length === 0 ? (
           <div className={`glass-elevated ${s.emptyState}`}>
             <p className="text-body">{t("noGuestPasses")}</p>
           </div>
         ) : (
-          <div className={s.cardGrid}>
-            {filteredRows.map((pass) => (
-              <GuestPassCard key={pass.id} pass={pass} onEdit={openEditModal} onChanged={load} />
+          <div className={s.groupList}>
+            {groupedRows.map(({ type, rows: groupRows }) => (
+              <section key={type} className={s.typeGroup}>
+                <div className={s.groupHeader}>
+                  <h2 className={s.groupTitle}>{t(TYPE_LABEL_KEY[type])}</h2>
+                  <span className={s.groupCount}>{groupRows.length}</span>
+                </div>
+                <div className={s.cardGrid}>
+                  {groupRows.map((pass) => (
+                    <GuestPassCard key={pass.id} pass={pass} onEdit={openEditModal} onChanged={load} />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         )}
