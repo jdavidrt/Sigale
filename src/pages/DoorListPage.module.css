@@ -1,0 +1,232 @@
+/*
+ * ============================================================
+ * SÍGALE — DoorListPage Module
+ * Printable door lists (paid attendees + artists/guests/crew).
+ * The document is styled as white "paper" both on screen (preview
+ * over the dark chrome) and in print, so what the organizer sees
+ * is exactly what comes out of Ctrl+P / right-click → Print.
+ * ============================================================
+ */
+
+.page {
+  min-height: 100dvh;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+
+/* ── Toolbar (screen only — never prints, lives inside #root) ─────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin: var(--space-2) var(--space-2) var(--space-5);
+}
+
+.pageTitle {
+  font-size: 22px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-heading);
+  margin: 0;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 4px 0 0;
+  max-width: 46ch;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-7) var(--space-4);
+}
+
+/* ── The paper sheet ─────────────────────────────────────────────── */
+.preview {
+  padding-bottom: var(--space-6);
+}
+
+.sheet {
+  background: #fff;
+  color: #111;
+  font-family: 'Barlow Semi Condensed', system-ui, sans-serif;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 32px;
+  border-radius: 10px;
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.45);
+}
+
+.docHead {
+  border-bottom: 2px solid #111;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.docTitle {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 26px;
+  line-height: 1.1;
+  margin: 0;
+  color: #111;
+}
+
+.docMeta {
+  font-size: 13px;
+  color: #444;
+  margin: 3px 0 0;
+}
+
+/* Uppercase only the first letter — Spanish doesn't capitalize weekday/month. */
+.docMeta::first-letter {
+  text-transform: uppercase;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.listTitle {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #111;
+}
+
+.count {
+  font-weight: 500;
+  color: #666;
+}
+
+.empty {
+  font-size: 13px;
+  font-style: italic;
+  color: #666;
+  margin: 4px 0 0;
+}
+
+.group {
+  margin-bottom: 16px;
+}
+
+.bandHead {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  border-bottom: 1px solid #999;
+  padding-bottom: 2px;
+  margin: 12px 0 4px;
+}
+
+/* ── Roster table ────────────────────────────────────────────────── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  text-align: left;
+  font-weight: 700;
+  color: #111;
+  border-bottom: 1.5px solid #111;
+  padding: 5px 6px;
+}
+
+.table td {
+  color: #111;
+  border-bottom: 1px solid #ccc;
+  padding: 6px;
+  vertical-align: middle;
+}
+
+.checkCol {
+  width: 30px;
+}
+
+.checkCell {
+  text-align: center;
+}
+
+.box {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid #111;
+  border-radius: 3px;
+}
+
+.numCol {
+  width: 34px;
+  color: #666;
+}
+
+.orderCol {
+  width: 70px;
+}
+
+.typeCol {
+  width: 96px;
+}
+
+/* ── Print isolation ─────────────────────────────────────────────── *
+ * The printable document is mounted in a body-level portal (#door-print-root)
+ * so browser print shows ONLY the sheets, never the dark organizer chrome.
+ * The rules that hide #root are scoped to `body.door-print-mode`, a flag this
+ * page adds on mount and removes on unmount, so they can never leak into
+ * printing on any other route.
+ */
+:global(#door-print-root) {
+  display: none;
+}
+
+@media print {
+  :global(body.door-print-mode #root) {
+    display: none !important;
+  }
+  :global(body.door-print-mode #door-print-root) {
+    display: block !important;
+  }
+  :global(body.door-print-mode) {
+    background: #fff !important;
+  }
+
+  .sheet {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* The guest list starts on a fresh page. */
+  .pageBreak {
+    break-before: page;
+  }
+
+  /* Repeat the column headers on every printed page of a long list. */
+  .table thead {
+    display: table-header-group;
+  }
+
+  /* Never split a person's row, or a heading from its table, across a page. */
+  .table tr {
+    break-inside: avoid;
+  }
+  .listTitle,
+  .bandHead {
+    break-after: avoid;
+  }
+}
+
+@page {
+  margin: 14mm;
+}

@@ -19,6 +19,7 @@ const SellTicketsPage = lazy(() => import("./pages/SellTicketsPage").then((m) =>
 const TicketsPage = lazy(() => import("./pages/TicketsPage").then((m) => ({ default: m.TicketsPage })));
 const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const GuestPassesPage = lazy(() => import("./pages/GuestPassesPage").then((m) => ({ default: m.GuestPassesPage })));
+const DoorListPage = lazy(() => import("./pages/DoorListPage").then((m) => ({ default: m.DoorListPage })));
 // 2.0 public routes (Astromelias) — rendered outside the organizer Layout.
 const LandingPage = lazy(() => import("./pages/LandingPage").then((m) => ({ default: m.LandingPage })));
 const PurchaseFlowPage = lazy(() => import("./pages/PurchaseFlowPage").then((m) => ({ default: m.PurchaseFlowPage })));
@@ -87,6 +88,7 @@ function AppContent() {
                     <Route path="/edit-event" element={<Navigate to="/edit" replace />} />
                     <Route path="/sell-tickets" element={<SellTicketsPage />} />
                     <Route path="/guest-passes" element={<GuestPassesPage />} />
+                    <Route path="/lista-puerta" element={<DoorListPage />} />
                     <Route path="/tickets" element={<TicketsPage />} />
                     <Route path="/validate-qr" element={<Navigate to="/scan" replace />} />
                     <Route path="/dashboard" element={<DashboardPage />} />

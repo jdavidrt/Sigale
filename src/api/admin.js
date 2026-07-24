@@ -149,6 +149,11 @@ export const adminApi = {
     return api.get(`/api/admin/tickets${qs}`, { headers: authHeader() });
   },
   updateTicket: (id, patch) => api.patch(`/api/admin/tickets/${id}`, patch, { headers: authHeader() }),
+  // Move a confirmed ticket to another stage of the same event. Rebalances
+  // stage inventory server-side and adopts the target stage's price; returns
+  // { ok, stageId, stageName, unitPrice }.
+  updateTicketStage: (id, stageId) =>
+    api.patch(`/api/admin/tickets/${id}/stage`, { stageId }, { headers: authHeader() }),
   deleteTicket: (id) => api.del(`/api/admin/tickets/${id}`, { headers: authHeader() }),
   deleteAllPurchases: () => api.del('/api/admin/purchases', { headers: authHeader() }),
 };
@@ -234,6 +239,7 @@ export const admin = {
   },
   listTickets: async (status) => adminApi.listTickets(status),
   updateTicket: async (id, patch) => adminApi.updateTicket(id, patch),
+  updateTicketStage: async (id, stageId) => adminApi.updateTicketStage(id, stageId),
   deleteTicket: async (id) => adminApi.deleteTicket(id),
   deleteAllPurchases: async () => adminApi.deleteAllPurchases(),
 };

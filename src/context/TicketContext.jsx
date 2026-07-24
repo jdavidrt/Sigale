@@ -26,6 +26,9 @@ export const fromServerTicket = (row) => {
     // event.ticketTypes keys are lowercased + trimmed by deriveTicketTypes —
     // match that here so price lookups land.
     ticketType: String(row.stageName || "").toLowerCase().trim(),
+    // Numeric stage id — lets the /tickets row offer a real "move stage" edit
+    // (the dropdown needs the id, not just the display name).
+    stageId: row.stageId ?? null,
     purchaseDate,
     checkedIn: !!row.isUsed,
     checkInTime: row.usedAt || null,
@@ -165,6 +168,9 @@ export const TicketProvider = ({ children }) => {
   const updateTicket = useCallback(async (ticketId, updatedData) => {
     const fresh = loadFromStorage() || data;
     const target = fresh.tickets.find((t) => t.ticketId === ticketId);
+    // Merged local update — starts from the edit draft and is enriched below
+    // with whatever the server echoes back (e.g. the moved stage's price/name).
+    const applied = { ...updatedData };
     // If the ticket was hydrated from the server (dbId present), push the
     // edit back so the change persists for everyone — not just this device.
     // Errors propagate to the caller, which renders the toast.
@@ -177,10 +183,26 @@ export const TicketProvider = ({ children }) => {
             ? updatedData.buyerPhone
             : null,
       });
+      // Stage move is a separate, inventory-aware endpoint: only call it when
+      // the draft actually points at a different stage. The server rebalances
+      // sold counts + adopts the target price and returns the new stage/price,
+      // which we mirror into local state so the badge/stats update without a
+      // full refresh. ticketType is kept as the lowercased stage name so the
+      // dashboard's price lookup (event.ticketTypes[type]) resolves correctly.
+      if (
+        updatedData.stageId != null &&
+        target.stageId != null &&
+        Number(updatedData.stageId) !== Number(target.stageId)
+      ) {
+        const res = await admin.updateTicketStage(target.dbId, Number(updatedData.stageId));
+        applied.stageId = res.stageId;
+        applied.ticketType = String(res.stageName || "").toLowerCase().trim();
+        applied.unitPrice = res.unitPrice;
+      }
     }
     const updatedTickets = fresh.tickets.map((ticket) => {
       if (ticket.ticketId === ticketId) {
-        return { ...ticket, ...updatedData };
+        return { ...ticket, ...applied };
       }
       return ticket;
     });

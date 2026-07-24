@@ -48,6 +48,22 @@ export const TicketTableRow = ({ ticket }) => {
   const isConfirmed = ticket.status ? ticket.status === "confirmed" : true;
   const statusLabel = ticket.status && !isConfirmed ? statusMeta(ticket.status).label : null;
 
+  // Stages the ticket can be moved to. Only offer the move when this ticket's
+  // current stage actually belongs to the loaded event (a server ticket from
+  // another event wouldn't match, and a cross-event move is rejected anyway).
+  const stageOptions = event?.stages ?? [];
+  const canMoveStage =
+    !!ticket.dbId &&
+    ticket.stageId != null &&
+    stageOptions.some((st) => Number(st.id) === Number(ticket.stageId));
+
+  const stageStatusLabel = (status) => {
+    if (status === "sold_out") return t("stageStatusSoldOut");
+    if (status === "closed") return t("stageStatusClosed");
+    if (status === "upcoming") return t("stageStatusUpcoming");
+    return "";
+  };
+
   // Snapshot the ticket into the draft when entering edit mode.
   const startEdit = () => {
     setDraft({
@@ -55,9 +71,23 @@ export const TicketTableRow = ({ ticket }) => {
       buyerId: ticket.buyerId,
       buyerPhone: ticket.buyerPhone,
       ticketType: ticket.ticketType,
+      stageId: ticket.stageId,
       checkedIn: ticket.checkedIn,
     });
     setIsEditing(true);
+  };
+
+  // Picking a stage updates both the id (what the server move needs) and the
+  // display ticketType (lowercased name, matching fromServerTicket) so the
+  // confirm-diff and dashboard price lookup stay consistent.
+  const selectStage = (value) => {
+    const st = stageOptions.find((x) => String(x.id) === String(value));
+    if (!st) return;
+    setDraft((prev) => ({
+      ...prev,
+      stageId: Number(st.id),
+      ticketType: String(st.name).toLowerCase().trim(),
+    }));
   };
 
   const cancelEdit = () => {
@@ -249,9 +279,28 @@ export const TicketTableRow = ({ ticket }) => {
         )}
       </div>
 
-      {/* Type */}
+      {/* Type / Etapa */}
       <div className={s.cell}>
-        {isEditing && event?.ticketTypes ? (
+        {isEditing && canMoveStage ? (
+          // Server ticket in the loaded event → real stage move (any stage).
+          <select
+            className={s.typeCellSelect}
+            value={String(draft.stageId ?? "")}
+            onChange={(e) => selectStage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            title={t("moveStageHint")}
+          >
+            {stageOptions.map((st) => {
+              const hint = stageStatusLabel(st.status);
+              return (
+                <option key={st.id} value={String(st.id)}>
+                  {st.name}{hint ? ` · ${hint}` : ""}
+                </option>
+              );
+            })}
+          </select>
+        ) : isEditing && !ticket.dbId && event?.ticketTypes ? (
+          // Local-only ticket (no server row) → legacy type picker, label only.
           <select
             className={s.typeCellSelect}
             value={draft.ticketType}

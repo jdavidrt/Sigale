@@ -20,6 +20,7 @@ const LINKS = [
   { to: '/sell-tickets', icon: 'plus', es: 'Vender en taquilla', en: 'Sell at the door' },
   { to: '/guest-passes', icon: 'user', es: 'Artistas y cortesías', en: 'Guest passes' },
   { to: '/tickets', icon: 'ticket', es: 'Boletas', en: 'Tickets' },
+  { to: '/lista-puerta', icon: 'id', es: 'Lista para imprimir', en: 'Print list' },
   { to: '/scan', icon: 'qr', es: 'Escanear boletas', en: 'Scan tickets' },
   { to: '/dashboard', icon: 'sparkle', es: 'Tablero', en: 'Dashboard' },
   { to: '/edit', icon: 'cal', es: 'Editar evento', en: 'Edit event' },

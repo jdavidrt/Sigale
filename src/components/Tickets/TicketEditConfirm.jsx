@@ -37,7 +37,11 @@ export const TicketEditConfirm = ({ ticket, draft, onConfirm, onCancel }) => {
 
   const renderValue = (key, value) => {
     if (key === "checkedIn") return formatStatus(value, t);
-    return value !== undefined && value !== null && value !== "" ? String(value) : <span className={s.empty}>—</span>;
+    if (value === undefined || value === null || value === "") return <span className={s.empty}>—</span>;
+    // ticketType holds the lowercased stage name — uppercase it so a stage move
+    // reads as "ETAPA 1 → ETAPA 2" instead of the internal lowercase key.
+    if (key === "ticketType") return String(value).toUpperCase();
+    return String(value);
   };
 
   return (

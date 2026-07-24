@@ -4,7 +4,7 @@
 # Run from anywhere; no args needed.
 
 $src = "C:\dev\Sígale\server"
-$dst = "C:\Users\jdk_l\OneDrive\Escritorio\BlackCoffe\blackcoffe\server\sigale"
+$dst = "C:\dev\BlackCoffe\server\sigale"
 
 # Sanity checks
 if (-not (Test-Path $src)) {
@@ -40,7 +40,8 @@ if ($rc -le 3) {
     Write-Host ""
     Write-Host "Done. Exit code $rc (0=no change, 1=copied, 2=deleted, 3=both)."
     Write-Host "You can now commit inside: C:\Users\jdk_l\OneDrive\Escritorio\BlackCoffe\blackcoffe"
-} else {
+}
+else {
     Write-Error "robocopy exited with code $rc — check output above for errors."
     exit $rc
 }
