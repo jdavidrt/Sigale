@@ -1,10 +1,22 @@
 # Sígale — Build Status & Open Items
 
-> **Source documents.** This file distills `docs/architecture/ADR-0001-migracion-sql-express.md`, `docs/design/DESIGN_BRIEF_2.0.md`, and `docs/design2.0/IMPLEMENTATION_GUIDE.md` into a single reference for what is built, what remains, and what must never change.
+> **⚠️ The 2.0 build has shipped. Read this as background, not as a to-do list.**
+> Sígale runs in production inside the shared BlackCoffe server. This file is kept
+> for two reasons: it is the canonical statement of the **§3.1 database-isolation
+> guardrail** (cited from `server/db.js`, `001_init.sql`, and `runMigrations.js`),
+> and it records the original build sequence.
+>
+> Known-stale details in the body below: it lists a `PurchaseStatusPage` and a
+> `/compra/:orderId` status route (both deliberately dropped — the public flow is
+> one-way), a `/api/recover` endpoint (never shipped), a "7-step wizard" (it is 6
+> steps), and a 1 000-folio `orderId` ceiling (superseded by migration `003`).
+> For current behavior use [`/CLAUDE.md`](../CLAUDE.md).
+
+> **Source documents.** This file distills `docs/architecture/ADR-0001-migracion-sql-express.md`, `legacy/docs/DESIGN_BRIEF_2.0.md`, and `docs/design2.0/IMPLEMENTATION_GUIDE.md` into a single reference for what is built, what remains, and what must never change.
 >
 > Conventions: Spanish UI copy, English code/identifiers, AM/PM times, `formatCurrency()` for money, America/Bogota timezone, token-driven styling, mobile-first (≥44px touch / ≥16px inputs), no native `alert/confirm/prompt`.
 
-> **HARD GUARDRAIL — do not touch BlackCoffe.** `server/current-server/` is a **read-only reference copy** of BlackCoffe's live production server, kept only to mirror its conventions. **Never execute it, never run its scripts or migrations, never point it at a database.** All Sígale backend code lives in a *separate* `server/` app and connects *only* to the dedicated **`sigale`** database. Sígale migrations may only create/alter Sígale's own tables and must never `CREATE`/`ALTER`/`DROP`/write BlackCoffe's tables (`orders`, `deposits`, `clients`, `products`, `users`). Before running anything, confirm `DB_NAME=sigale` — the shared `.env.local` may hold BlackCoffe's real credentials, and one migration against the wrong database could corrupt the other project. Full detail in [§3.1](#31-hard-guardrail--isolation-from-blackcoffe).
+> **HARD GUARDRAIL — do not touch BlackCoffe.** `reference/blackcoffe-server-snapshot/` (formerly `server/current-server/`) is a **read-only reference copy** of BlackCoffe's live production server, kept only to mirror its conventions. **Never execute it, never run its scripts or migrations, never point it at a database.** All Sígale backend code lives in a *separate* `server/` app and connects *only* to the dedicated **`sigale`** database. Sígale migrations may only create/alter Sígale's own tables and must never `CREATE`/`ALTER`/`DROP`/write BlackCoffe's tables (`orders`, `deposits`, `clients`, `products`, `users`). Before running anything, confirm `DB_NAME=sigale` — the shared `.env.local` may hold BlackCoffe's real credentials, and one migration against the wrong database could corrupt the other project. Full detail in [§3.1](#31-hard-guardrail--isolation-from-blackcoffe).
 
 > **Schema update:** `purchases` and `tickets` (referenced throughout this plan as two separate tables) have since been merged into a single `tickets` table — one row per seat, spanning the full order lifecycle instead of being minted fresh at confirm. See `docs/architecture/TICKETS_SCHEMA.md` for the current schema and `/CLAUDE.md`'s "Data model" section for the summary. Treat any `purchases`-table references below as historical/superseded.
 
@@ -94,10 +106,10 @@ These are resolved; do not reopen them.
 
 ### 3.1 Hard guardrail — isolation from BlackCoffe
 
-`server/current-server/` is a **reference snapshot** of BlackCoffe's production server. It is there to copy *patterns* from, nothing more. Treat it as read-only:
+`reference/blackcoffe-server-snapshot/` is a **reference snapshot** of BlackCoffe's production server. It is there to copy *patterns* from, nothing more. Treat it as read-only:
 
 - **Never execute it.** No `node index.js`, no `npm start`, no running any file under its `migrations/`.
-- **Build Sígale separately.** Sígale's backend is the `server/` app (sibling to `current-server/`).
+- **Build Sígale separately.** Sígale's backend is the `server/` app; the reference mirror lives outside it, at `reference/`.
 - **Own pool, own database.** Sígale uses its own pool bound to `DB_NAME=sigale`. Its migration runner may only touch Sígale tables; it must never reference BlackCoffe tables (`orders`, `deposits`, `clients`, `products`, `users`).
 - **Verify before any DB command.** Confirm `DB_NAME=sigale`. The shared `.env.local` may carry BlackCoffe's real credentials.
 - **Phase 6 stays additive.** Keep separate pools and migration sets in the shared repo. Use `CREATE TABLE IF NOT EXISTS` so redeployment is idempotent.
@@ -131,7 +143,7 @@ Persist UTC (`UTC_TIMESTAMP()`, `CURRENT_TIMESTAMP` defaults). Read with `CONVER
 - **1 000-folio ceiling** per event (3-digit `orderId`) — sufficient for ~200-seat venues; assert it.
 - **`payment_submitted` never swept.** Organizer inaction holds inventory indefinitely; surface a count in the admin dashboard.
 - **Static frontend ↔ API CORS.** Sígale production domain must be in the server's `cors` origins; `VITE_API_URL` must be set per environment.
-- **BlackCoffe data safety (highest severity).** `server/current-server/` and its migrations must never be executed from this repo. A stray run against the wrong `DB_NAME`, or destructive DDL on a shared redeploy, could corrupt the live project. See [§3.1](#31-hard-guardrail--isolation-from-blackcoffe).
+- **BlackCoffe data safety (highest severity).** `reference/blackcoffe-server-snapshot/` and its migrations must never be executed from this repo. A stray run against the wrong `DB_NAME`, or destructive DDL on a shared redeploy, could corrupt the live project. See [§3.1](#31-hard-guardrail--isolation-from-blackcoffe).
 
 ---
 

@@ -1,6 +1,13 @@
+> ⚠️ **RETIRED DOCUMENT — do not treat any of this as current.**
+> It describes an earlier state of Sígale and is kept only so past decisions stay
+> recoverable. See [`legacy/README.md`](../README.md) for why it was retired.
+> What is true today lives in [`/CLAUDE.md`](../../CLAUDE.md) and [`/docs/`](../../docs/README.md).
+
+---
+
 # Stage 2: Ticket Sales, QR Generation & Validation
 
-> **Historical document. Status: ✅ shipped.** This file is the original implementation plan from before Stage 2 was built. Kept for context only — for current state see [`docs/architecture/PROJECT_OVERVIEW.md`](../architecture/PROJECT_OVERVIEW.md). The ticket system, QR generation/scanning, and check-in flow all shipped; many of the templates below diverged during implementation (notably: 16-char hash instead of 10, sharper duplicate-detection semantics, and a TicketContext public API that grew through the audit work).
+> **Historical document. Status: ✅ shipped.** This file is the original implementation plan from before Stage 2 was built. Kept for context only — for current state see [`docs/architecture/PROJECT_OVERVIEW.md`](../../docs/architecture/PROJECT_OVERVIEW.md). The ticket system, QR generation/scanning, and check-in flow all shipped; many of the templates below diverged during implementation (notably: 16-char hash instead of 10, sharper duplicate-detection semantics, and a TicketContext public API that grew through the audit work).
 6. Add validation and duplicate detection
 7. Update App.jsx with new routes
 

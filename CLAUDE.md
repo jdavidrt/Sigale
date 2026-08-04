@@ -10,6 +10,8 @@ For depth, read `docs/architecture/PROJECT_OVERVIEW.md`. This file is the agent 
 
 ## Critical rules (do/don't)
 
+- **`legacy/` is out of bounds.** `legacy/` holds retired documentation and dead code kept only for history — nothing in it is imported, executed, or built, and ESLint ignores it. **Never import from it, never run its scripts, and never take its contents as a description of how the app works** (`legacy/server/merge_purchases_into_tickets.js` in particular is a destructive one-off that has already run). Read `legacy/README.md` before touching anything there. The same applies to `archive/` (old mockups + the pre-2.0 `CLAUDE.md`) and to `reference/` (a read-only, git-ignored mirror of **BlackCoffe's** server — not Sígale's code at all). If you're about to delete something that is genuinely obsolete, move it to `legacy/` with a banner rather than leaving it in `src/`, `server/`, or `docs/`.
+- **Online sales are currently CLOSED.** `ONLINE_SALES_OPEN` in `src/config.js` is `false`, so `/compra` is closed and `LandingPage` sends buyers to the box office instead of showing "Comprar boleta". Tickets sell only through `/sell-tickets`. Flip the flag to re-open — no other change needed. Check this flag before concluding the public purchase flow is broken.
 - **No Tailwind / no CSS framework**: style only with plain CSS — design tokens from `src/styles/tokens.css`, then `global.css`, `utilities.css`, `astromelias.css`, and co-located `*.module.css`. No `@apply`, no utility-class framework. PostCSS runs autoprefixer only (`postcss.config.js`).
 - **Mobile-first**: write base styles for mobile, layer tablet/desktop rules with `min-width` media queries. Touch targets ≥ 44×44px. Base font 16px (prevents iOS zoom).
 - **Dates**: always use `parseLocalDate()` / `toLocalDateString()` from `src/utils/timeFormat.js`. Never `new Date('YYYY-MM-DD')` (UTC bug at the day boundary). Times are America/Bogota, formatted AM/PM.
@@ -17,7 +19,7 @@ For depth, read `docs/architecture/PROJECT_OVERVIEW.md`. This file is the agent 
 - **Currency**: use `formatCurrency()` from `timeFormat.js`. Don't roll inline `${n.toLocaleString()}`.
 - **Code style**: components PascalCase, hooks `useCamelCase`, all code/comments in English, Spanish UI copy.
 - **Verify with lint + build only, not `npm test`**: after making changes, run `npm run lint` and `npm run build` and confirm both are clean — don't run `npm test` / vitest yourself. `npm test` covers TicketContext, hashGenerator, qrGenerator, storage, timeFormat, csvUtils, so avoid breaking their public API, but the user runs the actual test pass themselves. At the end of each piece of work, tell the user what to click through or run to test it manually (e.g. which page/flow to exercise, or `npm test` if the change touches tested utils).
-- **Do not touch `server/current-server/`**: read-only reference copy of BlackCoffe's production server. Sígale's backend lives in `server/` and connects only to the `sigale` database. Full guardrail in `docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md §3.1`.
+- **Do not touch `reference/blackcoffe-server-snapshot/`**: a read-only, git-ignored mirror of BlackCoffe's production server, kept only to mirror its conventions. Never execute it, never import from it, never point it at a database. Sígale's backend lives in `server/` and connects only to the `sigale` database. (It used to sit at `server/current-server/`; it was moved out on 2026-08-04 because its nested `sigale/` subfolder was a stale duplicate of Sígale's own backend — that duplicate has been deleted.) Full guardrail in `docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md §3.1`.
 - **DB isolation**: Sígale migrations may only `CREATE`/`ALTER` Sígale's own tables (`organizers`, `events`, `ticket_stages`, `tickets`, `guest_passes`). Confirm `DB_NAME=sigale` before any DB command.
 - **Sales are server-side, never localStorage-only**: every ticket that must appear at `/admin`, `/tickets`, `/dashboard`, or the door scanner has to exist as a row in the `tickets` table. Walk-in sales (`/sell-tickets` → `TicketForm`) **must** go through `admin.walkIn()` → `POST /api/admin/sales` so they mint `confirmed` row(s) under a sequential `orderId`. Walk-ins draw **only from the currently `active` stage** — `createWalkInSale` locks the stage `WHERE status = 'active'` (mirroring the public `createPurchase`) and returns 409 otherwise, and the `/sell-tickets` dropdown lists only active stages — so the door can never keep selling a superseded/`closed` etapa. Do **not** use the localStorage-only `addTicket()` for real sales — `/tickets` and `/dashboard` overwrite local state with `refreshFromServer()` on mount, so anything not persisted server-side silently disappears.
 - **Dashboard stats need the live event**: `EventContext` keeps the active event in memory only (never localStorage, per 2.0), so `TicketContext.data.event` is `null`. Always call `getStats(event)` with the event from `useEvent()` — bare `getStats()` resolves every price to `0` and the dashboard reads empty.
@@ -26,7 +28,8 @@ For depth, read `docs/architecture/PROJECT_OVERVIEW.md`. This file is the agent 
 - **`GREATEST(INT UNSIGNED − n, 0)` is NOT safe**: when `n > col`, MySQL evaluates the subtraction as unsigned first, wrapping to ~4 294 967 295. That value violates `chkStageCapacity`. Only decrement `soldQuantity`/`reservedQuantity` for ticket rows whose status proves they still hold inventory — `rejected` and `expired` have already been decremented by their own handlers.
 - **`resolveActiveStage(event)` returns `null` when no `active` stage**: it no longer falls back to `stages[0]`. Always guard on `!stage` before reading `stage.id`. LandingPage gates its "Comprar boleta" button and PurchaseFlow blocks the wizard on a null result.
 - **No JSON export/import or event-cloning tools**: these are obsolete now that event/ticket data lives in the cloud `sigale` MySQL DB — there is nothing to manually back up or transfer between devices anymore. The `/copy-event` page (JSON copy/download, ticket CSV export, PDF attendance sheet) and the "Pegar Datos del Evento" paste-to-clone button in `CreateEvent` were removed for this reason; don't reintroduce JSON/clipboard-based event transfer as a workaround for anything — fetch from the API instead.
-- **`purchases` and `tickets` are merged into one `tickets` table**: there is no more separate order-level `purchases` table. One row per seat/holder, created at *reservation* time (not confirm time), whose `status` transitions in place (`pending_payment → payment_submitted → confirmed | rejected | expired`) across every row sharing one `orderId`. Full column-by-column reference: `docs/architecture/TICKETS_SCHEMA.md`. Quantity/total for an order are no longer stored — compute `COUNT(*)`/`SUM(unitPrice)` `GROUP BY orderId`. `holdersSnapshot` is gone; holder identity lives directly on each row from creation onward. `validationHash` is still minted **only at confirm** (nullable column) — this is a security invariant the door scanner (`scan.controllers.js`) relies on, don't mint it earlier. It is now a **deterministic HMAC over `(orderId, seatIndex)` keyed by `SCAN_HASH_SECRET`** (16 hex chars), not a random secret — unique per seat and stable across holder edits, but unguessable without the env secret. **Status as of this writing: code-complete but not yet cut over in production** — the new schema exists as `tickets_v2` (additive, see `server/migrations/005_tickets_merge_schema.sql`); the controllers already query it under the final name `tickets`, so the data migration + `RENAME TABLE` cutover (copy existing rows from the old `purchases`/`tickets` into `tickets_v2`, verify, then rename) must ship in the same release as this code and is a separate, manually-supervised step requiring explicit go-ahead before touching production.
+- **`purchases` and `tickets` are merged into one `tickets` table**: there is no more separate order-level `purchases` table. One row per seat/holder, created at *reservation* time (not confirm time), whose `status` transitions in place (`pending_payment → payment_submitted → confirmed | rejected | expired`) across every row sharing one `orderId`. Full column-by-column reference: `docs/architecture/TICKETS_SCHEMA.md`. Quantity/total for an order are no longer stored — compute `COUNT(*)`/`SUM(unitPrice)` `GROUP BY orderId`. `holdersSnapshot` is gone; holder identity lives directly on each row from creation onward. `validationHash` is still minted **only at confirm** (nullable column) — this is a security invariant the door scanner (`scan.controllers.js`) relies on, don't mint it earlier. It is now a **deterministic HMAC over `(orderId, seatIndex)` keyed by `SCAN_HASH_SECRET`** (16 hex chars), not a random secret — unique per seat and stable across holder edits, but unguessable without the env secret. **The cutover has already run in production** — `tickets_v2` was renamed to `tickets`, and the old tables survive as `purchases_legacy_v1` / `tickets_legacy_v1`. `runMigrations.js` detects those legacy tables and force-marks migrations 001–005 as applied, so their now-colliding DDL is skipped on redeploy. The one-off script that performed it lives at `legacy/server/merge_purchases_into_tickets.js`; **it is destructive and must never be run again.**
+- **A fresh, empty `sigale` database does NOT bootstrap correctly.** `001_init.sql` still creates the *pre-merge* `tickets` table (`purchaseId NOT NULL`, `validationHash NOT NULL`) and there is no migration that performs the rename — the cutover was a manual step. On a database that has never been cut over, migrations run to completion but every controller query then targets the wrong table shape. Production is fine (it self-heals via the `tickets_legacy_v1` check); the gap only bites when standing up a brand-new environment. Fixing it means writing a `008_*` migration that creates the merged table under its final name. Don't assume `node index.js` against an empty DB gives you a working backend.
 - **Guest passes (`guest_passes`) are a deliberately separate table from `tickets`**: artist/crew/courtesy free-entry entries (`server/migrations/006_guest_passes.sql`) never touch `tickets`, `ticket_stages`, or the payment pipeline — no price, no `validationHash`, no QR, no scan-manifest integration. Every row has an `eventId` and a `band` (sourced from `events.artists`, the event's own lineup) so organizers can see how many free passes each band has used. Managed at `/guest-passes` (`GuestPassesPage.jsx`, reachable from the "+ Agregar un artista" card on `/admin` and from `OrganizerMenu`) via `src/api/guestPasses.js` → `GET/POST/PATCH/DELETE /api/admin/guest-passes`. Don't fold these into `/tickets`, `/dashboard`, or the door-scanner manifest — they're a manual name+ID roster for door staff, not a scannable ticket.
 
 ---
@@ -47,35 +50,44 @@ Sígale already runs in production — merged into the shared BlackCoffe backend
 
 ```
 src/
-├── App.jsx                        # Routes + provider tree; two groups: public (Astromelias) + organizer (Layout)
+├── main.jsx                       # Entry: providers + router mount; registers the service worker
+├── App.jsx                        # Routes + provider tree; two groups: public (Astromelias) + organizer (AdminLayout)
+├── config.js                      # ONLINE_SALES_OPEN feature flag — when false the public
+│                                  # /compra wizard is closed and the landing CTA points to
+│                                  # the box office. Currently FALSE (online sales closed).
+├── index.css
 ├── assets/
 │   ├── flyerImage.js              # Base64 flyer embedded at build time
 │   └── flyer.png
 ├── api/                           # Thin fetch wrappers — one file per domain
-│   ├── client.js                  # Base fetch (GET/POST/PUT/PATCH/DEL); reads VITE_API_URL
-│   ├── events.js
-│   ├── purchases.js               # createPurchase, submitPayment (no get/recover — flow is one-way)
-│   ├── admin.js                   # login, listPurchases, confirm/reject, walkIn,
-│   │                              # listTickets, updateTicket
+│   ├── client.js                  # Base fetch (GET/POST/PUT/PATCH/DEL) + ApiError; reads VITE_API_URL
+│   ├── events.js                  # getActive, getById, create, update
+│   │                              # + toApiEventPayload / fromApiEvent / deriveTicketTypes
+│   ├── purchases.js               # create, submit (no get/recover — the public flow is one-way)
+│   ├── admin.js                   # login, listPurchases, confirm, reject, walkIn, listTickets,
+│   │                              # updateTicket, updateTicketStage, deleteTicket,
+│   │                              # deleteAllPurchases + getAuth/isLoggedIn/logout
 │   ├── guestPasses.js             # list, create, bulkCreate, update, remove (artist/crew/courtesy)
-│   └── scan.js                    # getManifest, syncScans
+│   └── scan.js                    # scanAndAdmit + SCAN_RESULT — ONE request per scan against
+│                                  # POST /api/admin/scan. Online-only: no manifest, no IndexedDB.
 ├── components/
 │   ├── Common/                    # SlideToConfirm, Button.module.css, StorageErrorBanner
 │   ├── Dashboard/                 # SalesDashboard, CheckInDashboard, Dashboard.shared.module.css
 │   ├── Event/                     # CreateEvent (create + edit; mode prop)
 │   ├── ErrorBoundary/
-│   ├── GuestPasses/                # GuestPassTable, GuestPassTableRow — editable roster
-│   │                              # for artist/crew/courtesy free-entry passes
+│   ├── GuestPasses/               # GuestPassCard, GuestPassTable, GuestPassTableRow —
+│   │                              # editable roster for artist/crew/courtesy free-entry passes
 │   ├── Layout/                    # AdminLayout (organizer dark chrome + OrganizerMenu),
 │   │                              # OrganizerMenu (slide-out nav)
-│   ├── Scanner/                   # OfflineScanner (html5-qrcode) — the single door scanner
+│   ├── Scanner/                   # OfflineScanner (html5-qrcode camera wrapper). NOTE: the name
+│   │                              # is historical — scanning is online-only, see api/scan.js.
 │   ├── Tickets/                   # TicketForm, TicketCard, QRDisplay,
 │   │                              # TicketTable, TicketTableRow, TicketsViewToggle,
 │   │                              # TicketEditConfirm, CSVPanel
 │   ├── flow/                      # FlowShell, PurchaseFlow — 6-step public purchase wizard
 │   │                              # (back is locked from step 4 onward; step 6 is terminal)
 │   └── ui/                        # StatCell, EmptyStateCard, FieldLabel, Modal, Toast,
-│                                  # AsyncState, Ic, Money, Screen, StarField, Wordmark
+│                                  # Ic, Screen, StarField
 ├── context/
 │   ├── EventContext.jsx           # Event CRUD (reads/writes server via api/events.js)
 │   ├── TicketContext.jsx          # Organizer ticket list; refreshFromServer() hydrates from
@@ -85,21 +97,21 @@ src/
 ├── hooks/
 │   ├── useLocalStorage.js         # Whole-blob persisted state (cross-tab sync, write errors)
 │   ├── useLocalStorageValue.js    # Single-key persisted state with try/catch
-│   ├── useOfflineScan.js          # IndexedDB cache + sync queue for door scanning
 │   └── usePageVisibility.js       # iOS tab-suspension recovery
 ├── pages/
 │   ├── LandingPage.jsx            # Public event landing — Astromelias (/ and /evento/:id)
 │   ├── PurchaseFlowPage.jsx       # 6-step wizard (/compra) ending on terminal success screen
 │   ├── AdminPage.jsx              # Organizer panel — purchases queue, confirm/reject (/admin);
-│   │                              # "+ Registrar Venta" now navigates to /sell-tickets
-│   ├── ScanPage.jsx               # Door scan, offline-first (/scan)
-│   ├── Home.jsx                   # (deprecated) — merged into AdminPage at /admin
+│   │                              # "+ Registrar Venta" navigates to /sell-tickets
+│   ├── ScanPage.jsx               # Door scan (/scan) — online, one request per QR
 │   ├── CreateEventPage.jsx, EditEventPage.jsx, SellTicketsPage.jsx
 │   ├── TicketsPage.jsx, DashboardPage.jsx
 │   │                              # /tickets + /dashboard hydrate from /api/admin/tickets
 │   │                              # on mount via TicketContext.refreshFromServer()
 │   ├── GuestPassesPage.jsx        # Artist/crew/courtesy roster (/guest-passes) — editable
 │   │                              # table + paste-to-bulk-add, scoped to the active event
+│   └── DoorListPage.jsx           # Printable door list (/lista-puerta) — tickets + guest
+│                                  # passes grouped by type, for staff with no device
 ├── styles/
 │   ├── tokens.css                 # Raw palette + semantic token assignments (import first)
 │   ├── global.css
@@ -111,36 +123,47 @@ src/
     │                              # tolerates the legacy JSON payload. Hash arrives from API after confirm
     ├── qrCopy.js                  # copySVGToClipboard, copyPNGToClipboard, shareQR
     ├── svgTicketTemplate.js       # PNG ticket template with the event flyer
+    ├── guestPassImage.js          # Shareable PNG for a guest pass (no QR — free entry)
     ├── timeFormat.js              # formatTo12Hour, parseLocalDate, toLocalDateString,
     │                              # checkInWindowStatus, formatCurrency
     ├── csvUtils.js                # ticketsToCSV (round-trip) + ticketsToHumanCSV (price)
     ├── ticketPasteParser.js       # parseSingleNameAndId, parseTicketRows (TSV-aware)
-    ├── scanDb.js                  # IndexedDB helpers for offline scan cache
-    ├── storage.js                 # localStorage primitives + version migration
+    ├── storage.js                 # localStorage primitives + version migration. UI/session
+    │                              # state only — the DB is the source of truth for sales.
+    ├── serviceWorkerRegistration.js
     ├── translations.js            # ES/EN dictionary
-    ├── sampleEvent.js             # Dev/seed sample event data
+    ├── sampleEvent.js             # Fallback sample event when the API has no active event
     └── base64Cleaner.js           # cleanBase64 (used by svgTicketTemplate)
 
 server/
 ├── index.js                       # Express: helmet + CORS + routes + error handler + runMigrations() → listen
-├── config.js                      # PORT
+├── integration.js                 # mountSigale/startSigale — the seam BlackCoffe's server uses
+│                                  # to mount Sígale. Not imported by index.js by design; keep
+│                                  # its route mounts in sync with index.js when adding a router.
+├── config.js                      # PORT (default 25060)
 ├── db.js                          # mysql2/promise pool → sigale DB, dateStrings:true, SSL CA cert
-├── migrations/001_init.sql        # DDL: organizers, events, ticket_stages, purchases, tickets (original two-table split)
-├── migrations/002_event_address.sql # adds events.address (idempotent guard via information_schema)
-├── migrations/003_sequential_orderid.sql # orderId CHAR(3) → INT UNSIGNED, globally unique, starts at 100
-├── migrations/004_holders_snapshot.sql   # adds purchases.holdersSnapshot JSON NULL (retired by 005)
-├── migrations/005_tickets_merge_schema.sql # creates tickets_v2 — the merged purchases+tickets schema (see docs/architecture/TICKETS_SCHEMA.md). Additive only; cutover (rename to `tickets`) is a separate manual step.
-├── migrations/006_guest_passes.sql # creates guest_passes (artist/crew/courtesy free-entry roster) — separate from tickets, no cutover needed, brand-new table.
-├── migrations/007_single_active_stage.sql # adds `closed` terminal stage status + uqOneActiveStagePerEvent unique constraint (ticket_stages.activeFlag generated column) — DB-enforced guarantee that at most one stage per event is ever `active`.
-├── migrations/runMigrations.js
+├── README.md                      # Backend reference: layout, migrations, jobs, security floor
+├── migrations/                    # See server/README.md for the full table; 001–005 are
+│                                  # pre-cutover history that runMigrations.js skips on an
+│                                  # already-migrated DB. 006 + 007 are live.
+├── migrations/runMigrations.js    # Ledger-backed runner (schema_migrations) + cutover self-heal
 ├── controllers/                   # events, purchases, admin, guestPasses, scan
 ├── routes/                        # health, events, purchases, admin, guestPasses, scan
 ├── middleware/requireOrganizer.js # Re-validates credentials on every /api/admin/* request
 ├── jobs/scheduler.js              # node-cron: auto-activate stages + sweep expired holds (24h)
-├── seed/                          # seedOrganizer, seedSampleEvent, seedFromLocalStorage
+├── seed/                          # seedOrganizer, seedSampleEvent
 ├── utils/emailNotifier.js         # sendErrorEmail (mirrors BlackCoffe pattern)
-├── utils/time.js                  # UTC ↔ Bogotá helpers
-└── current-server/                # READ-ONLY BlackCoffe reference — never run or import
+└── utils/time.js                  # UTC ↔ Bogotá helpers
+                                   # NOTE: server/ contains ONLY Sígale's backend. The
+                                   # BlackCoffe mirror that used to live at
+                                   # server/current-server/ now sits in reference/.
+
+legacy/                            # Retired docs + dead code. Never imported, never executed.
+                                   # Read legacy/README.md before touching anything in it.
+reference/                         # Read-only mirror of BlackCoffe's server (git-ignored).
+                                   # Not Sígale's code. Never run or import.
+archive/                           # Original mockups, brand assets, pre-2.0 CLAUDE.md
+prototype-2.0/                     # Dependency-free Astromelias prototype (visual reference)
 ```
 
 ---
@@ -155,7 +178,8 @@ server/
 | `/evento/:id` | LandingPage (specific event) |
 | `/compra` | PurchaseFlowPage — 6-step wizard. Steps 1–3 are reversible; from step 4 ("Ir a pagar") onward the back chevron is hidden and step 6 is a terminal success screen with one CTA: "Volver al inicio". |
 | `/admin` | AdminPage — login → purchase queue (confirm/reject). "+ Registrar Venta" links to `/sell-tickets` (the inline walk-in stepper is gone). Slide-out `OrganizerMenu` links to every tool below. If no active event, redirects to `/create-event`. |
-| `/scan` | ScanPage (door scan, offline-first) — the **single** QR-validation surface. There is no longer a separate `/validate-qr` page (it and its `QRScanner`/`ValidationResult` components were removed; `/validate-qr` now redirects here). Validation runs against the **server** manifest (`src/api/scan.js` calls the real `/api/admin/scan/*` endpoints — the old localStorage simulation is gone), cached in IndexedDB for offline use. **Public route** (no `RequireAuth`) so the door device doesn't need to sit behind the auth funnel, but the `/api/admin/scan/*` calls still require organizer credentials, so the device must have logged in once (via `/admin`) for `getAuth()` to hold Basic creds. It renders the shared `OrganizerMenu` in its topbar so it is **not** a navigation dead-end. |
+| `/admin/create` | (legacy) — redirects to `/admin`. Public, i.e. outside `RequireAuth`. |
+| `/scan` | ScanPage — the **single** QR-validation surface. **Online-only**: each scan is one `POST /api/admin/scan` that both validates the hash and stamps entry (`src/api/scan.js` → `scanAndAdmit`). There is no manifest download, no IndexedDB cache, and no sync queue — the old offline-first design (`useOfflineScan`, `scanDb.js`) was removed, and `components/Scanner/OfflineScanner.jsx` keeps its name only for historical reasons (it is just the html5-qrcode camera wrapper). **Public route** (no `RequireAuth`) so the door device doesn't sit behind the auth funnel, but the call still requires organizer credentials, so the device must have logged in once (via `/admin`) for `getAuth()` to hold Basic creds. It renders the shared `OrganizerMenu` in its topbar so it is **not** a navigation dead-end. |
 
 There is no public status page. Buyers see their orden number on the success screen and rely on the organizer reaching out by WhatsApp/email once the payment is confirmed.
 
@@ -163,18 +187,21 @@ There is no public status page. Buyers see their orden number on the success scr
 
 Every organizer route below requires the admin login (`isLoggedIn()`); unauthenticated visits redirect to `/admin`. The gate is a UX funnel only — the server still re-validates organizer credentials per request.
 
+**The redirects in this group are gated too.** `/validate-qr` and the `*` catch-all live *inside* `RequireAuth`, so a logged-out visitor to either lands on `/admin`, not on their nominal target.
+
 | Path | Page |
 |------|------|
-| `/admin/create` | (legacy) — redirects to `/admin` |
 | `/create-event` | CreateEvent component (create mode) — the single API-backed event form |
 | `/edit` | CreateEvent component (edit mode); `/edit-event` redirects here |
 | `/sell-tickets` | SellTicketsPage (walk-in entry). Phone field is **optional**; name and ID don't pop the "not valid" inline error until the user types ≥ 4 characters. **Persists server-side**: submitting `POST`s to `/api/admin/sales`, which mints `confirmed` row(s) under a sequential `orderId` directly (no reservation phase) — so the sale shows up at `/admin` and `/tickets` immediately. The success screen shows the order number and the ticket QR (built from the `validationHash` the API now returns). It does **not** write localStorage-only tickets. |
 | `/guest-passes` | GuestPassesPage — artist/crew/courtesy free-entry roster, scoped to the active event. Editable spreadsheet (`GuestPassTable`/`GuestPassTableRow`, inline edit/delete) + a "Pegar lista" bulk-paste flow (reuses `parseTicketRows`) + a single-add modal ("Agregar un artista", also reachable as a card on `/admin`). Shows a per-band count summary. No price, no QR, no scan integration — see the "Guest passes" bullet in Critical rules. |
+| `/lista-puerta` | DoorListPage — printable door list for staff working without a device: confirmed ticket holders plus guest passes, grouped and styled for paper. Reachable from `OrganizerMenu` ("Lista para imprimir"). |
 | `/tickets` | TicketsPage (cards / table toggle, search, CSV). Hydrates from `/api/admin/tickets` on mount; this is where the organizer edits holder data and generates / shares each QR. |
 | `/dashboard` | DashboardPage — hydrates from `/api/admin/tickets` on mount so sales and check-in stats match `/admin`. |
+| `/validate-qr` | (legacy) — redirects to `/scan` |
 | `*` | redirect → `/` |
 
-Every route except Home is lazy-loaded. There is **one** event form (`CreateEvent`), wired to the API for both create and edit — the old minimal inline form on `/admin` is gone.
+Every routed page is lazy-loaded. There is **one** event form (`CreateEvent`), wired to the API for both create and edit — the old minimal inline form on `/admin` is gone.
 
 There is intentionally no `/copy-event` route anymore. It used to export/import event + ticket data as JSON (plus a CSV/PDF ticket export) so an organizer could back up or clone an event across devices — a localStorage-era need. Now that events and tickets are persisted server-side in the cloud `sigale` DB, every device already sees the same data via the API, so the whole copy/paste/JSON-clone flow is dead weight. Don't rebuild it.
 
@@ -273,8 +300,12 @@ Only `confirmed` rows have held `soldQuantity`; only `pending_payment` and `paym
 | POST | `/api/admin/sales` | Organizer (walk-in) — body `{ eventId, stageId, quantity, holders[] }`. Draws inventory from the stage **only if it is `active`** (locks `WHERE status = 'active'`, 409 otherwise) and inserts `confirmed` row(s) directly under a sequential `orderId` in one multi-row insert (no reservation phase). Returns `{ orderId, status, minted, tickets[] }` (each ticket includes its `validationHash` so the seller's screen can render the QR without a second fetch) |
 | GET | `/api/admin/tickets?status=` | Organizer — every ticket row, joined with its stage (feeds /tickets and /dashboard). `status` defaults to `confirmed` when omitted (load-bearing: protects `/dashboard`'s stats from silently including non-confirmed rows) — pass a comma-separated list or the literal `all` to see a wider set; this is what makes pending/rejected/expired orders visible on `/tickets`, not just `/admin` |
 | PATCH | `/api/admin/tickets/:id` | Organizer — edit `holderName / holderIdNumber / holderPhone`; `validationHash` is immutable once minted |
-| GET | `/api/admin/scan/manifest` | Organizer |
-| POST | `/api/admin/scan/sync` | Organizer |
+| PATCH | `/api/admin/tickets/:id/stage` | Organizer — `moveAdminTicketStage`: reassign one ticket to a different stage, moving the inventory counters on both stages. Can expand capacity on a sold-out target stage |
+| DELETE | `/api/admin/tickets/:id` | Organizer — `deleteAdminTicket`. Confirmed rows release `soldQuantity` and run the restore check; **non-confirmed rows are rejected with 409** (no designed inventory path for partially deleting an open order) |
+| DELETE | `/api/admin/purchases` | Organizer — `deleteAllPurchases`: single `DELETE FROM tickets` across every status, then one un-scoped counter restore. Backs "Delete All Tickets" on `/tickets`. See the inventory rule above |
+| POST | `/api/admin/scan` | Organizer — **the only scan endpoint the app uses.** Body `{ hash }`; `markUsed()` looks up the confirmed ticket by `validationHash` and stamps `isUsed`/`usedAt` (idempotent). Returns `ok` \| `already_used`, or 404 for an unknown/unconfirmed hash |
+| GET | `/api/admin/scan/manifest` | Organizer — **dead endpoint, no client calls it.** Left from the removed offline-scan design |
+| POST | `/api/admin/scan/sync` | Organizer — **dead endpoint, no client calls it.** Same origin as above |
 | GET | `/api/admin/guest-passes?eventId=` | Organizer — every guest pass for one event, ordered by band |
 | POST | `/api/admin/guest-passes` | Organizer — single add, body `{ eventId, band, holderName, holderIdNumber, type }` |
 | POST | `/api/admin/guest-passes/bulk` | Organizer — paste-to-bulk-add, body `{ eventId, band, type, entries: [{ holderName, holderIdNumber }] }`, one multi-row `INSERT` |
@@ -299,9 +330,8 @@ Auth: Basic credentials re-validated by `requireOrganizer` on every `/api/admin/
 | "No event" placeholder | `<EmptyStateCard icon title description />` |
 | Form-field icon row | `<FieldLabel icon rowClass textClass>{children}</FieldLabel>` |
 | Icon | `<Ic name="…" />` |
-| Currency display | `<Money value={n} />` or `formatCurrency(n)` |
-| Loading / error states | `<AsyncState loading error onRetry>{children}</AsyncState>` |
-| Offline scan | `useOfflineScan()` + `scanDb.js` |
+| Currency display | `formatCurrency(n)` from `timeFormat.js` |
+| Door QR scan | `scanAndAdmit(hash)` + `SCAN_RESULT` from `src/api/scan.js` |
 | Persisted single-key state | `useLocalStorageValue(key, initial)` |
 | Ticket bulk-import | `addTicketsFromCSV(rows)` from `useTickets()` |
 | Multi-row name+id paste | `parseTicketRows(text)` from `ticketPasteParser.js` |
@@ -323,11 +353,16 @@ npm test            # vitest (CI mode)
 npm run test:watch
 npm run test:ui
 
-# Backend (cd server/)
+# Backend (cd server/) — only when running a LOCAL stack; production is already deployed
 node index.js                       # Start Express (runs migrations on boot)
 node seed/seedOrganizer.js
 node seed/seedSampleEvent.js
-node seed/seedFromLocalStorage.js   # One-time import from legacy localStorage export
+
+# Deploy: mirror server/ into the BlackCoffe repo, then commit there
+./sync-sigale-server.ps1
+
+# Full local stack (frees ports, boots server + Vite, optional -InitDb)
+./dev-local.ps1
 ```
 
 Copy `server/.env.example` → `server/.env`. Set `VITE_API_URL` in the frontend `.env`.
@@ -336,6 +371,6 @@ Copy `server/.env.example` → `server/.env`. Set `VITE_API_URL` in the frontend
 
 ## Browser requirements
 
-Chrome/Edge 90+, Firefox 88+, Safari 14+. HTTPS required for camera access and IndexedDB in some browsers.
+Chrome/Edge 90+, Firefox 88+, Safari 14+. HTTPS required for camera access.
 
-Required APIs: Web Crypto, localStorage, Clipboard, MediaDevices (camera), IndexedDB (offline scan). Web Share API + File System Access (best-effort, feature-detected).
+Required APIs: Web Crypto, localStorage, Clipboard, MediaDevices (camera). Web Share API + File System Access are best-effort and feature-detected. **IndexedDB is no longer used** — the offline scan cache was removed.

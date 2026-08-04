@@ -1,4 +1,12 @@
 /*
+ * ============================================================
+ * RETIRED — NOT PART OF THE RUNNING SYSTEM.
+ * This file has zero importers and is never executed. Do not
+ * import it, run it, or copy patterns from it. See
+ * legacy/README.md for why it was retired and what replaced it.
+ * ============================================================
+ */
+/*
  * Money — yellow tabular price token (Astromelias .price/.cur).
  * Delegates to formatCurrency() so the rendered value can never drift
  * from the rest of the app; it only restyles the leading "$" as a small

@@ -1,4 +1,12 @@
 /*
+ * ============================================================
+ * RETIRED — NOT PART OF THE RUNNING SYSTEM.
+ * This file has zero importers and is never executed. Do not
+ * import it, run it, or copy patterns from it. See
+ * legacy/README.md for why it was retired and what replaced it.
+ * ============================================================
+ */
+/*
  * Wordmark — the "Sígale" / "Astromelias" lockup in --font-display.
  * Ported from docs/design2.0/lib.jsx. `swash` holds character indices to
  * render italic for the flyer's flourish (e.g. swash={[0, 4]}).

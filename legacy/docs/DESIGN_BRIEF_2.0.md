@@ -1,3 +1,10 @@
+> ⚠️ **RETIRED DOCUMENT — do not treat any of this as current.**
+> It describes an earlier state of Sígale and is kept only so past decisions stay
+> recoverable. See [`legacy/README.md`](../README.md) for why it was retired.
+> What is true today lives in [`/CLAUDE.md`](../../CLAUDE.md) and [`/docs/`](../../docs/README.md).
+
+---
+
 # Sígale — Design Brief Sígale 2.0 (for a UI/UX rework)
 
 > Hand-off document for Claude Design. It synthesizes the **current state** of the app with the **2.0 architecture** (public sales over MySQL + Express, see `docs/architecture/ADR-0001-migracion-sql-express.md`). Goal: redesign the surface so it can sell tickets to the public, not just manage them privately.

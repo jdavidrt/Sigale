@@ -95,4 +95,4 @@ npm run build
 
 ---
 
-For detailed documentation, see [documentation/ios-persistence-guide.md](documentation/ios-persistence-guide.md)
+The older iOS persistence guide was written when localStorage was the database; it has been retired to [`legacy/docs/ios-persistence-guide.md`](../../legacy/docs/ios-persistence-guide.md). For behavior that still applies, see [`android-ios-compatibility.md`](android-ios-compatibility.md).

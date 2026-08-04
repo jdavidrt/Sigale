@@ -1,6 +1,13 @@
+> ⚠️ **RETIRED DOCUMENT — do not treat any of this as current.**
+> It describes an earlier state of Sígale and is kept only so past decisions stay
+> recoverable. See [`legacy/README.md`](../README.md) for why it was retired.
+> What is true today lives in [`/CLAUDE.md`](../../CLAUDE.md) and [`/docs/`](../../docs/README.md).
+
+---
+
 # Sígale Design System Implementation Guide
 
-> **This documents the 1.0 violet identity.** For Sígale 2.0, the **Astromelias** skin in [`../design2.0/IMPLEMENTATION_GUIDE.md`](../design2.0/IMPLEMENTATION_GUIDE.md) supersedes the palette and fonts below. Token *names* are unchanged; their *values* are remapped there (plum/daffodil/red-orange, Barlow Semi Condensed + DM Serif Display).
+> **This documents the 1.0 violet identity.** For Sígale 2.0, the **Astromelias** skin in [`../design2.0/IMPLEMENTATION_GUIDE.md`](../../docs/design2.0/IMPLEMENTATION_GUIDE.md) supersedes the palette and fonts below. Token *names* are unchanged; their *values* are remapped there (plum/daffodil/red-orange, Barlow Semi Condensed + DM Serif Display).
 
 A modern, iOS/Material Design inspired system for consistent styling across the project. Optimized for high density and maximum readability.
 

@@ -1,11 +1,26 @@
-# Sígale 2.0 — Local-First Testing (Windows)
+# Sígale — Local-First Testing (Windows)
 
-> Goal: run the **entire 2.0 stack on your own machine** — Express server + a local
+> Goal: run the **entire stack on your own machine** — Express server + a local
 > MySQL `sigale` database + the Vite client — and walk the full flow
-> (reserve → submit payment → organizer confirms → door scan) before a single line
-> ever touches the real DigitalOcean `sigale` database. This is the gate before Phase 6.
+> (reserve → submit payment → organizer confirms → door scan) without touching the
+> real DigitalOcean `sigale` database.
+
+> ⚠️ **Two corrections to keep in mind while following this guide.** It was written
+> before the current backend shipped, so a few details are dated:
 >
-> Nothing here connects to DigitalOcean or runs anything under `server/current-server/`.
+> - **A fresh empty database does not bootstrap into a working backend.**
+>   `001_init.sql` creates the *pre-merge* `tickets` table and nothing performs the
+>   `purchases`→`tickets` rename, which was a manual one-off. See
+>   [`server/README.md`](../server/README.md) → "The purchases → tickets cutover".
+>   Expect to need a new `008_*` migration before a from-scratch local DB works.
+> - **Door scanning is online-only.** There is no manifest download and no
+>   IndexedDB cache. Each QR is one `POST /api/admin/scan` that validates and
+>   admits in a single call. Ignore any manifest step below.
+>
+> Also note that production is already live inside the shared BlackCoffe server —
+> don't build a local stack just to check something that is already deployed.
+>
+> Nothing here connects to DigitalOcean or runs anything under `reference/`.
 > The `DB_NAME=sigale` guardrail in `db.js` still holds — your local database is simply
 > *also* named `sigale`.
 
@@ -173,14 +188,20 @@ Invoke-RestMethod -Method Post http://localhost:25060/api/login `
 | POST | `/api/purchases` | Public |
 | POST | `/api/purchases/:orderId/submitted` | Public |
 | GET | `/api/purchases/:orderId` | Public |
-| GET | `/api/recover?contact=` | Public (rate-limited) |
 | POST | `/api/login` | Public (rate-limited) |
 | GET | `/api/admin/purchases` | Organizer |
-| POST | `/api/admin/purchases/:id/confirm` | Organizer |
-| POST | `/api/admin/purchases/:id/reject` | Organizer |
-| POST | `/api/admin/sales` | Organizer |
-| GET | `/api/admin/scan/manifest` | Organizer |
-| POST | `/api/admin/scan` · `/api/admin/scan/sync` | Organizer |
+| POST | `/api/admin/purchases/:orderId/confirm` | Organizer |
+| POST | `/api/admin/purchases/:orderId/reject` | Organizer |
+| POST | `/api/admin/sales` | Organizer (walk-in) |
+| GET · PATCH · DELETE | `/api/admin/tickets` · `/tickets/:id` · `/tickets/:id/stage` | Organizer |
+| POST | `/api/admin/scan` | Organizer — **the only scan endpoint in use** |
+| GET · POST · PATCH · DELETE | `/api/admin/guest-passes*` | Organizer |
+
+`GET /api/recover` was removed — the public flow is one-way and recovery is the
+organizer's job. `/api/admin/scan/manifest` and `/api/admin/scan/sync` still exist
+but have no client callers.
+
+For the authoritative list see the API surface table in [`/CLAUDE.md`](../CLAUDE.md).
 
 ---
 
@@ -223,7 +244,7 @@ Then repeat Step 1 (recreate) → Step 4 (boot re-migrates) → Step 5 (re-seed)
 > Validation: the whole stack was run end to end against a real SQL engine (MariaDB 10.6,
 > as a stand-in for MySQL 8). Migrations applied cleanly (5 statements), and the full flow
 > passed: reserve (inventory held under the row lock) -> submit -> login -> confirm
-> (reserved->sold, two tickets minted with a 16-hex deterministic HMAC validationHash) -> manifest ->
+> (reserved->sold, two tickets minted with a 16-hex deterministic HMAC validationHash) ->
 > scan (`ok`) -> re-scan (`already_used`, idempotent). Negative paths held too: a cap-1 stage
 > returned 409 `Cupos insuficientes`, an upcoming stage 409, admin without Basic auth 401,
 > and an unknown hash 404. The authoritative run is still Step 4 on your MySQL 8.

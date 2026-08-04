@@ -437,7 +437,7 @@ export const CSVPanel = ({ filteredTickets }) => {
     setParseErrors([]);
   };
 
-  // Button styles following STYLE_GUIDE.md
+  // Button styles following docs/design2.0/IMPLEMENTATION_GUIDE.md
   const buttonStyle = {
     padding: '8px 16px',
     borderRadius: '12px',

@@ -1,16 +1,32 @@
 # `tickets` table — merged schema reference
 
-## Status
+## Status — **live in production**
 
-This describes the **new, merged schema** implemented in
-`server/migrations/005_tickets_merge_schema.sql` (currently created as
-`tickets_v2`, additive and side-by-side with the still-live old
-`purchases`/`tickets` tables). It is **not yet in production** — the
-data migration + `RENAME TABLE` cutover (`tickets_v2` → `tickets`,
-old tables → `*_legacy_v1`) is a separate, manually-supervised step that
-has not been run yet. The rewritten controllers in `server/controllers/`
-already assume this schema is live as `tickets`, so the cutover must ship
-in the same release as that code.
+This is the **current** shape of the `tickets` table. The cutover has run:
+`tickets_v2` (created by `server/migrations/005_tickets_merge_schema.sql`) was
+renamed to `tickets`, and the old order-level and seat-level tables survive as
+`purchases_legacy_v1` and `tickets_legacy_v1`. Every controller in
+`server/controllers/` queries the bare name `tickets` with the column set
+described below; there are no `FROM purchases` queries left anywhere in the
+running code.
+
+Two consequences worth knowing before you touch migrations:
+
+1. **`runMigrations.js` self-heals.** On boot it checks for a `tickets_legacy_v1`
+   table; if present, it force-marks migrations `001`–`005` as applied in the
+   `schema_migrations` ledger. Those files declare FK constraint names
+   (`fkPurchase*`, `fkTicketV2*`) that the `RENAME TABLE` carried onto the
+   renamed tables, so re-running them throws `ER_FK_DUP_NAME` (1826) and aborts
+   the whole boot loop — which is what silently blocked `006_guest_passes` once.
+2. **A brand-new empty database does not bootstrap correctly.** `001_init.sql`
+   still creates the *pre-merge* `tickets` table and no migration performs the
+   rename, because the cutover was a manual one-off. Standing up a fresh
+   environment therefore needs a new `008_*` migration that creates the merged
+   table under its final name. Production is unaffected.
+
+The one-off cutover script now lives at
+`legacy/server/merge_purchases_into_tickets.js`. **It is destructive and must
+never be run again.**
 
 ## What changed, in one sentence
 

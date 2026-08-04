@@ -2,9 +2,9 @@
 
 The deep-dive technical document. For the agent quick-reference, see `/CLAUDE.md`.
 
-> **Schema update superseding this document's data-model sections:** the `purchases` + `tickets` tables described below have been merged into a single `tickets` table (one row per seat, spanning the full order lifecycle from reservation through confirm/reject/expiry). See `docs/architecture/TICKETS_SCHEMA.md` for the current schema and `/CLAUDE.md`'s "Data model" section for the quick summary. This document's narrative below still reflects the original two-table design and is kept as historical context for *why* the split existed — don't use it as the current source of truth for table shapes.
+> **Scope.** This document tracks the current system. Two things it deliberately does *not* re-explain in full: the column-by-column shape of the `tickets` table (see [`TICKETS_SCHEMA.md`](TICKETS_SCHEMA.md)) and the migration history (see [`server/README.md`](../../server/README.md)). Documentation describing the retired 1.0 architecture — where localStorage was the database — lives in [`legacy/`](../../legacy/README.md) and should not be read as current.
 
-Sígale is a mobile-first React 19 + Vite PWA backed by an Express + MySQL server. Public buyers browse the event landing page, reserve seats, send a payment screenshot over WhatsApp, and land on a terminal success screen telling them the boleta will arrive at their chosen contact. There is no public status page — once the wizard ends, the organizer drives the rest of the lifecycle. Organizers confirm payments, mint tickets, deliver QRs from `/tickets`, register walk-ins via `/sell-tickets`, and scan QR codes at the door (offline-capable). The Astromelias visual identity ships as a CSS layer over the existing token system.
+Sígale is a mobile-first React 19 + Vite PWA backed by an Express + MySQL server. Public buyers browse the event landing page, reserve seats, send a payment screenshot over WhatsApp, and land on a terminal success screen telling them the boleta will arrive at their chosen contact. There is no public status page — once the wizard ends, the organizer drives the rest of the lifecycle. Organizers confirm payments, mint tickets, deliver QRs from `/tickets`, register walk-ins via `/sell-tickets`, and scan QR codes at the door. The Astromelias visual identity ships as a CSS layer over the existing token system.
 
 ---
 
@@ -13,7 +13,7 @@ Sígale is a mobile-first React 19 + Vite PWA backed by an Express + MySQL serve
 Two audiences share one app:
 
 - **Public buyers** need a polished, shareable URL on their phone. They never see the organizer chrome.
-- **Organizers** need fast access to the purchase queue, a walk-in form, and a door scanner that keeps working without Wi-Fi.
+- **Organizers** need fast access to the purchase queue, a walk-in form, and a door scanner that validates against live inventory.
 
 These audiences share a server-side source of truth (MySQL) for inventory. The QR code is never stored; it is generated on demand from a server-minted deterministic-HMAC hash (`validationHash`) once the organizer confirms the purchase.
 
@@ -26,14 +26,13 @@ These audiences share a server-side source of truth (MySQL) for inventory. The Q
 | Framework | React 19 | `useMemo`/`useCallback` for context-value stability |
 | Build | Vite 7 | Fast HMR, native ESM, route-level code splitting |
 | Styling | Plain CSS — design tokens + CSS Modules + Astromelias classes | `tokens.css → global.css → utilities.css → astromelias.css`; PostCSS runs autoprefixer only. No Tailwind. |
-| Routing | React Router v7 | Lazy-loaded; only Home and LandingPage ship with the main bundle |
+| Routing | React Router v7 | Every routed page is lazy-loaded |
 | QR generation | `qrcode.react` | SVG output; rendered to canvas for PNG export |
 | QR scanning | `html5-qrcode` | Lazy-loaded on `/scan` only (~100 KB gz) |
-| PDF export | `jspdf` | Dynamic import on the export page |
 | Crypto | Web Crypto API | Client-side: ticket IDs for walk-ins only |
 | Backend | Express + `mysql2/promise` | Separate `server/` app; `dateStrings:true`, SSL CA cert |
 | Database | MySQL 8 on DigitalOcean | Dedicated `sigale` database; shared cluster with BlackCoffe |
-| Offline scan | IndexedDB (`scanDb.js`) | Pre-cached manifest + sync queue; `useOfflineScan` hook |
+| Door scan | `POST /api/admin/scan` | **Online-only**: one request per QR, validates + admits. No IndexedDB, no manifest |
 | Jobs | `node-cron` (`scheduler.js`) | Stage auto-activation + expired-hold sweep |
 
 ---
@@ -50,7 +49,8 @@ These audiences share a server-side source of truth (MySQL) for inventory. The Q
 | `/evento/:id` | LandingPage (specific event) |
 | `/compra` | PurchaseFlowPage — 6-step wizard. Steps 1–3 reversible; from step 4 ("Ir a pagar") onward the back chevron is hidden. Step 6 is a terminal success screen with a single "Volver al inicio" CTA. |
 | `/admin` | AdminPage — login → purchase queue. "+ Registrar Venta" navigates to `/sell-tickets` (no inline walk-in stepper). Slide-out `OrganizerMenu` links to every organizer tool; with no active event it redirects to `/create-event`. |
-| `/scan` | ScanPage (door scan, offline-first) |
+| `/scan` | ScanPage (door scan, online). Public route so the door device isn't behind the auth funnel, but the call still needs organizer credentials from a prior login. |
+| `/admin/create` | (legacy) — redirects to `/admin` |
 
 The old `/compra/:orderId` status page and `GET /api/recover` were removed in favor of an organizer-driven delivery model: the buyer is told *"Tan pronto nuestro equipo valide tu pago te enviaremos la boleta a `<deliveryContact>` por `<WhatsApp|correo>`"* and the organizer reaches out from `/tickets` once the order is confirmed.
 
@@ -60,15 +60,17 @@ All organizer routes require the admin login (`isLoggedIn()` in `api/admin.js`);
 
 | Route | Page |
 |-------|------|
-| `/admin/create` | (legacy) — redirects to `/admin` |
 | `/create-event` | CreateEvent (create mode) — the single API-backed event form |
 | `/edit` | CreateEvent (edit mode); `/edit-event` redirects here |
 | `/sell-tickets` | SellTicketsPage (walk-in registration). Phone field is **optional**; name + ID don't pop inline validation errors until the user has typed ≥ 4 characters. |
-| `/guest-passes` | GuestPassesPage — artist/crew/courtesy free-entry roster, scoped to the active event and grouped by band (sourced from `events.artists`). Editable spreadsheet (`GuestPassTable`/`GuestPassTableRow`) with inline edit/delete, a "Pegar lista" paste-to-bulk-add flow (reuses `parseTicketRows`), and a single-add modal. Deliberately separate from `tickets`: no price, no `validationHash`, no scan-manifest integration — see the Data model section below. |
+| `/guest-passes` | GuestPassesPage — artist/crew/courtesy free-entry roster, scoped to the active event and grouped by band (sourced from `events.artists`). Editable spreadsheet (`GuestPassTable`/`GuestPassTableRow`) with inline edit/delete, a "Pegar lista" paste-to-bulk-add flow (reuses `parseTicketRows`), and a single-add modal. Deliberately separate from `tickets`: no price, no `validationHash`, no scan integration — see the Data model section below. |
 | `/tickets` | TicketsPage (cards / table view, search, CSV). Hydrates from `/api/admin/tickets` on mount via `TicketContext.refreshFromServer()` so every confirmed purchase shows up; this is where the organizer edits holder data and generates / shares each QR. |
-| `/scan` | ScanPage — the single door/QR-validation surface (camera scanner, offline-first, validates against the server manifest). The former separate `/validate-qr` page was removed; `/validate-qr` now redirects here. |
+| `/lista-puerta` | DoorListPage — printable door list (confirmed holders + guest passes, grouped by type) for staff working without a device. |
 | `/dashboard` | DashboardPage — same server hydration as `/tickets`, so sales + check-in stats match `/admin`. |
+| `/validate-qr` | (legacy) — redirects to `/scan`. The former separate validation page and its `QRScanner`/`ValidationResult` components were removed. |
 | `*` | redirect → `/` |
+
+Note that `/validate-qr` and the `*` catch-all sit **inside** `RequireAuth`, so a logged-out visitor to either lands on `/admin` rather than on the nominal target.
 
 There is one event form (`CreateEvent`), used for both create and edit and wired to the API. The minimal inline create form that once lived inside `/admin` has been removed; `/admin` now delegates to `/create-event`.
 
@@ -76,7 +78,7 @@ There is one event form (`CreateEvent`), used for both create and edit and wired
 
 ## Data model (MySQL `sigale` DB)
 
-Schema lives in `server/migrations/001_init.sql`, with `002_event_address.sql` adding `events.address` (idempotent column guard via `information_schema`). All timestamps stored UTC; read back with `CONVERT_TZ` for Bogotá display.
+Current shape below. `001_init.sql` shows the *original* two-table split and is pre-cutover history — see `server/README.md` for the migration table and `TICKETS_SCHEMA.md` for the column-by-column reference. All timestamps stored UTC; read back with `CONVERT_TZ` for Bogotá display.
 
 ```
 organizers
@@ -90,21 +92,24 @@ ticket_stages
   id, eventId → events, name, price, totalQuantity, soldQuantity,
   reservedQuantity, sortOrder, activatesAt, status (upcoming|active|sold_out|closed)
 
-purchases
-  id, eventId, stageId, quantity, totalAmount, orderId INT UNSIGNED (sequential, globally unique, starts at 100),
-  deliveryMethod, deliveryContact, holdersSnapshot JSON NULL, status, idempotencyKey,
-  reservationExpiresAt, confirmedAt, confirmedBy
-
-tickets
-  id, purchaseId → purchases, holderName, holderIdNumber, holderPhone,
-  validationHash CHAR(64) UNIQUE, isUsed, usedAt
+tickets                       -- ONE ROW PER SEAT, created at reservation time.
+  id, orderId INT UNSIGNED (sequential from 100, SHARED by every row of an order),
+  orderAnchor (UNIQUE, set on row 0 only — collision guard),
+  eventId → events, stageId → ticket_stages, unitPrice,
+  holderName, holderIdNumber, holderPhone,
+  deliveryMethod, deliveryContact, idempotencyKey, reservationExpiresAt,
+  status (pending_payment|payment_submitted|confirmed|rejected|expired),
+  validationHash CHAR(64) NULL UNIQUE (minted ONLY at confirm), isUsed, usedAt,
+  confirmedAt, confirmedBy
+  -- There is no `purchases` table. An "order" is every row sharing one orderId.
+  -- Quantity/total are computed: COUNT(*) / SUM(unitPrice) GROUP BY orderId.
 
 guest_passes
   id, eventId → events, band, holderName, holderIdNumber,
   type ENUM(artist|crew|courtesy), createdAt
 ```
 
-`guest_passes` (added by `server/migrations/006_guest_passes.sql`) is a standalone roster for people who get free entry without a ticket — performing artists, their crew, and courtesy guests. It's intentionally disconnected from the purchase/ticket pipeline: no `unitPrice`/`stageId`, no `validationHash`, no `status` lifecycle, and it's never joined into `/api/admin/tickets`, `/dashboard` stats, or the scan manifest — door staff check `holderName`/`holderIdNumber` manually rather than scanning a QR. `band` is a plain string but the UI (`GuestPassesPage`) sources it from `events.artists` as a dropdown so per-band counts (shown as a summary strip) aren't split by typos.
+`guest_passes` (added by `server/migrations/006_guest_passes.sql`) is a standalone roster for people who get free entry without a ticket — performing artists, their crew, and courtesy guests. It's intentionally disconnected from the purchase/ticket pipeline: no `unitPrice`/`stageId`, no `validationHash`, no `status` lifecycle, and it's never joined into `/api/admin/tickets`, `/dashboard` stats, or the door scanner — staff check `holderName`/`holderIdNumber` manually rather than scanning a QR. `band` is a plain string but the UI (`GuestPassesPage`) sources it from `events.artists` as a dropdown so per-band counts (shown as a summary strip) aren't split by typos.
 
 **Purchase state machine:**
 
@@ -149,9 +154,9 @@ The ENUM is `('upcoming', 'active', 'sold_out', 'closed')` — `closed` added by
 
 `orderId` is an `INT UNSIGNED`, assigned sequentially (global `MAX(orderId) + 1`, starting at 100). Migration 003 converted it from `CHAR(3)` unique-per-event to a globally unique integer. `nextOrderId()` is called inside a `FOR UPDATE` transaction and is shared between purchase creation and walk-in registration.
 
-`holdersSnapshot` (`JSON NULL`) captures the buyer-entered holder names / ID numbers / phones when the purchase is created or submitted. At confirm-time `confirmPurchase` uses this snapshot to mint tickets automatically; the organizer can pass an overriding `holders` array in the confirm request body to change them.
+`holdersSnapshot` is **retired**. Holder identity (`holderName` / `holderIdNumber` / `holderPhone`) now lives directly on each `tickets` row from the moment it's known — usually `NULL` at reservation, filled in by `submitPayment`, and optionally overridden by an admin at `confirmPurchase`. Positional mapping (`holders[i]` → the i-th row of the order) is safe because every row of an order is inserted in one statement, so their ids are monotonic in submission order.
 
-`purchases.deliveryMethod` / `deliveryContact` are the **single source of truth** for how to reach the buyer. The success screen reads them straight off the row; the organizer reads them off `/admin` and `/tickets` when sending the QR by WhatsApp or email.
+`tickets.deliveryMethod` / `deliveryContact` are the **single source of truth** for how to reach the buyer. The success screen reads them straight off the row; the organizer reads them off `/admin` and `/tickets` when sending the QR by WhatsApp or email.
 
 **Hold semantics:** `reservationExpiresAt = createdAt + 24h`. The scheduler sweeps `pending_payment` past expiry and returns `reservedQuantity` to the stage. `payment_submitted` is excluded from the sweep; it holds until the organizer acts. The 20-minute countdown shown to buyers is cosmetic copy only.
 
@@ -193,16 +198,18 @@ index.js            # helmet + CORS (Sígale origins) + express.json(64kb) +
                     # route mounts + global error middleware + runMigrations() → listen
 config.js           # PORT from env
 db.js               # mysql2/promise pool; sigale DB; dateStrings:true; SSL CA cert
-migrations/
-  001_init.sql                # Full DDL — all Sígale tables, idempotent (IF NOT EXISTS)
-  002_event_address.sql       # Adds events.address; idempotent via information_schema + PREPARE/EXECUTE
+migrations/                   # 001–005 are PRE-CUTOVER HISTORY: the runner marks them
+                              # applied rather than executing them once it detects a
+                              # cut-over DB. Full table in server/README.md.
+  001_init.sql                # Original DDL, incl. the old purchases + tickets split
+  002_event_address.sql       # Adds events.address; guarded via information_schema
   003_sequential_orderid.sql  # orderId CHAR(3) → INT UNSIGNED, globally unique, starts at 100
-  004_holders_snapshot.sql    # Adds purchases.holdersSnapshot JSON NULL
-  005_tickets_merge_schema.sql # Creates tickets_v2 (merged purchases+tickets schema)
-  006_guest_passes.sql        # Creates guest_passes — artist/crew/courtesy free-entry roster
-  007_single_active_stage.sql # Adds `closed` stage status + uqOneActiveStagePerEvent unique
-                               # constraint (ticket_stages.activeFlag) — at most one active stage/event
-  runMigrations.js            # Runs every SQL file in name order before boot
+  004_holders_snapshot.sql    # Adds purchases.holdersSnapshot — retired by 005
+  005_tickets_merge_schema.sql # Creates tickets_v2, since RENAMEd to `tickets`
+  006_guest_passes.sql        # LIVE — creates guest_passes (artist/crew/courtesy roster)
+  007_single_active_stage.sql # LIVE — adds `closed` stage status + uqOneActiveStagePerEvent
+                              # unique constraint (ticket_stages.activeFlag)
+  runMigrations.js            # Ledger-backed (schema_migrations) + post-cutover self-heal
 controllers/        # events, purchases, admin, guestPasses, scan
 routes/             # health, events, purchases, admin, guestPasses, scan
 middleware/
@@ -212,18 +219,16 @@ jobs/
 seed/
   seedOrganizer.js
   seedSampleEvent.js
-  seedFromLocalStorage.js   # One-time import of legacy localStorage data
 utils/
   emailNotifier.js  # sendErrorEmail — mirrors BlackCoffe's error reporting
   time.js           # UTC ↔ Bogotá helpers
-current-server/     # READ-ONLY BlackCoffe reference copy — never run or import
 ```
 
 **Inventory rule:** every path that touches `soldQuantity` or `reservedQuantity` uses `pool.getConnection()` → `beginTransaction()` → `SELECT … FOR UPDATE` → mutate → `COMMIT`/`ROLLBACK` in a `finally` that calls `conn.release()`. Never `pool.query` for inventory. After every increment, run the `active → sold_out` fill check; after every decrement, run the `sold_out → active` restore check. See the "Stage status lifecycle" table in the Data model section for the full matrix. Never use `GREATEST(INT UNSIGNED − n, 0)` as a safe no-op — unsigned underflow wraps to ~4 294 967 295 and violates `chkStageCapacity`.
 
 **Auth model:** no JWT/session. `requireOrganizer` re-validates bcrypt credentials on every `/api/admin/*` request **and** on the event write routes (`POST`/`PUT /api/events`), Basic header over HTTPS. `/api/login` is rate-limited. On the client, `RequireAuth` gates every organizer route on the session-stored login — a UX funnel only; the server check is the real boundary.
 
-**Admin endpoints (`/api/admin/*`):** `GET /purchases`, `POST /purchases/:id/confirm`, `POST /purchases/:id/reject`, `POST /sales` (walk-in), `GET /tickets` (every minted ticket joined with its stage + order — feeds `/tickets` and `/dashboard`), `PATCH /tickets/:id` (edit `holderName / holderIdNumber / holderPhone`; `validationHash` is immutable once minted), the scan endpoints `/scan/manifest` and `/scan/sync`, and the guest-passes endpoints `GET /guest-passes?eventId=`, `POST /guest-passes` (single add), `POST /guest-passes/bulk` (paste-to-bulk-add, one multi-row `INSERT`), `PATCH /guest-passes/:id`, `DELETE /guest-passes/:id` — a fully separate table from `tickets`, no price/QR/scan involved.
+**Admin endpoints (`/api/admin/*`):** `GET /purchases`, `POST /purchases/:orderId/confirm`, `POST /purchases/:orderId/reject`, `POST /sales` (walk-in), `GET /tickets` (every minted ticket joined with its stage + order — feeds `/tickets` and `/dashboard`), `PATCH /tickets/:id` (edit `holderName / holderIdNumber / holderPhone`; `validationHash` is immutable once minted), `POST /scan` (the only scan endpoint in use; `/scan/manifest` and `/scan/sync` survive as dead endpoints with no client callers), `PATCH /tickets/:id/stage` (reassign a ticket to another stage, moving both stages' counters), `DELETE /tickets/:id` (confirmed rows only — 409 otherwise), `DELETE /purchases` (wipe all), and the guest-passes endpoints `GET /guest-passes?eventId=`, `POST /guest-passes` (single add), `POST /guest-passes/bulk` (paste-to-bulk-add, one multi-row `INSERT`), `PATCH /guest-passes/:id`, `DELETE /guest-passes/:id` — a fully separate table from `tickets`, no price/QR/scan involved.
 
 **Security floor:**
 - Organizer password stored bcrypt-hashed in `organizers.passwordHash`. Seed by hashing — never store plaintext.
@@ -234,15 +239,20 @@ current-server/     # READ-ONLY BlackCoffe reference copy — never run or impor
 
 ---
 
-## Offline scan architecture
+## Door scan architecture
 
-The `/scan` route uses `useOfflineScan` backed by `scanDb.js` (IndexedDB):
+**Scanning is online-only.** Each QR is one round trip:
 
-1. **Before doors open:** organizer calls `downloadManifest(eventId)` → server returns all confirmed `validationHash` values → stored in IndexedDB.
-2. **At the door:** `validate(hash)` is 100% local — checks cache for `valid / already_used / invalid`. Admits are written to IndexedDB immediately and queued.
-3. **On reconnect:** `sync()` drains the queue to `POST /api/admin/scan/sync` (idempotent batch); server applies earliest-`usedAt` wins for conflicts.
+1. `OfflineScanner.jsx` (html5-qrcode) decodes the QR into a bare `validationHash` string.
+2. `scanAndAdmit(hash)` in `src/api/scan.js` sends `POST /api/admin/scan { hash }`.
+3. The server's `markUsed()` looks up the **confirmed** ticket by that hash and stamps `isUsed` / `usedAt` in one idempotent write, returning `ok` or `already_used`; an unknown or unconfirmed hash returns 404.
+4. The UI maps the response to `SCAN_RESULT`: `OK`, `ALREADY_USED`, `INVALID`, or `ERROR`.
 
-Single-scanner assumption: two offline devices scanning simultaneously could each admit the same ticket until sync. Documented assumption; revisit if a second scanner is ever added.
+`ERROR` is deliberately distinct from `INVALID` so a dropped network or an auth failure never reads as "boleta no válida" to door staff.
+
+Because the database is the single arbiter, two devices scanning the same ticket simultaneously cannot both admit it — the second gets `already_used`. That is the main reason the earlier offline-first design was dropped.
+
+> **Historical note.** `/scan` used to pre-cache a manifest of confirmed hashes in IndexedDB (`useOfflineScan`, `scanDb.js`) and queue admits for later sync. Those modules were removed. `components/Scanner/OfflineScanner.jsx` keeps its name only for historical reasons, and the server still exposes `GET /api/admin/scan/manifest` and `POST /api/admin/scan/sync` as **dead endpoints with no client callers**.
 
 ---
 
@@ -278,7 +288,7 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 
 | File | Role |
 |------|------|
-| `OfflineScanner.jsx` | The single door scanner: `html5-qrcode` camera + offline-first scan UI via `useOfflineScan`, inline color-coded verdict (valid / already-used / invalid). Replaced the old `QRScanner.jsx` + `ValidationResult.jsx` pair, which were removed with `/validate-qr`. |
+| `OfflineScanner.jsx` | The single door scanner: `html5-qrcode` camera + `scanAndAdmit()` per QR, inline color-coded verdict (valid / already-used / invalid / error). **The name is historical** — scanning is online-only; there is no offline path left. Replaced the old `QRScanner.jsx` + `ValidationResult.jsx` pair, which were removed with `/validate-qr`. |
 
 ### UI primitives (`src/components/ui/`)
 
@@ -289,12 +299,9 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 | `FieldLabel` | Icon + label row above a form input |
 | `Modal` | Generic backdrop + card; portal-rendered, Esc + click-outside to dismiss |
 | `Toast` | Bottom-center status stack rendered by `DialogProvider` |
-| `AsyncState` | Wraps loading / error / empty states with a retry callback |
 | `Ic` | Astromelias icon primitive |
-| `Money` | Renders `formatCurrency(value)` with Astromelias typography |
 | `Screen` | Full-screen wrapper for public Astromelias pages |
 | `StarField` | Animated canvas star background (respects `prefers-reduced-motion`) |
-| `Wordmark` | Sígale logotype |
 
 ---
 
@@ -304,7 +311,6 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 |------|---------|-------|
 | `useLocalStorage(initial)` | `[data, setData, { lastError, clearError }]` | Whole-blob organizer state; cross-tab sync |
 | `useLocalStorageValue(key, initial)` | `[value, setValue]` | Single-key prefs (language, view toggle) |
-| `useOfflineScan()` | `{ meta, cachedCount, pending, online, log, download, validate, sync }` | IndexedDB + server reconciliation |
 | `usePageVisibility()` | `{ isVisible }` | Tab regain focus → re-reads storage (iOS recovery) |
 
 ---
@@ -321,7 +327,7 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 | `timeFormat.js` | `formatTo12Hour`, `parseLocalDate`, `toLocalDateString`, `checkInWindowStatus`, `formatCurrency` |
 | `csvUtils.js` | `ticketsToCSV` (round-trip), `ticketsToHumanCSV` (price column; not re-importable), `csvToTickets` |
 | `ticketPasteParser.js` | `parseSingleNameAndId`, `parseTicketRows` (TSV-aware multi-row) |
-| `scanDb.js` | IndexedDB CRUD for manifest cache and scan queue |
+| `guestPassImage.js` | Shareable PNG for a guest pass (no QR — free entry) |
 | `storage.js` | `loadFromStorage`, `saveToStorage`, `clearStorage`, version migration |
 | `translations.js` | `translations` dictionary, `detectBrowserLanguage` |
 
@@ -331,17 +337,17 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 
 **Public purchase (6 steps).** Buyer opens `/` → selects ticket stage + quantity → confirms order → enters holder names + chooses WhatsApp/email delivery → is shown the payment QR and bank details (back button is now locked) → opens WhatsApp with the pre-filled message and taps "Ya lo envié" → lands on a terminal success screen with their orden number and the line *"Tan pronto nuestro equipo valide tu pago te enviaremos la boleta a `<deliveryContact>` por `<WhatsApp|correo>`"*. The only exit is "Volver al inicio", which `navigate('/', { replace: true })`s back to the landing so back-navigating doesn't pop the wizard back onto the stack.
 
-**Organizer — confirm payment + deliver ticket.** `/admin` shows the order queue. The organizer finds the orderId from the WhatsApp message, verifies the transfer, hits Confirmar pago → server marks `confirmed`, then mints tickets using `purchases.holdersSnapshot` (the buyer-entered names / IDs / phones). The organizer can pass an overriding `holders` array in the confirm body to change them before minting. Newly minted tickets appear on `/tickets` (and totals on `/dashboard`) — that's where the organizer generates / copies / shares the QR and sends it to the buyer via `deliveryMethod` + `deliveryContact`.
+**Organizer — confirm payment + deliver ticket.** `/admin` shows the order queue. The organizer finds the orderId from the WhatsApp message, verifies the transfer, hits Confirmar pago → server marks `confirmed`, then flips every row of the order to `confirmed` and mints each seat's `validationHash` (holder names / IDs / phones already live on the rows from reservation time). The organizer can pass an overriding `holders` array in the confirm body to change them before minting. Newly minted tickets appear on `/tickets` (and totals on `/dashboard`) — that's where the organizer generates / copies / shares the QR and sends it to the buyer via `deliveryMethod` + `deliveryContact`.
 
-**Door scan.** Before doors open, organizer opens `/scan` and taps Download to seed the IndexedDB cache. At the door, scanned hashes validate locally (no network). Scans queue offline; on reconnect the queue reconciles with the server.
+**Door scan.** Organizer opens `/scan` on a device that has logged in at least once (the call carries Basic organizer credentials). Each scanned QR is validated against the live database in one request, which both checks and admits. The device needs connectivity — there is no offline cache.
 
-**Walk-in registration.** `/admin` → "+ Registrar Venta" → `/sell-tickets` (`TicketForm`) → organizer enters buyer info (phone optional) → ticket is created. The legacy inline walk-in stepper on `/admin` has been removed; collecting holder name/ID/phone up front means walk-ins appear in the same `/tickets`, `/dashboard`, and scanner manifest as purchased orders. Walk-ins sell **only from the currently `active` stage**: `createWalkInSale` locks the stage `WHERE status = 'active'` (409 otherwise), and the ticket-type dropdown lists only active stages — a superseded/`closed` etapa can never be sold at the door.
+**Walk-in registration.** `/admin` → "+ Registrar Venta" → `/sell-tickets` (`TicketForm`) → organizer enters buyer info (phone optional) → ticket is created. The legacy inline walk-in stepper on `/admin` has been removed; collecting holder name/ID/phone up front means walk-ins appear in the same `/tickets`, `/dashboard`, and door scanner as purchased orders. Walk-ins sell **only from the currently `active` stage**: `createWalkInSale` locks the stage `WHERE status = 'active'` (409 otherwise), and the ticket-type dropdown lists only active stages — a superseded/`closed` etapa can never be sold at the door.
 
-**Guest passes (artist/crew/courtesy).** `/admin` → "+ Agregar un artista" → `/guest-passes` → either the single-add modal (band + name + id + type) or "Pegar lista" to bulk-paste a whole band's list under one default band+type. Entries live in their own `guest_passes` table — they never appear on `/tickets`, `/dashboard`, or the scan manifest; door staff check the name/ID against this list manually. The per-band summary strip helps the organizer track how many free passes each band has used.
+**Guest passes (artist/crew/courtesy).** `/admin` → "+ Agregar un artista" → `/guest-passes` → either the single-add modal (band + name + id + type) or "Pegar lista" to bulk-paste a whole band's list under one default band+type. Entries live in their own `guest_passes` table — they never appear on `/tickets`, `/dashboard`, or the door scanner; staff check the name/ID against this list manually. The per-band summary strip helps the organizer track how many free passes each band has used.
 
 **Ticket sales / bulk add.** `/tickets` → Table view → "Paste Tickets" → `parseTicketRows` splits clipboard TSV → `addTicketsFromCSV` dedupes and inserts.
 
-**Backup / handoff.** `/copy-event` exports JSON + CSV. `CreateEvent`'s "Paste from clipboard" restores a JSON export. `seedFromLocalStorage.js` in the server seeds legacy data into MySQL.
+**Backup / handoff.** There is none, by design. Events and tickets live in the cloud `sigale` database, so every device already sees the same data through the API. The old `/copy-event` JSON export/import and the "Paste from clipboard" clone button were removed — don't rebuild them.
 
 ---
 
@@ -349,7 +355,7 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 
 | Metric | Target |
 |--------|--------|
-| Initial JS (Home + LandingPage) | ~50 KB gz |
+| Initial JS (LandingPage) | ~50 KB gz |
 | `/scan` (html5-qrcode chunk) | ~100 KB gz |
 | Concurrent reservations | Serialized by `SELECT … FOR UPDATE` at the DB |
 | orderId range | `INT UNSIGNED`, globally unique, sequential from 100 — no per-event ceiling |
@@ -368,13 +374,13 @@ Single-scanner assumption: two offline devices scanning simultaneously could eac
 
 ## BlackCoffe guardrail
 
-`server/current-server/` is a **read-only reference snapshot** of BlackCoffe's production server. Never execute it, never import from it. Sígale's backend is a separate app; its migrations touch only the `sigale` database tables (`organizers`, `events`, `ticket_stages`, `purchases`, `tickets`, `guest_passes`) and must never `CREATE`/`ALTER`/`DROP` BlackCoffe tables (`orders`, `deposits`, `clients`, `products`, `users`). Confirm `DB_NAME=sigale` before any DB command. Full policy in `docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md §3.1`.
+`reference/blackcoffe-server-snapshot/` (git-ignored, formerly `server/current-server/`) is a **read-only reference snapshot** of BlackCoffe's production server. Never execute it, never import from it. Sígale's backend is a separate app; its migrations touch only the `sigale` database tables (`organizers`, `events`, `ticket_stages`, `tickets`, `guest_passes`) and must never `CREATE`/`ALTER`/`DROP` BlackCoffe tables (`orders`, `deposits`, `clients`, `products`, `users`). Confirm `DB_NAME=sigale` before any DB command. Full policy in `docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md §3.1`.
 
 ---
 
 ## Browser support
 
-Chrome/Edge 90+, Firefox 88+, Safari 14+. HTTPS required for camera access and full IndexedDB availability. Required APIs: Web Crypto, localStorage, Clipboard, MediaDevices (camera), IndexedDB. Web Share API + File System Access used best-effort with feature detection.
+Chrome/Edge 90+, Firefox 88+, Safari 14+. HTTPS required for camera access. Required APIs: Web Crypto, localStorage, Clipboard, MediaDevices (camera). Web Share API + File System Access used best-effort with feature detection. **IndexedDB is no longer used** — the offline scan cache was removed.
 
 ---
 
@@ -392,7 +398,6 @@ npm test         # vitest
 node index.js                      # Start (runs migrations on boot)
 node seed/seedOrganizer.js
 node seed/seedSampleEvent.js
-node seed/seedFromLocalStorage.js  # One-time legacy import
 ```
 
 ---
@@ -402,8 +407,10 @@ node seed/seedFromLocalStorage.js  # One-time legacy import
 - Agent quick-reference — `/CLAUDE.md`
 - Backend architecture decisions — `docs/architecture/ADR-0001-migracion-sql-express.md`
 - Design tokens + Astromelias — `docs/design2.0/IMPLEMENTATION_GUIDE.md`
-- Remaining build work — `docs/SIGALE_2.0_IMPLEMENTATION_PLAN.md`
+- Merged tickets schema — `docs/architecture/TICKETS_SCHEMA.md`
+- Backend, migrations, deploy — `server/README.md`
+- Retired docs and dead code — `legacy/README.md`
 - CSS module conventions — `docs/guides/css-architecture-guide.md`
-- iOS Safari persistence quirks — `docs/guides/ios-persistence-guide.md`
+- Cross-platform mobile behavior — `docs/guides/android-ios-compatibility.md`
 - CSV import/export details — `docs/features/CSV_FEATURE_GUIDE.md`
 - Mobile testing checklist — `docs/guides/MOBILE_TESTING.md`

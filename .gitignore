@@ -59,8 +59,10 @@ desktop.ini
 # temp build-verification output (Cowork sandbox)
 dist_verify/
 
-# Read-only mirror of the live server (do not commit)
-/server/current-server/
+# Read-only mirror of BlackCoffe's live server, kept for reference only.
+# Not Sígale's code — never commit it. Moved out of server/ so it can't be
+# mistaken for part of this backend. See reference/README.md.
+/reference/blackcoffe-server-snapshot/
 
 # Local dev launcher logs (dev-local.ps1)
 .dev-local-logs/

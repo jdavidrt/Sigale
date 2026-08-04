@@ -1,3 +1,10 @@
+> ⚠️ **RETIRED DOCUMENT — do not treat any of this as current.**
+> It describes an earlier state of Sígale and is kept only so past decisions stay
+> recoverable. See [`legacy/README.md`](../README.md) for why it was retired.
+> What is true today lives in [`/CLAUDE.md`](../../CLAUDE.md) and [`/docs/`](../../docs/README.md).
+
+---
+
 # Sígale Project - Style Audit Report
 
 > **Historical (2026-02-05) — Tailwind has since been removed.** This audit describes a Tailwind-based setup that no longer exists: the project now styles entirely with plain CSS (design tokens + `global.css`/`utilities.css` + CSS Modules; PostCSS runs autoprefixer only). Do not act on the Tailwind config/recommendations below. See `../../CLAUDE.md` and `../guides/css-architecture-guide.md`.

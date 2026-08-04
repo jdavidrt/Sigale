@@ -206,10 +206,6 @@ export const translations = {
     copyFailed: "Error al copiar",
     shareNotSupported: "Compartir no disponible",
 
-    // Scanner flow — QRScanner.jsx status messages
-
-    // Scanner flow — ValidationResult.jsx labels
-
     // TicketForm — inline validation errors + order number label
     nameInvalid: "Nombre no válido. Solo letras y espacios.",
     idInvalid: "Documento no válido. Solo números.",
@@ -493,10 +489,6 @@ export const translations = {
     // N3 — Ticket Card toasts
     copyFailed: "Failed to copy",
     shareNotSupported: "Share not supported",
-
-    // Scanner flow — QRScanner.jsx status messages
-
-    // Scanner flow — ValidationResult.jsx labels
 
     // TicketForm — inline validation errors + order number label
     nameInvalid: "Invalid name. Letters and spaces only.",

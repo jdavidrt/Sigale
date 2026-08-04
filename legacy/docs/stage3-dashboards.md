@@ -1,6 +1,13 @@
+> ⚠️ **RETIRED DOCUMENT — do not treat any of this as current.**
+> It describes an earlier state of Sígale and is kept only so past decisions stay
+> recoverable. See [`legacy/README.md`](../README.md) for why it was retired.
+> What is true today lives in [`/CLAUDE.md`](../../CLAUDE.md) and [`/docs/`](../../docs/README.md).
+
+---
+
 # Stage 3: Dashboards, Import/Export & Refinement
 
-> **Historical document. Status: ✅ shipped.** This file is the original implementation plan from before Stage 3 was built. Kept for context only — for current state see [`docs/architecture/PROJECT_OVERVIEW.md`](../architecture/PROJECT_OVERVIEW.md). The dashboards, JSON/CSV/PDF export, and JSON import all shipped; many of the templates below diverged during implementation.
+> **Historical document. Status: ✅ shipped.** This file is the original implementation plan from before Stage 3 was built. Kept for context only — for current state see [`docs/architecture/PROJECT_OVERVIEW.md`](../../docs/architecture/PROJECT_OVERVIEW.md). The dashboards, JSON/CSV/PDF export, and JSON import all shipped; many of the templates below diverged during implementation.
 5. Implement ticket viewer modal
 6. Add storage warnings
 7. Final polish and testing

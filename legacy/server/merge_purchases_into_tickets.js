@@ -1,5 +1,13 @@
 /*
  * ============================================================
+ * RETIRED — NOT PART OF THE RUNNING SYSTEM.
+ * This file has zero importers and is never executed. Do not
+ * import it, run it, or copy patterns from it. See
+ * legacy/README.md for why it was retired and what replaced it.
+ * ============================================================
+ */
+/*
+ * ============================================================
  * SÍGALE — ONE-OFF MIGRATION: merge purchases + tickets -> tickets_v2
  *
  * Manually run only. NOT picked up by runMigrations.js (which only

@@ -8,7 +8,7 @@ All solutions work seamlessly on **both iOS Safari and Android Chrome** without 
 
 ## 🎯 What Was Added for Android Chrome
 
-### 1. **Enhanced Page Lifecycle Events** ([src/hooks/usePageVisibility.js](../src/hooks/usePageVisibility.js))
+### 1. **Enhanced Page Lifecycle Events** ([src/hooks/usePageVisibility.js](../../src/hooks/usePageVisibility.js))
 
 **Added Android Chrome-specific events:**
 - ✅ `beforeunload` - Graceful cleanup before tab closes (Android Chrome)
@@ -41,7 +41,7 @@ window.addEventListener('pageshow', (event) => {
 
 ---
 
-### 2. **PWA Install Prompt Hook** ([src/hooks/usePWAInstall.js](../src/hooks/usePWAInstall.js))
+### 2. **PWA Install Prompt Hook** (`src/hooks/usePWAInstall.js` — **removed; this section is historical**)
 
 **Android Chrome advantages:**
 - ✅ Automatic `beforeinstallprompt` event capture
@@ -65,7 +65,7 @@ if (canPrompt) {
 
 ---
 
-### 3. **Enhanced Service Worker** ([public/sw.js](../public/sw.js))
+### 3. **Enhanced Service Worker** ([public/sw.js](../../public/sw.js))
 
 **Optimizations for both platforms:**
 
@@ -277,43 +277,43 @@ window.addEventListener('page-restored-from-cache', () => {
 
 ## 📝 Files Modified for Cross-Platform Support
 
-1. **[src/hooks/usePageVisibility.js](../src/hooks/usePageVisibility.js)**
+1. **[src/hooks/usePageVisibility.js](../../src/hooks/usePageVisibility.js)**
    - Added `pagehide`, `pageshow`, `beforeunload`, `blur` events
    - Session storage for state preservation
    - bfcache detection
 
-2. **[src/hooks/usePWAInstall.js](../src/hooks/usePWAInstall.js)** (NEW)
+2. **`src/hooks/usePWAInstall.js`** — **no longer exists** (the custom install-prompt hook was removed; installation now relies on the browser default)
    - Android Chrome automatic prompt capture
    - iOS detection and manual install indication
    - Programmatic install trigger
 
-3. **[public/sw.js](../public/sw.js)**
+3. **[public/sw.js](../../public/sw.js)**
    - Cache-first strategy for same-origin requests
    - Enhanced navigation fallback
    - Better logging for debugging
    - Message handling for updates
 
-4. **[src/App.jsx](../src/App.jsx)**
+4. **[src/App.jsx](../../src/App.jsx)**
    - Integrated `usePageVisibility` hook
    - Wrapped with `ErrorBoundary`
 
-5. **[src/main.jsx](../src/main.jsx)**
+5. **[src/main.jsx](../../src/main.jsx)**
    - Service Worker registration on startup
 
-6. **[index.html](../index.html)**
+6. **[index.html](../../index.html)**
    - PWA manifest link
    - iOS meta tags
    - Android theme color
 
-7. **[vite.config.js](../vite.config.js)**
+7. **[vite.config.js](../../vite.config.js)**
    - Mobile device access
    - HMR timeout increase
    - Preview server config
 
-8. **[public/manifest.json](../public/manifest.json)**
+8. **[public/manifest.json](../../public/manifest.json)**
    - PWA configuration (both platforms)
 
-9. **[public/_redirects](../public/_redirects)**
+9. **[public/_redirects](../../public/_redirects)**
    - SPA fallback rule
 
 ---

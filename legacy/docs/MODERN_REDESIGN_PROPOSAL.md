@@ -1,3 +1,10 @@
+> ⚠️ **RETIRED DOCUMENT — do not treat any of this as current.**
+> It describes an earlier state of Sígale and is kept only so past decisions stay
+> recoverable. See [`legacy/README.md`](../README.md) for why it was retired.
+> What is true today lives in [`/CLAUDE.md`](../../CLAUDE.md) and [`/docs/`](../../docs/README.md).
+
+---
+
 # Sígale Modern Redesign Proposal
 
 > **Historical (2026-02-05).** This proposal predates two later decisions: Tailwind was removed (the project is now plain CSS — tokens + CSS Modules, no framework), and the 2.0 visual identity is **Astromelias** (`../design2.0/IMPLEMENTATION_GUIDE.md`). Ignore the `tailwind.config.js` snippets below; they do not reflect the current build.

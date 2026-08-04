@@ -1,6 +1,15 @@
 # ADR-0001 — Migración del estado compartido a MySQL + Express (sobre la infraestructura de BlackCoffe)
 
-- **Estado:** Propuesto
+> **Estado: ACEPTADO E IMPLEMENTADO.** La decisión de fondo — mover el estado de
+> `localStorage` a MySQL + Express sobre la infraestructura de BlackCoffe — está en
+> producción. Este documento se conserva por el *porqué*, no por el *cómo*: varios
+> detalles de implementación cambiaron después de escribirlo. En particular, las
+> tablas `purchases` y `tickets` se fusionaron en una sola tabla `tickets` (una fila
+> por asiento, ver [`TICKETS_SCHEMA.md`](TICKETS_SCHEMA.md)), y el endpoint público
+> `GET /api/recover` nunca se mantuvo. Para el estado actual: [`/CLAUDE.md`](../../CLAUDE.md)
+> y [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md).
+
+- **Estado:** Aceptado e implementado (originalmente: Propuesto)
 - **Fecha:** Monday, June 15, 2026
 - **Autor:** David (jdramirezt@unal.edu.co)
 - **Decisión técnica:** Mover inventario, compras y cuenta del Organizador desde un único blob en `localStorage` hacia un backend Express con base de datos relacional MySQL, conservando la generación dinámica del QR de entrada.

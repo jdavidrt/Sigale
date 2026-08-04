@@ -1,3 +1,8 @@
+# ============================================================
+# RETIRED - superseded by /sync-sigale-server.ps1. Do not run:
+# it hardcodes an old BlackCoffe path and copies from the wrong
+# source directory. See legacy/README.md.
+# ============================================================
 # =============================================================================
 # Sigale -> BlackCoffe shared-server merge
 # Runs the "outside the repo" steps from SIGALE_MERGE_INTO_SHARED_SERVER.md:

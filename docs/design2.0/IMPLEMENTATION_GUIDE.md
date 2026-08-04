@@ -141,6 +141,8 @@ Every screen sits on a night field with a warm bottom glow and scattered stars.
 
 ### 3.3 Wordmark & Money
 
+> **Implementation note.** `<Wordmark>` and `<Money>` are **prototype components**, described here as design specs. They were never adopted in `src/` and their React ports have been retired to `legacy/src/`. In the app: render the wordmark with the Astromelias CSS classes from `src/styles/astromelias.css`, and format money with `formatCurrency()` from `src/utils/timeFormat.js` — which already produces the CO grouping specified below.
+
 - **`<Wordmark text swash={[…]}>`** — the "Astromelias" lockup in `--font-display`; `swash` indices render selected letters italic for flyer flavor.
 - **`<Money v>`** — must match the codebase's `formatCurrency()` → CO grouping `"$30.000"`; small superscript `$` + tabular-nums. Use everywhere money appears.
 

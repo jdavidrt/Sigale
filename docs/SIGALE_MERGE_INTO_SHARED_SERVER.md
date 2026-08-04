@@ -1,6 +1,6 @@
 # Sígale → Shared Server — Merge & Deploy Plan (Phase 6)
 
-> Status: **PLAN ONLY**. `server/current-server/` stays read-only reference (per [§3.1](SIGALE_2.0_IMPLEMENTATION_PLAN.md)). Nothing in this repo is executed against BlackCoffe. The steps below describe the changes to apply **in the real BlackCoffe deployment repo**.
+> Status: **PLAN ONLY**. `reference/blackcoffe-server-snapshot/` stays read-only reference (per [§3.1](SIGALE_2.0_IMPLEMENTATION_PLAN.md)). Nothing in this repo is executed against BlackCoffe. The steps below describe the changes to apply **in the real BlackCoffe deployment repo**.
 
 One process, two tenants. BlackCoffe keeps its house; Sígale moves into a separate room of the same building, with its own key to its own schema. No wall is knocked down.
 
@@ -12,19 +12,19 @@ One process, two tenants. BlackCoffe keeps its house; Sígale moves into a separ
 |---|----------|----------|
 | 1 | Database sharing | **Same MySQL instance, separate `sigale` schema.** Sígale keeps its own pool and credentials; the `DB_NAME==='sigale'` guardrail survives. BlackCoffe's tables (`orders`, `deposits`, `clients`, `products`, `users`) are never touched. |
 | 2 | Frontend hosting | **Stays separately hosted.** The Sígale PWA only retargets `VITE_API_URL` at the shared backend host. Express keeps serving only BlackCoffe's `client/dist`. |
-| 3 | `/current-server` role | **Reference only.** Read it to mirror conventions; apply the actual edits in the live BlackCoffe repo. |
+| 3 | `reference/` role | **Reference only.** Read it to mirror conventions; apply the actual edits in the live BlackCoffe repo. |
 | 4 | Data on deploy | **Schema only, no data.** Migrations create the empty `sigale` tables. Seeding the first organizer is a deliberate post-deploy step (see §7). |
 
 ---
 
 ## 2. Current state (two separate apps)
 
-| Aspect | BlackCoffe (`current-server/`) | Sígale (`server/`) |
+| Aspect | BlackCoffe (`reference/blackcoffe-server-snapshot/`) | Sígale (`server/`) |
 |--------|--------------------------------|--------------------|
 | Entry | `index.js` → `runMigrations()` then `listen` | `index.js` → `runMigrations()` then `listen` + `startScheduler()` |
 | Route prefix | unprefixed: `/orders`, `/clients`, `/products`, `/users/:u/:p`, `/ping`, `/query`, `/deposits` | all `/api/*`: `/api/health`, `/api/events`, `/api/purchases`, `/api/admin/*`, `/api/scan` |
 | DB pool | `db.js` — `await createPool`, `DB_NAME` from env, `ssl.rejectUnauthorized=false` | `db.js` — guardrail throws unless `DB_NAME==='sigale'`; CA cert or no SSL |
-| Migrations | `migrations/add_client_snapshot.js` | `migrations/runMigrations.js` (`001`–`004` SQL) |
+| Migrations | `migrations/add_client_snapshot.js` | `migrations/runMigrations.js` (`001`–`007` SQL, ledger-backed) |
 | Extras | global error mw + `sendErrorEmail` (Resend); serves `client/dist`; `app.get('*')` SPA fallback | `helmet`, `express-rate-limit`, `node-cron` scheduler, bcrypt auth |
 | Notifier | `utils/emailNotifier.js` (Resend) | `utils/emailNotifier.js` (Resend) — same transport |
 
@@ -126,7 +126,7 @@ export const pool = createPool({
 Two notes:
 
 1. **SSL alignment.** Locally Sígale ran without TLS; on the shared DigitalOcean instance use the same SSL config that BlackCoffe already proves works (`rejectUnauthorized:false`), unless you provide a CA cert via `DB_CA_CERT`.
-2. **Schema already exists on production.** The `sigale` schema is already created on the shared instance, so no `CREATE DATABASE` step is needed. The pool connects straight to `database:'sigale'`, and `runMigrations.js` runs `CREATE TABLE IF NOT EXISTS` for the `001`–`004` tables — additive, idempotent, and never naming a BlackCoffe table. (If the schema is ever recreated from scratch, a one-time `CREATE DATABASE IF NOT EXISTS sigale;` would be the only prerequisite.)
+2. **Schema already exists on production.** The `sigale` schema is already created on the shared instance, so no `CREATE DATABASE` step is needed. The pool connects straight to `database:'sigale'`, and `runMigrations.js` applies any unapplied file from `001`–`007`, tracked in a `schema_migrations` ledger — additive, idempotent, and never naming a BlackCoffe table. (If the schema is ever recreated from scratch, a one-time `CREATE DATABASE IF NOT EXISTS sigale;` would be the only prerequisite.)
 
 ---
 
@@ -150,9 +150,9 @@ Dedupe `utils/emailNotifier.js`: both are Resend wrappers. Keep BlackCoffe's as 
 1. **Merge dependencies** into the host `package.json`: add `bcryptjs`, `express-rate-limit`, `helmet`, `node-cron`. `resend`, `cors`, `express`, `mysql2` are already present. Run `npm install`, commit the lockfile.
 2. **Copy** `server/` (Sígale) into the BlackCoffe repo as `server/sigale/` and add `integration.js` (§4). Apply the `db.js` change (§5) and the host `index.js` edits (§4).
 3. **Set env vars** (§6) in the host (Render / DigitalOcean dashboard).
-4. **Deploy.** On boot: BlackCoffe migrations run (unchanged), then `startSigale()` runs Sígale migrations `001`–`004` against the **already-existing** `sigale` schema. Result: `organizers`, `events`, `ticket_stages`, `purchases`, `tickets` ensured via `CREATE TABLE IF NOT EXISTS` — **no rows**.
+4. **Deploy.** On boot: BlackCoffe migrations run (unchanged), then `startSigale()` runs any unapplied Sígale migration against the **already-existing** `sigale` schema. Result: `organizers`, `events`, `ticket_stages`, `tickets`, `guest_passes`. Note that `001`–`005` are pre-cutover history the runner marks applied rather than executing — see `server/README.md`.
 5. **Smoke test** (§9).
-6. **Seed the first organizer only** (no events, no sample data): run `node sigale/seed/seedOrganizer.js` once against the shared instance, or insert one bcrypt-hashed organizer row. This is the only data created. Skip `seedSampleEvent` / `seedFromLocalStorage`.
+6. **Seed the first organizer only** (no events, no sample data): run `node sigale/seed/seedOrganizer.js` once against the shared instance, or insert one bcrypt-hashed organizer row. This is the only data created. Skip `seedSampleEvent`.
 
 ---
 

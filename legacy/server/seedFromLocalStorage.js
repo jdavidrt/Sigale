@@ -1,5 +1,13 @@
 /*
  * ============================================================
+ * RETIRED — NOT PART OF THE RUNNING SYSTEM.
+ * This file has zero importers and is never executed. Do not
+ * import it, run it, or copy patterns from it. See
+ * legacy/README.md for why it was retired and what replaced it.
+ * ============================================================
+ */
+/*
+ * ============================================================
  * SÍGALE — SEED FROM 1.0 localStorage EXPORT (migration helper)
  *
  * Reads a JSON file produced by the 1.0 app's /copy-event export

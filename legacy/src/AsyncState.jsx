@@ -1,4 +1,12 @@
 /*
+ * ============================================================
+ * RETIRED — NOT PART OF THE RUNNING SYSTEM.
+ * This file has zero importers and is never executed. Do not
+ * import it, run it, or copy patterns from it. See
+ * legacy/README.md for why it was retired and what replaced it.
+ * ============================================================
+ */
+/*
  * AsyncState — one first-class home for the loading / error / empty states
  * of any data fetch in the 2.0 skin (Phase 5, Guide §7 step 10). Instead of
  * each page hand-rolling a "Cargando…" div and an ad-hoc error block, they
