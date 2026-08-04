@@ -141,7 +141,7 @@ export const DoorListPage = () => {
     setStatus("loading");
     try {
       const [tickets, gp] = await Promise.all([
-        admin.listTickets("confirmed"), // paid = confirmed rows only
+        admin.listTickets("confirmed", event.id), // paid = confirmed rows only
         guestPasses.list(event.id),
       ]);
       setPaid(Array.isArray(tickets) ? tickets : []);

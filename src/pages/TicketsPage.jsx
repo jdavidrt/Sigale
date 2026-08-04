@@ -20,7 +20,7 @@ import btn from "../components/Common/Button.module.css";
  * Lives here (not in src/components/ui) because it's the only consumer
  * and the typed-confirm pattern hasn't earned a generic primitive yet.
  */
-const TypedConfirmBody = ({ count, requiredWord, t, onConfirm, onCancel }) => {
+const TypedConfirmBody = ({ count, eventName, requiredWord, t, onConfirm, onCancel }) => {
   const [typed, setTyped] = useState("");
   const matches = typed.trim().toUpperCase() === requiredWord;
 
@@ -30,7 +30,7 @@ const TypedConfirmBody = ({ count, requiredWord, t, onConfirm, onCancel }) => {
         {t("deleteAllTitle")}
       </h2>
       <p className={s.confirmBody}>
-        {t("deleteAllBody").replace("{count}", count)}
+        {t("deleteAllBody").replace("{count}", count).replace("{event}", eventName)}
       </p>
       <input
         type="text"
@@ -84,9 +84,10 @@ export const TicketsPage = () => {
   const [statusFilter, setStatusFilter] = useState("confirmed");
 
   useEffect(() => {
+    if (!event?.id) return;
     const meta = STATUS_FILTERS.find((f) => f.key === statusFilter);
-    refreshFromServer(meta?.value ?? "confirmed");
-  }, [refreshFromServer, statusFilter]);
+    refreshFromServer(meta?.value ?? "confirmed", event.id);
+  }, [refreshFromServer, statusFilter, event?.id]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState(searchParams.get("type") || "all");
@@ -115,17 +116,18 @@ export const TicketsPage = () => {
   // can read it with DevTools. Two-step typed-DELETE confirmation instead.
   // Operators needing real access control should deploy behind an auth'd proxy.
   const handleClearAllTickets = () => {
-    if (tickets.length === 0) return;
+    if (tickets.length === 0 || !event?.id) return;
     openCustom((close) => (
       <TypedConfirmBody
         count={tickets.length}
+        eventName={event.name}
         requiredWord={t("deleteAllConfirmWord")}
         t={t}
         onCancel={close}
         onConfirm={async () => {
           close();
           try {
-            await clearAllTickets();
+            await clearAllTickets(event.id);
             notify({ message: t("deleteAllSuccess"), tone: "success" });
           } catch {
             notify({ message: t("error"), tone: "error" });

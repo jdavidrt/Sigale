@@ -8,6 +8,7 @@ import {
   faWandMagicSparkles, faFloppyDisk, faTriangleExclamation, faTrash,
   faCalendarDay, faPlus, faUsers, faLayerGroup,
 } from "@fortawesome/free-solid-svg-icons";
+import { sanitizeSlugInput, isSlugFormatValid } from "../../utils/slug";
 import s from "./CreateEvent.module.css";
 import btn from "../Common/Button.module.css";
 
@@ -37,8 +38,18 @@ export const CreateEvent = ({ isEditing = false }) => {
     whatsappNumber: "",
     flyerImageUrl: "",
     bankQrImageUrl: "",
+    slug: "",
+    isPublished: false,
+    salesOpen: false,
     stages: [emptyStage()],
   });
+
+  // The demo's slug/isDemo are permanently fixed server-side (see the
+  // "on a demo row, ignore submitted slug/isDemo" carve-out in
+  // events.controllers.js) — lock the slug field to match, so the organizer
+  // isn't misled into thinking a copy-edit could change it.
+  const isDemoEvent = isEditing && !!event?.isDemo;
+  const [slugError, setSlugError] = useState("");
 
   useEffect(() => {
     if (isEditing && event) {
@@ -64,6 +75,9 @@ export const CreateEvent = ({ isEditing = false }) => {
         whatsappNumber: event.whatsappNumber || "",
         flyerImageUrl: event.flyerImageUrl || "",
         bankQrImageUrl: event.bankQrImageUrl || "",
+        slug: event.slug || "",
+        isPublished: !!event.isPublished,
+        salesOpen: !!event.salesOpen,
         stages,
       });
     }
@@ -100,6 +114,17 @@ export const CreateEvent = ({ isEditing = false }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Demo row: slug is fixed server-side regardless of what's submitted, so
+    // skip client-side slug validation entirely for it (mirrors the backend
+    // carve-out). Every other event requires a valid slug.
+    if (!isDemoEvent) {
+      if (!isSlugFormatValid(formData.slug)) {
+        setSlugError(t("eventSlugInvalid"));
+        return;
+      }
+      setSlugError("");
+    }
 
     const named = formData.stages.filter((st) => st.name.trim() !== "");
     if (named.length === 0) {
@@ -142,6 +167,11 @@ export const CreateEvent = ({ isEditing = false }) => {
       whatsappNumber: formData.whatsappNumber,
       flyerImageUrl: formData.flyerImageUrl,
       bankQrImageUrl: formData.bankQrImageUrl,
+      // Demo row: slug is ignored server-side no matter what's sent, so it's
+      // harmless to include the (locked, unchanged) value here too.
+      slug: formData.slug,
+      isPublished: formData.isPublished,
+      salesOpen: formData.salesOpen,
       stages,
     };
 
@@ -209,6 +239,58 @@ export const CreateEvent = ({ isEditing = false }) => {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder={t("eventNamePlaceholder")}
                   />
+                </div>
+
+                <div className={s.field}>
+                  <label className={s.fieldLabel}>{t("eventSlugLabel")}</label>
+                  {isDemoEvent ? (
+                    <>
+                      <input type="text" value={formData.slug} disabled />
+                      <p className={s.demoNotice}>{t("eventIsDemoNotice")}</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className={s.slugField}>
+                        <span className={s.slugPrefix}>{t("eventSlugHint")}</span>
+                        <input
+                          type="text" required maxLength={80} value={formData.slug}
+                          onChange={(e) => {
+                            setFormData({ ...formData, slug: sanitizeSlugInput(e.target.value) });
+                            if (slugError) setSlugError("");
+                          }}
+                          placeholder="mi-evento"
+                        />
+                      </div>
+                      {slugError && <p className={s.fieldError}>{slugError}</p>}
+                    </>
+                  )}
+                </div>
+
+                <div className={s.fieldRow}>
+                  <label className={s.toggleRow}>
+                    <input
+                      type="checkbox"
+                      className={s.toggleInput}
+                      checked={formData.isPublished}
+                      onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                    />
+                    <span className={s.toggleText}>
+                      <span>{t("eventPublishedLabel")}</span>
+                      <span className={s.toggleHint}>{t("eventPublishedHint")}</span>
+                    </span>
+                  </label>
+                  <label className={s.toggleRow}>
+                    <input
+                      type="checkbox"
+                      className={s.toggleInput}
+                      checked={formData.salesOpen}
+                      onChange={(e) => setFormData({ ...formData, salesOpen: e.target.checked })}
+                    />
+                    <span className={s.toggleText}>
+                      <span>{t("eventSalesOpenLabel")}</span>
+                      <span className={s.toggleHint}>{t("eventSalesOpenHint")}</span>
+                    </span>
+                  </label>
                 </div>
 
                 <div className={s.field}>

@@ -3,6 +3,7 @@ import { SalesDashboard } from "../components/Dashboard/SalesDashboard";
 import { CheckInDashboard } from "../components/Dashboard/CheckInDashboard";
 import { useLanguage } from "../context/LanguageContext";
 import { useTickets } from "../context/TicketContext";
+import { useEvent } from "../context/EventContext";
 import { getStorageSizeInMB } from "../utils/storage";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChartLine, faDatabase } from "@fortawesome/free-solid-svg-icons";
@@ -11,16 +12,19 @@ import s from "./DashboardPage.module.css";
 export const DashboardPage = () => {
   const { t } = useLanguage();
   const { refreshFromServer } = useTickets();
+  const { eventId } = useEvent();
   const [activeTab, setActiveTab] = useState("sales");
 
   // Sales/check-in stats are derived from `tickets` in TicketContext. Pull
-  // the canonical list from the server on mount so the dashboard reflects
-  // every confirmed order, not just what was produced on this device.
-  // Explicit 'confirmed' (not relying on the server-side default) — stats
-  // must never silently include pending/rejected/expired rows.
+  // the canonical list from the server — scoped to the organizer's currently
+  // selected event — on mount and whenever that selection changes, so the
+  // dashboard reflects every confirmed order for THIS event, not just what
+  // was produced on this device (or a previously selected event). Explicit
+  // 'confirmed' (not relying on the server-side default) — stats must never
+  // silently include pending/rejected/expired rows.
   useEffect(() => {
-    refreshFromServer("confirmed");
-  }, [refreshFromServer]);
+    if (eventId) refreshFromServer("confirmed", eventId);
+  }, [refreshFromServer, eventId]);
 
   const tabs = [
     { id: "sales", label: t("salesDashboard") },

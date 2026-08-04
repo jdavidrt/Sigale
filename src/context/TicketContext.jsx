@@ -20,6 +20,7 @@ export const fromServerTicket = (row) => {
   return {
     ticketId: `t-${row.id}`,
     dbId: row.id,
+    eventId: row.eventId ?? null,
     buyerName: row.holderName || "",
     buyerId: row.holderIdNumber || "",
     buyerPhone: phone,
@@ -211,20 +212,22 @@ export const TicketProvider = ({ children }) => {
 
   /**
    * Pull the canonical ticket list from the server and replace the
-   * in-memory cache. Called by the Tickets and Dashboard pages on mount.
-   * Quietly no-ops if the organizer isn't logged in — falls back to
-   * whatever localStorage has.
+   * in-memory cache. Called by the Tickets and Dashboard pages on mount and
+   * whenever the organizer's selected event changes. Quietly no-ops if the
+   * organizer isn't logged in, or if no event is selected yet (multi-event:
+   * there's no more implicit "the one active event" to fall back to).
    *
    * `status` is passed straight through to admin.listTickets() — the
    * server defaults to 'confirmed' when omitted, so callers that need
    * confirmed-only stats (Dashboard) can rely on the default, and callers
    * that want the full lifecycle (Tickets' status filter) pass an
-   * explicit value or 'all'.
+   * explicit value or 'all'. `eventId` scopes the fetch to one event.
    */
-  const refreshFromServer = useCallback(async (status) => {
+  const refreshFromServer = useCallback(async (status, eventId) => {
     if (!isLoggedIn()) return { ok: false, reason: "not-logged-in" };
+    if (!eventId) return { ok: false, reason: "no-event-selected" };
     try {
-      const rows = await admin.listTickets(status);
+      const rows = await admin.listTickets(status, eventId);
       const mapped = Array.isArray(rows) ? rows.map(fromServerTicket) : [];
       const fresh = loadFromStorage() || data;
       setData({ ...fresh, tickets: mapped });
@@ -261,12 +264,14 @@ export const TicketProvider = ({ children }) => {
     [stats, data.tickets]
   );
 
-  // Deletes all confirmed purchases + tickets on the server (restores stage
-  // inventory), then wipes the local cache. Falls back to local-only wipe
-  // when not logged in (offline / dev mode).
-  const clearAllTickets = useCallback(async () => {
+  // Deletes ALL of one event's tickets on the server (every status, restores
+  // stage inventory), then wipes the local cache. Scoped by eventId now that
+  // several events can be selling at once — this must never wipe another
+  // event's tickets. Falls back to local-only wipe when not logged in
+  // (offline / dev mode).
+  const clearAllTickets = useCallback(async (eventId) => {
     if (isLoggedIn()) {
-      await admin.deleteAllPurchases();
+      await admin.deleteAllPurchases(eventId);
     }
     const fresh = loadFromStorage() || data;
     setData({ ...fresh, tickets: [] });

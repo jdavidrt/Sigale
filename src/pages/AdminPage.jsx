@@ -110,7 +110,7 @@ function Login({ onIn }) {
 // ── Panel (post-login) ─────────────────────────────────────────────────────────
 function Panel({ onLogout }) {
   const { t } = useLanguage();
-  const { event, eventLoading, refreshEvent } = useEvent();
+  const { event, eventLoading, refreshEvent, organizerEvents } = useEvent();
 
   if (eventLoading) {
     return (
@@ -123,8 +123,19 @@ function Panel({ onLogout }) {
   }
 
   if (!event) {
-    // No event yet → take the organizer to the dedicated create form.
-    return <Navigate to="/create-event" replace />;
+    // Multi-event: `event` can be transiently null while OrganizerMenu's
+    // mount-time refreshOrganizerEvents() is still in flight, so only bounce
+    // to the create form once we know for sure the organizer has no events.
+    if (organizerEvents.length === 0) {
+      return <Navigate to="/create-event" replace />;
+    }
+    return (
+      <Screen seed={11}>
+        <div className="scr-body pad" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+          <p className="muted">{t('loadingEvent')}</p>
+        </div>
+      </Screen>
+    );
   }
 
   return <Home event={event} onLogout={onLogout} onRefreshEvent={refreshEvent} />;
@@ -153,9 +164,10 @@ function Home({ event, onLogout, onRefreshEvent }) {
   // pull the confirmed ticket rows — the purchases aggregate has no
   // validationHash, so the share drawer needs the per-seat rows to build QRs.
   const load = useCallback(async () => {
+    if (!event?.id) return;
     const [purchaseRows, ticketRows] = await Promise.all([
-      admin.list(),
-      admin.listTickets('confirmed').catch(() => []),
+      admin.list({ eventId: event.id }),
+      admin.listTickets('confirmed', event.id).catch(() => []),
     ]);
     setRows(purchaseRows);
     const map = {};
@@ -163,7 +175,7 @@ function Home({ event, onLogout, onRefreshEvent }) {
       (map[r.orderId] ||= []).push(fromServerTicket(r));
     }
     setTicketsByOrder(map);
-  }, []);
+  }, [event?.id]);
 
   useEffect(() => { load(); }, [load]);
 

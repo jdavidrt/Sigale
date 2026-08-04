@@ -5,14 +5,13 @@
  * Body: single column mobile, two-column grid (lineup | tickets+venue) desktop.
  */
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useEvent } from '../context/EventContext';
 import { StarField } from '../components/ui/StarField';
 import { Ic } from '../components/ui/Ic';
-import { SAMPLE_EVENT, resolveActiveStage, stageCupos } from '../utils/sampleEvent';
+import { resolveActiveStage, stageCupos } from '../utils/sampleEvent';
 import { formatCurrency, formatTo12Hour, parseLocalDate } from '../utils/timeFormat';
 import { whatsappLink } from '../api/purchases';
-import { ONLINE_SALES_OPEN } from '../config';
 import flyerImg from '../assets/flyer.png';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -45,13 +44,22 @@ const FLOATS = [
 
 export function LandingPage() {
   const navigate = useNavigate();
-  const { event: ctxEvent, eventLoading, refreshEvent } = useEvent();
+  const { slug } = useParams();
+  const { event: ctxEvent, eventLoading, loadEventBySlug } = useEvent();
 
-  // Re-query ticket availability every time the user lands here so they
-  // never see a stale stage or accidentally try to buy a sold-out ticket.
+  // Fresh fetch by slug every time the user lands here so they never see a
+  // stale stage or accidentally try to buy a sold-out ticket. A slug that
+  // doesn't resolve (404) bounces back to the root landing grid rather than
+  // stranding the visitor on a dead URL.
   useEffect(() => {
-    refreshEvent();
-  }, [refreshEvent]);
+    let cancelled = false;
+    loadEventBySlug(slug).then((e) => {
+      if (!cancelled && !e) navigate('/', { replace: true });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, loadEventBySlug, navigate]);
 
   // All hooks must run on every render — declare BEFORE any conditional return.
   // (Violating this triggers React error #310 when `eventLoading` flips.)
@@ -133,8 +141,12 @@ export function LandingPage() {
   // If upcoming stages still have inventory, show them as "Próximamente" with no buy button.
   const isSoldOut = !active && upcoming.length === 0 && (event.stages || []).some((s) => s.status === 'sold_out' || s.status === 'closed');
   const flyerSrc = event.flyerImageUrl || flyerImg;
+  // Per-event replacement for the retired global ONLINE_SALES_OPEN flag. The
+  // demo always shows the buy flow (its wizard simulates the purchase
+  // locally) regardless of its own salesOpen value.
+  const salesOpenForBuyer = event.salesOpen || event.isDemo;
 
-  const goBuy = () => navigate('/compra');
+  const goBuy = () => navigate(`/${event.slug}/compra`);
 
   const dateLabel = event.date
     ? `${parseLocalDate(event.date)?.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })} \xB7 ${formatTo12Hour(event.entranceTime || '00:00')}`
@@ -213,7 +225,7 @@ export function LandingPage() {
                     </div>
                     {/* Cupos count only means something while online sales are open.
                         With box-office-only sales it would read a misleading "0 cupos". */}
-                    {ONLINE_SALES_OPEN && (
+                    {salesOpenForBuyer && (
                       <div style={{ textAlign: 'center' }}>
                         <div className="serif" style={{ fontSize: 36, color: '#fff' }}>{stageCupos(active)}</div>
                         <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.75)' }}>{stageCupos(active) === 1 ? 'cupo' : 'cupos'}</div>
@@ -232,7 +244,7 @@ export function LandingPage() {
                     ))}
                   </div>
                 )}
-                {ONLINE_SALES_OPEN ? (
+                {salesOpenForBuyer ? (
                   active ? (
                     <button className="btn btn-buy" onClick={goBuy}><Ic n="ticket" s={20} /> Comprar boleta</button>
                   ) : isSoldOut ? (

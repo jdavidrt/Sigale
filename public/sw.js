@@ -6,7 +6,7 @@
 //   3. Poisoned cache entries are detected and purged
 //   4. Fetch requests have timeouts to survive iOS suspension
 
-const CACHE_NAME = 'sigale-v2';
+const CACHE_NAME = 'sigale-v3';
 const NAVIGATION_TIMEOUT_MS = 4000;
 const urlsToCache = [
   '/',
@@ -308,8 +308,15 @@ async function handleCrossOrigin(request) {
     const response = await fetch(request);
     // Only http(s) requests are cacheable. Browser-extension and other
     // non-http schemes throw on cache.put(), so skip them silently.
-    const scheme = new URL(request.url).protocol;
-    if (isCacheableResponse(response) && (scheme === 'http:' || scheme === 'https:')) {
+    // /api/ responses are NEVER cached (multi-event): this handler is
+    // network-first, so a cache entry only ever serves when the live fetch
+    // fails — for event/stage data that means a flaky connection could show
+    // yesterday's cuposRestantes or an unpublished/deleted event, which is
+    // exactly the wrong failure mode. Better to surface the network error.
+    const url = new URL(request.url);
+    const scheme = url.protocol;
+    const isApi = url.pathname.startsWith('/api/');
+    if (isCacheableResponse(response) && !isApi && (scheme === 'http:' || scheme === 'https:')) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }

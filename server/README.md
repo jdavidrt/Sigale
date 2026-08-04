@@ -52,6 +52,7 @@ re-run.
 | `005_tickets_merge_schema.sql` | Creates `tickets_v2`, the merged order+seat schema | **Superseded by the cutover** — that table is now simply `tickets` |
 | `006_guest_passes.sql` | Creates `guest_passes` (artist/crew/courtesy roster) | **Live** |
 | `007_single_active_stage.sql` | Adds the `closed` stage status + `uqOneActiveStagePerEvent` unique index (via the `activeFlag` generated column) | **Live** |
+| `008_multi_event.sql` | Adds `events.slug` (+ `uqEventSlug`), `isPublished`, `isDemo`, `salesOpen`; creates `order_counter` (persisted orderId high-water mark) seeded from `MAX(tickets.orderId)` | **Live** |
 
 **Do not delete or renumber `001`–`005`.** They are kept in place so the ledger
 and the runner's self-heal logic stay coherent; the runner marks them applied
@@ -76,8 +77,9 @@ never be run again.**
 ⚠️ **Known gap: a fresh, empty `sigale` database does not bootstrap correctly.**
 `001_init.sql` creates the *pre-merge* `tickets` table and nothing performs the
 rename, so the controllers would query the wrong shape. Standing up a brand-new
-environment requires writing a `008_*` migration that creates the merged table
-under its final name. Production is unaffected.
+environment requires writing a `009_*` migration that creates the merged table
+under its final name (renumbered from the originally-earmarked `008` once that
+slot was claimed by `008_multi_event.sql`). Production is unaffected.
 
 Full column reference: `docs/architecture/TICKETS_SCHEMA.md`.
 

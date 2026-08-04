@@ -112,9 +112,14 @@ export const adminApi = {
   // Ticket rows joined with their stage. `status` defaults to 'confirmed'
   // server-side when omitted — pass a comma-separated list or 'all' to see
   // pending/rejected/expired orders too (used by /tickets' status filter).
-  listTickets: (status) => {
-    const qs = status ? `?status=${encodeURIComponent(status)}` : '';
-    return api.get(`/api/admin/tickets${qs}`, { headers: authHeader() });
+  // `eventId` is optional (deploy-window compat) — the new frontend always
+  // sends it so the panel only ever sees the currently selected event.
+  listTickets: (status, eventId) => {
+    const params = {};
+    if (status) params.status = status;
+    if (eventId) params.eventId = eventId;
+    const qs = new URLSearchParams(params).toString();
+    return api.get(`/api/admin/tickets${qs ? `?${qs}` : ''}`, { headers: authHeader() });
   },
   updateTicket: (id, patch) => api.patch(`/api/admin/tickets/${id}`, patch, { headers: authHeader() }),
   // Move a confirmed ticket to another stage of the same event. Rebalances
@@ -123,7 +128,10 @@ export const adminApi = {
   updateTicketStage: (id, stageId) =>
     api.patch(`/api/admin/tickets/${id}/stage`, { stageId }, { headers: authHeader() }),
   deleteTicket: (id) => api.del(`/api/admin/tickets/${id}`, { headers: authHeader() }),
-  deleteAllPurchases: () => api.del('/api/admin/purchases', { headers: authHeader() }),
+  // Wipes ALL of one event's tickets (every status) and restores its stage
+  // inventory — scoped by eventId now that several events can sell at once.
+  deleteAllPurchases: (eventId) =>
+    api.del(`/api/admin/purchases?eventId=${encodeURIComponent(eventId)}`, { headers: authHeader() }),
 };
 
 // ── Facade the UI imports. Flipped to real API (backend now live). ─────────────
@@ -145,11 +153,11 @@ export const admin = {
   walkIn: async (payload) => {
     return adminApi.walkIn(payload);
   },
-  listTickets: async (status) => adminApi.listTickets(status),
+  listTickets: async (status, eventId) => adminApi.listTickets(status, eventId),
   updateTicket: async (id, patch) => adminApi.updateTicket(id, patch),
   updateTicketStage: async (id, stageId) => adminApi.updateTicketStage(id, stageId),
   deleteTicket: async (id) => adminApi.deleteTicket(id),
-  deleteAllPurchases: async () => adminApi.deleteAllPurchases(),
+  deleteAllPurchases: async (eventId) => adminApi.deleteAllPurchases(eventId),
 };
 
 export default admin;

@@ -21,6 +21,7 @@ export function FlowShell({
   onBack,
   footnote,
   ghost,
+  banner,
 }) {
   return (
     <Screen seed={30 + step}>
@@ -38,6 +39,10 @@ export function FlowShell({
         <div className="serif" style={{ fontSize: 18, color: 'var(--cream)' }}>Sígale</div>
         <div style={{ width: 44 }} />
       </div>
+
+      {/* Persistent, cross-step notice (currently only "Modo demostración") —
+          rendered once here so every step gets it without repeating markup. */}
+      {banner}
 
       <div className="flow-wrap">
         <div className="pad" style={{ position: 'relative', zIndex: 2 }}>

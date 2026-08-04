@@ -38,6 +38,10 @@ function toSqlDateTime(date, time) {
 /** App event shape -> API request payload (used by create/update). */
 export function toApiEventPayload(event) {
   return {
+    // Absent/undefined is valid — the server treats a missing slug as NULL
+    // (deploy-window compat). isDemo is never sent: it's only ever set by
+    // the one-off prod flip, never through this form.
+    slug: event.slug || undefined,
     name: event.name,
     description: event.description || null,
     artists: Array.isArray(event.artists) ? event.artists : [],
@@ -52,6 +56,8 @@ export function toApiEventPayload(event) {
     flyerImageUrl: event.flyerImageUrl || null,
     bankQrImageUrl: event.bankQrImageUrl || null,
     whatsappNumber: event.whatsappNumber || null,
+    isPublished: !!event.isPublished,
+    salesOpen: !!event.salesOpen,
     stages: (event.stages || []).map((s, i) => ({
       // id is load-bearing on edit: updateEvent matches submitted stages to
       // existing rows by id (UPDATE in place, preserving sold/reserved/status).
@@ -88,6 +94,7 @@ export function fromApiEvent(apiEvent) {
   }));
   return {
     id: apiEvent.id,
+    slug: apiEvent.slug || '',
     name: apiEvent.name,
     description: apiEvent.description || '',
     artists: apiEvent.artists || [],
@@ -99,11 +106,27 @@ export function fromApiEvent(apiEvent) {
     flyerImageUrl: apiEvent.flyerImageUrl || '',
     bankQrImageUrl: apiEvent.bankQrImageUrl || '',
     whatsappNumber: apiEvent.whatsappNumber || '',
-    isActive: !!apiEvent.isActive,
+    isActive: !!apiEvent.isActive, // retired semantics — column stays, nothing new reads/writes it
+    isPublished: !!apiEvent.isPublished,
+    isDemo: !!apiEvent.isDemo,
+    salesOpen: !!apiEvent.salesOpen,
     stages,
     activeStage: apiEvent.activeStage || null,
     // back-compat for legacy consumers (Home, TicketContext stats)
     ticketTypes: deriveTicketTypes(stages),
+  };
+}
+
+/** Lightweight landing-grid row (GET /api/events, GET /api/events/all) -> app shape. */
+export function fromApiEventListItem(row) {
+  return {
+    id: row.id,
+    slug: row.slug || '',
+    name: row.name,
+    venue: row.venue,
+    flyerImageUrl: row.flyerImageUrl || '',
+    isDemo: !!row.isDemo,
+    date: String(row.eventDate || '').split(' ')[0] || '',
   };
 }
 
@@ -117,10 +140,16 @@ export function deriveTicketTypes(stages) {
 }
 
 export const eventsApi = {
-  /** GET /api/events/active — the single active event. */
+  /** GET /api/events/active — deploy-window compat only; the old "one active event" resolver. */
   getActive: () => api.get('/api/events/active').then(fromApiEvent),
   /** GET /api/events/:id */
   getById: (id) => api.get(`/api/events/${id}`).then(fromApiEvent),
+  /** GET /api/events/by-slug/:slug — public, resolves an event by its URL slug. */
+  getBySlug: (slug) => api.get(`/api/events/by-slug/${encodeURIComponent(slug)}`).then(fromApiEvent),
+  /** GET /api/events — public, published events only (root landing grid). */
+  list: () => api.get('/api/events').then((rows) => (rows || []).map(fromApiEventListItem)),
+  /** GET /api/events/all — organizer, every event regardless of isPublished (event selector). */
+  listAll: (opts) => api.get('/api/events/all', opts).then((rows) => (rows || []).map(fromApiEventListItem)),
   /** POST /api/events — organizer create. `opts` carries the Basic auth header. */
   create: (event, opts) => api.post('/api/events', toApiEventPayload(event), opts).then(fromApiEvent),
   /** PUT /api/events/:id — organizer edit. `opts` carries the Basic auth header. */

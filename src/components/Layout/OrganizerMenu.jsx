@@ -8,10 +8,12 @@
  * This is the single organizer nav surface; update the LINKS list below when
  * adding a tool.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Ic } from '../ui/Ic';
 import { useLanguage } from '../../context/LanguageContext';
+import { useEvent } from '../../context/EventContext';
+import { EventSelector } from './EventSelector';
 
 // Destination list. Icons are Astromelias `Ic` glyph names. /admin is the
 // single organizer home — there's no longer a separate /admin/create page.
@@ -29,8 +31,18 @@ const LINKS = [
 export function OrganizerMenu({ onLogout }) {
   const [open, setOpen] = useState(false);
   const { language, toggleLanguage } = useLanguage();
+  const { refreshOrganizerEvents } = useEvent();
   const location = useLocation();
   const label = (l) => (language === 'en' ? l.en : l.es);
+
+  // OrganizerMenu is the one chrome shared by every organizer page (both
+  // AdminLayout-wrapped pages and the hand-rolled /admin + /scan topbars), so
+  // it's the natural place to populate + restore the selected event — run
+  // unconditionally on mount, not gated behind the slide-out panel being open.
+  useEffect(() => {
+    refreshOrganizerEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -80,6 +92,8 @@ export function OrganizerMenu({ onLogout }) {
                 <Ic n="plus" s={18} style={{ transform: 'rotate(45deg)' }} />
               </button>
             </div>
+
+            <EventSelector />
 
             {LINKS.map((l) => {
               const active = location.pathname === l.to;

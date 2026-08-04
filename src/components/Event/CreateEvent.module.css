@@ -254,6 +254,60 @@
   flex-shrink: 0;
 }
 
+/* Multi-event (2.0) — slug prefix + isPublished/salesOpen toggles */
+.slugField {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.slugPrefix {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  padding: var(--space-4);
+  background: var(--color-tint-primary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-primary-sm);
+}
+
+.toggleInput {
+  min-height: auto;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.toggleText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggleHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.demoNotice {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: calc(var(--space-2) * -1) 0 var(--space-2);
+}
+
+.fieldError {
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  margin: calc(var(--space-2) * -1) 0 var(--space-2);
+}
+
 .dangerCheckboxText {
   font-size: var(--text-base);
   color: var(--color-error-text-light);

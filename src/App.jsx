@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams, useNavigate } from "react-router-dom";
 
 // Style foundation — import order is intentional:
 // tokens → global → utilities → astromelias (each layer builds on the previous)
@@ -21,6 +21,7 @@ const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ 
 const GuestPassesPage = lazy(() => import("./pages/GuestPassesPage").then((m) => ({ default: m.GuestPassesPage })));
 const DoorListPage = lazy(() => import("./pages/DoorListPage").then((m) => ({ default: m.DoorListPage })));
 // 2.0 public routes (Astromelias) — rendered outside the organizer Layout.
+const EventsListPage = lazy(() => import("./pages/EventsListPage").then((m) => ({ default: m.EventsListPage })));
 const LandingPage = lazy(() => import("./pages/LandingPage").then((m) => ({ default: m.LandingPage })));
 const PurchaseFlowPage = lazy(() => import("./pages/PurchaseFlowPage").then((m) => ({ default: m.PurchaseFlowPage })));
 const AdminPage = lazy(() => import("./pages/AdminPage").then((m) => ({ default: m.AdminPage })));
@@ -30,6 +31,7 @@ import { FLYER_IMAGE_BASE64 } from "./assets/flyerImage";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import { usePageVisibility } from "./hooks/usePageVisibility";
 import { isLoggedIn } from "./api/admin";
+import { eventsApi } from "./api/events";
 
 // Organizer chrome (Astromelias topbar + OrganizerMenu sidebar) for every
 // admin-tooling route. Each child page renders inside the dark Screen.
@@ -47,6 +49,32 @@ function RequireAuth({ children }) {
   return isLoggedIn() ? children : <Navigate to="/admin" replace />;
 }
 
+// Legacy /evento/:id links (pre-2.0 multi-event) → /:slug. Falls back to the
+// root landing when the event has no slug (a deploy-window-created event) or
+// the id doesn't resolve at all — never gets stuck on a dead URL.
+function LegacyEventRedirect() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let cancelled = false;
+    eventsApi
+      .getById(id)
+      .then((e) => {
+        if (cancelled) return;
+        navigate(e?.slug ? `/${e.slug}` : "/", { replace: true });
+      })
+      .catch(() => {
+        if (!cancelled) navigate("/", { replace: true });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, navigate]);
+
+  return <div className="route-fallback">Loading…</div>;
+}
+
 function AppContent() {
   const { isVisible } = usePageVisibility();
 
@@ -61,17 +89,18 @@ function AppContent() {
   }, [isVisible]);
 
   return (
-    <LanguageProvider>
-      <EventProvider>
-        <TicketProvider>
-          <DialogProvider>
-            <BrowserRouter>
+    <BrowserRouter>
+      <LanguageProvider>
+        <EventProvider>
+          <TicketProvider>
+            <DialogProvider>
               <Suspense fallback={<div className="route-fallback">Loading…</div>}>
                 <Routes>
-                  {/* Public 2.0 routes — full-screen Astromelias, no organizer nav. */}
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/evento/:id" element={<LandingPage />} />
-                  <Route path="/compra" element={<PurchaseFlowPage />} />
+                  {/* Root landing — public grid of every published event
+                      (multi-event: there is no more single "the" event). */}
+                  <Route path="/" element={<EventsListPage />} />
+                  <Route path="/compra" element={<Navigate to="/" replace />} />
+                  <Route path="/evento/:id" element={<LegacyEventRedirect />} />
 
                   {/* /admin is the single organizer home (login + event hero +
                       purchase queue). Old /admin/create URL now redirects here. */}
@@ -92,15 +121,27 @@ function AppContent() {
                     <Route path="/tickets" element={<TicketsPage />} />
                     <Route path="/validate-qr" element={<Navigate to="/scan" replace />} />
                     <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Route>
+
+                  {/* Public per-event routes — every event lives at /:slug
+                      (/demo is just a slug like any other). react-router
+                      ranks static path segments over dynamic ones regardless
+                      of declaration order, so these never swallow the
+                      literal routes above (/admin, /scan, /tickets, …). */}
+                  <Route path="/:slug" element={<LandingPage />} />
+                  <Route path="/:slug/compra" element={<PurchaseFlowPage />} />
+
+                  {/* Catch-all lives at the top level (not inside RequireAuth)
+                      so a logged-out visitor to an unknown URL lands on the
+                      public root, not on /admin. */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </Suspense>
-            </BrowserRouter>
-          </DialogProvider>
-        </TicketProvider>
-      </EventProvider>
-    </LanguageProvider>
+            </DialogProvider>
+          </TicketProvider>
+        </EventProvider>
+      </LanguageProvider>
+    </BrowserRouter>
   );
 }
 

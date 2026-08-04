@@ -9,8 +9,9 @@ import { formatCurrency } from "../../utils/timeFormat";
 import { parseSingleNameAndId } from "../../utils/ticketPasteParser";
 import { QRDisplay } from "./QRDisplay";
 import { FieldLabel } from "../ui/FieldLabel";
+import { EmptyStateCard } from "../ui/EmptyStateCard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTicketSimple, faPenToSquare, faUser, faIdCard, faPhone, faChevronDown, faPlusCircle, faCheckCircle, faPaste } from "@fortawesome/free-solid-svg-icons";
+import { faTicketSimple, faPenToSquare, faUser, faIdCard, faPhone, faChevronDown, faPlusCircle, faCheckCircle, faPaste, faLock } from "@fortawesome/free-solid-svg-icons";
 import s from "./TicketForm.module.css";
 import btn from "../Common/Button.module.css";
 
@@ -126,7 +127,7 @@ export const TicketForm = () => {
           checkInTime: null,
         });
         // Keep the in-memory list in sync so /tickets reflects the new order.
-        refreshFromServer();
+        refreshFromServer('confirmed', event.id);
         setFormData({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "" });
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -147,6 +148,29 @@ export const TicketForm = () => {
   };
 
   const handleNewTicket = () => setCreatedTicket(null);
+
+  // Multi-event: `event` can be transiently null right after login/selector
+  // mount, and the demo event never accepts walk-in sales server-side
+  // (assertNotDemo) — hide the form outright rather than let the organizer
+  // fill it out only to hit a 409 on submit.
+  if (!event) {
+    return (
+      <div className={s.page}>
+        <div className={s.container}>
+          <EmptyStateCard icon={<FontAwesomeIcon icon={faTicketSimple} />} title={t("loadingEvent")} description="" />
+        </div>
+      </div>
+    );
+  }
+  if (event.isDemo) {
+    return (
+      <div className={s.page}>
+        <div className={s.container}>
+          <EmptyStateCard icon={<FontAwesomeIcon icon={faLock} />} title={t("demoReadOnlyTitle")} description={t("demoReadOnlyDesc")} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={s.page}>

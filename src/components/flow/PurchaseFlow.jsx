@@ -15,19 +15,24 @@
  * rewind to change quantity or holder data.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useEvent } from '../../context/EventContext';
 import { useDialog } from '../../context/DialogContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Ic } from '../ui/Ic';
 import { FlowShell } from './FlowShell';
 import { purchases, whatsappLink } from '../../api/purchases';
 import { Screen } from '../ui/Screen';
-import { SAMPLE_EVENT, resolveActiveStage, stageCupos } from '../../utils/sampleEvent';
+import { resolveActiveStage, stageCupos } from '../../utils/sampleEvent';
 import { formatCurrency } from '../../utils/timeFormat';
-import { ONLINE_SALES_OPEN } from '../../config';
 
 const MAX_QTY = 6;
 const COUNTDOWN_SECONDS = 20 * 60; // cosmetic only (real hold is 24h server-side)
+// Demo mode never calls the server — this fake order number is hardcoded to
+// match the real seeded "Invitado Demo" walk-in's orderId (Step 2.3 of
+// MULTI_EVENT_PLAN.md, run once against production before the demo flag is
+// flipped). Update this constant once that one-off records the real value.
+const DEMO_ORDER_NUMBER = 100;
 
 // ── Field validators (regex-driven) ─────────────────────────────────────────────
 const RE_NUMERIC = /^[0-9]+$/;
@@ -57,8 +62,10 @@ function mmss(total) {
 
 export function PurchaseFlow() {
   const navigate = useNavigate();
-  const { event: ctxEvent, eventLoading } = useEvent();
+  const { slug } = useParams();
+  const { event: ctxEvent, eventLoading, loadEventBySlug } = useEvent();
   const { openCustom } = useDialog();
+  const { t } = useLanguage();
 
   // All hooks first — they must run on every render in the same order.
   const [step, setStep] = useState(1);
@@ -71,20 +78,28 @@ export function PurchaseFlow() {
   const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
   const [keyCopied, setKeyCopied] = useState(false);
 
-  // Derived state (no hooks). Uses sample event as a placeholder for the
-  // initial render; the guards below block the flow until ctxEvent loads.
-  const event = ctxEvent || SAMPLE_EVENT;
+  // With EventContext's auto-getActive() gone (multi-event), a refresh or
+  // deep link straight to /:slug/compra must resolve the event itself rather
+  // than assuming LandingPage already loaded it.
+  useEffect(() => {
+    loadEventBySlug(slug);
+  }, [slug, loadEventBySlug]);
+
+  // Derived state (no hooks). `event` may be null before the fetch resolves —
+  // resolveActiveStage/stageCupos both tolerate that — the guards below block
+  // the flow's real UI until hasRealEvent is true.
+  const event = ctxEvent;
   const stage = resolveActiveStage(event);
   const cupos = stageCupos(stage);
   const maxQty = Math.max(1, Math.min(MAX_QTY, cupos));
 
-  // Two failure modes the original code masked by silently falling back to the
-  // SAMPLE_EVENT (which has no DB ids): (1) the real event is still loading,
-  // (2) there is no active event at all. Surface both before we try to reserve
-  // — otherwise the reservation POST goes out with stageId: null and the
-  // server (correctly) returns 400 "Faltan campos obligatorios de la compra".
   const hasRealEvent = !!ctxEvent && Number.isFinite(Number(ctxEvent.id));
   const hasRealStage = !!stage && Number.isFinite(Number(stage.id));
+  // Per-event replacement for the retired global ONLINE_SALES_OPEN flag. The
+  // demo always allows walking the wizard (it's simulated) regardless of its
+  // own salesOpen value.
+  const isDemo = !!ctxEvent?.isDemo;
+  const salesOpenForBuyer = !!ctxEvent && (ctxEvent.salesOpen || isDemo);
 
   const total = (Number(stage?.price) || 0) * qty;
 
@@ -127,6 +142,19 @@ export function PurchaseFlow() {
 
   const reserve = async () => {
     if (orderId || reserving) return;
+    // Demo mode never touches the server — the wizard is a simulation. The
+    // fake order number is hardcoded (DEMO_ORDER_NUMBER above) to match the
+    // real seeded "Invitado Demo" ticket, so the WhatsApp handoff on the
+    // terminal screen references an order the organizer can actually share
+    // back from /tickets.
+    if (isDemo) {
+      setReserving(true);
+      setReserveError('');
+      await new Promise((r) => setTimeout(r, 400)); // mirrors real reservation latency
+      setOrderId(DEMO_ORDER_NUMBER);
+      setReserving(false);
+      return;
+    }
     // Defensive guard — by this point hasRealEvent + hasRealStage are true,
     // but a stale state could still slip a non-numeric id through.
     const numericEventId = Number(event.id);
@@ -172,7 +200,7 @@ export function PurchaseFlow() {
       // resolve it and would strand the wizard with the order already reserved.
       openCustom((close) => <PaymentInfoModal onOk={close} />);
     }
-    if (step === 5 && orderId) {
+    if (step === 5 && orderId && !isDemo) {
       // Mark the payment as submitted and patch the contact info captured
       // in step 3 so the organizer sees the buyer's real method/contact +
       // holder names alongside the order.
@@ -193,7 +221,7 @@ export function PurchaseFlow() {
     ? null
     : () => {
       if (step > 1) setStep((s) => s - 1);
-      else navigate(`/evento/${event.id ?? 'sample'}`);
+      else navigate(`/${slug}`);
     };
 
   // ── Step 3 validation ────────────────────────────────────────────────────────
@@ -211,10 +239,31 @@ export function PurchaseFlow() {
 
   // Early returns AFTER all hooks (rules of hooks). Block the flow until the
   // real event finishes loading; show a friendly message if none exists.
-
-  // Online sales are closed — tickets are box-office only. Guard the direct
-  // /compra URL (there's no longer a link to it from the landing page).
-  if (!ONLINE_SALES_OPEN) {
+  if (eventLoading) {
+    return (
+      <Screen seed={42}>
+        <div className="scr-body pad" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+          <p className="muted">Cargando evento…</p>
+        </div>
+      </Screen>
+    );
+  }
+  if (!hasRealEvent) {
+    return (
+      <Screen seed={42}>
+        <div className="scr-body pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12, zIndex: 1 }}>
+          <div className="charly" style={{ width: 64, height: 64, fontSize: 28 }}>✦</div>
+          <div className="serif" style={{ fontSize: 22 }}>Aún no hay boletas disponibles</div>
+          <p className="muted" style={{ maxWidth: 280 }}>No hay un evento publicado todavía. Vuelve más tarde.</p>
+          <button className="btn ghost sm" onClick={() => navigate('/')}>Volver al inicio</button>
+        </div>
+      </Screen>
+    );
+  }
+  // Online sales are closed for this event — tickets are box-office only.
+  // Per-event replacement for the retired global ONLINE_SALES_OPEN flag;
+  // the demo bypasses this (salesOpenForBuyer is true whenever isDemo is).
+  if (!salesOpenForBuyer) {
     return (
       <Screen seed={42}>
         <div className="scr-body pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12, zIndex: 1 }}>
@@ -228,37 +277,45 @@ export function PurchaseFlow() {
       </Screen>
     );
   }
-  if (eventLoading) {
-    return (
-      <Screen seed={42}>
-        <div className="scr-body pad" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-          <p className="muted">Cargando evento…</p>
-        </div>
-      </Screen>
-    );
-  }
-  if (!hasRealEvent || !hasRealStage) {
+  if (!hasRealStage) {
     return (
       <Screen seed={42}>
         <div className="scr-body pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12, zIndex: 1 }}>
           <div className="charly" style={{ width: 64, height: 64, fontSize: 28 }}>✦</div>
           <div className="serif" style={{ fontSize: 22 }}>Aún no hay boletas disponibles</div>
-          <p className="muted" style={{ maxWidth: 280 }}>
-            {hasRealEvent
-              ? 'Ninguna etapa está activa en este momento. Vuelve más tarde.'
-              : 'No hay un evento publicado todavía. Vuelve más tarde.'}
-          </p>
+          <p className="muted" style={{ maxWidth: 280 }}>Ninguna etapa está activa en este momento. Vuelve más tarde.</p>
           <button className="btn ghost sm" onClick={() => navigate('/')}>Volver al inicio</button>
         </div>
       </Screen>
     );
   }
 
+  // Persistent cross-step notice, passed to every FlowShell below via its
+  // `banner` slot so it's visible on all 6 steps without repeating markup.
+  const demoBanner = isDemo ? (
+    <div
+      role="status"
+      style={{
+        margin: '0 var(--space-4, 16px)',
+        padding: '8px 14px',
+        borderRadius: 'var(--r-md)',
+        background: 'rgba(231,174,63,0.14)',
+        border: '1px solid rgba(231,174,63,0.35)',
+        color: 'var(--yellow)',
+        fontSize: 13,
+        fontWeight: 600,
+        textAlign: 'center',
+      }}
+    >
+      {t('demoModeBanner')}
+    </div>
+  ) : null;
+
   // ── Step 1 · Selección ────────────────────────────────────────────────────────
   if (step === 1) {
     return (
       <FlowShell step={1} kicker="Selección" title="Elige tu boleta" onNext={next} onBack={back}
-        cta="Continuar" ctaIcon={<Ic n="chevR" s={20} />}>
+        cta="Continuar" ctaIcon={<Ic n="chevR" s={20} />} banner={demoBanner}>
         <div className="tile purple" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div className="chip" style={{ background: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.24)', color: '#fff', marginBottom: 8 }}>Etapa activa</div>
@@ -313,7 +370,7 @@ export function PurchaseFlow() {
 
     return (
       <FlowShell step={2} kicker="Datos de boletas" title="¿Para quién son?" onNext={next} onBack={back}
-        cta={reserving ? 'Reservando…' : 'Continuar'} ctaIcon={<Ic n="chevR" s={20} />} ctaDisabled={!datosValid || reserving}>
+        cta={reserving ? 'Reservando…' : 'Continuar'} ctaIcon={<Ic n="chevR" s={20} />} ctaDisabled={!datosValid || reserving} banner={demoBanner}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {holders.map((h, i) => {
             const nameInvalid = h.name.length >= 4 && !validators.name(h.name);
@@ -389,7 +446,7 @@ export function PurchaseFlow() {
   if (step === 3) {
     return (
       <FlowShell step={3} kicker="Confirmar compra" title="Tu cupo está reservado" onNext={next} onBack={back}
-        cta="Ir a pagar" ctaIcon={<Ic n="chevR" s={20} />}>
+        cta="Ir a pagar" ctaIcon={<Ic n="chevR" s={20} />} banner={demoBanner}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 8 }}>
           <div className="charly" style={{ width: 76, height: 76, fontSize: 34 }}>✦</div>
           <div className="serif" style={{ fontSize: 22, color: 'var(--cream)', marginTop: 16 }}>Apartamos {qty} boleta{qty > 1 ? 's' : ''} para ti</div>
@@ -420,7 +477,7 @@ export function PurchaseFlow() {
   if (step === 4) {
     return (
       <FlowShell step={4} kicker="Realiza el pago" title="Transfiere y guarda el pantallazo" onNext={next} onBack={back}
-        cta="Ya transferí, continuar" ctaIcon={<Ic n="check" s={20} />}>
+        cta="Ya transferí, continuar" ctaIcon={<Ic n="check" s={20} />} banner={demoBanner}>
         <div className="tile" style={{ background: 'rgba(231,174,63,0.10)', border: '1px solid rgba(231,174,63,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px' }}>
           <div>
             <div className="label" style={{ color: 'var(--cream-dim)' }}>Tienes</div>
@@ -485,7 +542,7 @@ export function PurchaseFlow() {
             <Ic n="wa" s={20} fill /> Abrir WhatsApp
           </a>
         }
-        cta="Ya lo envié" ctaClass="btn ghost" onNext={next}>
+        cta="Ya lo envié" ctaClass="btn ghost" onNext={next} banner={demoBanner}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 12 }}>
           <div style={{ width: 84, height: 84, borderRadius: '50%', background: 'rgba(95,190,123,0.14)', border: '1px solid rgba(95,190,123,0.4)', display: 'grid', placeItems: 'center', color: 'var(--green)' }}>
             <Ic n="wa" s={40} fill />
@@ -515,23 +572,37 @@ export function PurchaseFlow() {
       total={total}
       delivery={delivery}
       navigate={navigate}
+      isDemo={isDemo}
+      event={event}
+      t={t}
+      banner={demoBanner}
     />
   );
 }
 
-function Step6({ orderId, stage, qty, total, delivery, navigate }) {
-  // Submit was already marked from step 5 → 6; this is a no-op if so.
+function Step6({ orderId, stage, qty, total, delivery, navigate, isDemo, event, t, banner }) {
+  // Submit was already marked from step 5 → 6; this is a no-op if so. Demo
+  // orders never touched the server in the first place — nothing to submit.
   useEffect(() => {
-    if (orderId) {
+    if (orderId && !isDemo) {
       purchases.submit(orderId).catch(() => { /* already submitted or transient */ });
     }
-  }, [orderId]);
+  }, [orderId, isDemo]);
 
   const methodLabel = delivery.method === 'email' ? 'correo' : 'WhatsApp';
 
   // navigate('/', { replace: true }) so the back button on the landing won't
   // pop the wizard back onto the stack — Ir a pagar really is final.
   const goHome = () => navigate('/', { replace: true });
+
+  // Demo-only: hands the visitor off to the organizer on WhatsApp so they can
+  // reply with the real seeded "Invitado Demo" QR from /tickets — the demo's
+  // order number is hardcoded (DEMO_ORDER_NUMBER) to match that seeded ticket.
+  const demoWaLink = isDemo && event?.whatsappNumber
+    ? `https://wa.me/${String(event.whatsappNumber).replace(/[^\d]/g, '')}?text=${encodeURIComponent(
+        t('demoConfirmMessage').replace('{orderId}', orderId),
+      )}`
+    : null;
 
   return (
     <FlowShell
@@ -542,6 +613,25 @@ function Step6({ orderId, stage, qty, total, delivery, navigate }) {
       cta="Volver al inicio"
       ctaIcon={<Ic n="home" s={20} />}
       onNext={goHome}
+      banner={banner}
+      footnote={demoWaLink ? (
+        <a
+          className="btn"
+          href={demoWaLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            textDecoration: 'none',
+            marginBottom: 10,
+            background: 'var(--green)',
+            borderColor: 'var(--green)',
+            color: '#fff',
+            boxShadow: '0 4px 14px rgba(95,190,123,0.35)',
+          }}
+        >
+          <Ic n="wa" s={20} fill /> {t('demoConfirmWhatsApp')}
+        </a>
+      ) : undefined}
     >
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 12 }}>
         <div style={{ width: 84, height: 84, borderRadius: '50%', background: 'rgba(95,190,123,0.14)', border: '1px solid rgba(95,190,123,0.4)', display: 'grid', placeItems: 'center', color: 'var(--green)' }}>
