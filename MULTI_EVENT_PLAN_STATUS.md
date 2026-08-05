@@ -7,11 +7,20 @@
 
 **STEP 1 (code) and STEP 2 (deploy) are complete.** Production runs the
 multi-event platform: the Astromelias row is the read-only demo at `/demo`,
-and the frontend is deployed. **STEP 3 is underway — Ring A is fully green
-and the "Girasoles" fixture exists (event id 3).** What remains is Ring B:
-the manual click-throughs that mint real data (a real purchase, walk-ins to
-trigger the sold-out cascade, the demo scan loop, delete-all), plus the
-`npm test` pass.
+and the frontend is deployed. **Ring A is fully green, and Ring B was run at
+the API level on 2026-08-05** with explicit user authorization to drive the
+production API — a real purchase on Girasoles (order #166) through
+create → submit → confirm → scan, all 7 demo read-only 409s, the full
+sold-out cascade + reject scenario, and per-event scoping across tickets,
+purchases and guest passes. **Every server-side Ring B behavior passed.**
+
+What is still open: (1) the **orderId-never-reused / delete-all** item, which
+the user chose to skip, so Girasoles rests with 5 test tickets and
+`salesOpen = 1`; (2) the **click-through half** of the items verified via the
+API — no React component was driven in a browser beyond read-only render
+probes; (3) the `/create-event` and `/edit` **form UI**; (4) the demo
+wizard's **steps 2–6** and its WhatsApp hand-off; (5) the **nightly rearm**,
+checkable 2026-08-06; (6) `npm test`.
 
 Exit gate passed: `npm run lint` → 0 errors (2 pre-existing unrelated
 warnings). `npm run build` → succeeds. Both grep audits from the plan's Step 1
@@ -217,7 +226,7 @@ the 2.4 flip populated it.
 
 ---
 
-## STEP 3 — testing & validation (Ring A ✅, Ring B pending)
+## STEP 3 — testing & validation (Ring A ✅, Ring B API-level ✅ / click-through pending)
 
 ### Girasoles fixture ✅ — event id **3**
 
@@ -259,23 +268,41 @@ confirming the per-event `salesOpen` gate end to end.
 
 Re-inspection after the negative probes confirmed they created nothing.
 
-### Ring B ⏳ — user-driven, nothing done yet
+### Ring B — run at the API level 2026-08-05 ✅ (one item skipped)
 
-Everything left needs a human to mint real data. In the plan's order: flip
-Girasoles' `salesOpen` via `/edit`; a real 6-step purchase on
-`/girasoles/compra` + confirm + scan; the demo's read-only 409s seen through
-the UI; the demo scan loop (`ok` → `already_used` → rearmed next day); the
-selector scoping every organizer page; filling Etapa 1 to trigger the
-sold-out cascade; and the orderId-never-reused check via delete-all.
+The user authorized driving the production API directly, overriding the
+plan's risk #7 ("only the user mints real rows"). Each item below was
+exercised through the **exact endpoints the UI calls**, with a read-back
+after every write. Scripts live in this session's scratchpad
+(`b1-salesopen`, `b2-purchase`, `b3-demo`, `b5-scoping`, `b6-stages`,
+`b7-orderid`, `render.mjs`).
 
-**One Ring B item is now differently scoped:** "create Girasoles via
-`/create-event`" no longer creates anything. Its server half is covered by
-Ring A, but **the form's inline validation has still never rendered in a
-browser** — the slug input's live regex/reserved-word feedback, the
-`sigale…/<slug>` prefix, and the `isPublished`/`salesOpen` toggle rows.
-Exercise those when creating the first real event, or by opening `/edit` on
-Girasoles (which is also the first real test of `updateEvent`'s stage
-reconciliation — watch that stages 31/32 keep their ids and statuses).
+**This covers all server-side behavior and none of the React components.**
+Where an item says "(API)", the server half passed and the click-through is
+still open.
+
+| Item | Result |
+|---|---|
+| `salesOpen` flip via `PUT /api/events/3` | ✅ 0→1; `isPublished` still 0; slug intact; **stages 31/32 kept ids, names, prices, statuses** — the stage-reconciliation path that caused the 2026-07-20 incident behaved |
+| Real purchase, order **#166** | ✅ reserve (qty 2) → `submitted` (contact + 2 holders persisted) → confirm (2 rows, ids 102/103, real HMACs; 2 reserved → 2 sold) |
+| Scan | ✅ `ok` → `already_used`; bogus hash → 404 `invalid` |
+| Admin scoping of that order | ✅ present under `eventId=3`, absent under `eventId=1` |
+| Demo read-only | ✅ **all 7** mutating handlers → 409 *"…solo lectura"*; 96 rows before = 96 after; ticket 97 unchanged |
+| Demo scan exemption | ✅ `ok` → `already_used` on ticket 97 |
+| Guest-pass scoping | ✅ pass added to Girasoles/"Los Cardos" landed on event 3, demo's 66 untouched; removed afterwards |
+| `status` defaults to `confirmed` | ✅ 75 of 96 demo rows — the `/dashboard` invariant |
+| **Sold-out cascade** | ✅ Etapa 1 filled 5/5 → promoted Etapa 2 to `active` and set Etapa 1 to **`closed`, not `sold_out`**; exactly one active stage throughout |
+| Walk-in on the superseded stage | ✅ 409 *"La etapa seleccionada no está disponible para venta"* |
+| **Reject on a `closed` stage** | ✅ 200, no `ER_DUP_ENTRY`, Etapa 1 not resurrected, no unsigned underflow (4s+0r/5) — the 2026-07-21 incident, reproduced and passed |
+| Demo as bystander | ✅ its three stages identical before and after the whole run |
+| Browser render (`/girasoles`, `/girasoles/compra`, `/`) | ✅ CTA flipped to "Comprar boleta"; wizard opens with no demo banner and "Máx. 6 por persona"; `/` still shows only the demo card |
+| **orderId never reused / delete-all** | ⛔ **SKIPPED — user decision** (see Outstanding) |
+
+**Still never rendered in a browser:** the `/create-event` and `/edit` form
+UI — the slug input's live regex/reserved-word feedback, the
+`sigale…/<slug>` prefix, and the `isPublished`/`salesOpen` toggle rows. The
+`salesOpen` flip above went through the API, so `updateEvent`'s stage
+reconciliation is now proven, but the form that drives it is not.
 
 ---
 
@@ -286,6 +313,9 @@ reconciliation — watch that stages 31/32 keep their ids and statuses).
   `src/components/Common/SlideToConfirm.jsx`).
 - `npm run build` → succeeds (only the pre-existing large-chunk-size
   advisory, unrelated).
+- **`npm test` → passing** (user-run, 2026-08-05). The anticipated
+  `TicketContext.refreshFromServer` signature fallout (`(status)` →
+  `(status, eventId)`) did not materialise into a failure.
 - Grep audit #1 (`grep -rl "useEvent(" src/`): 18 matches, one is a
   comment-only false positive (`TicketContext.jsx`); every real consumer
   destructures only keys that still exist on the context value.
@@ -335,19 +365,43 @@ reconciliation — watch that stages 31/32 keep their ids and statuses).
 
 **Still open:**
 
-- **Ring B in full** — see the STEP 3 section above. Everything left needs a
-  human to mint real data.
-- **`npm test` hasn't been run.** `TicketContext.refreshFromServer`'s
-  signature changed (`(status)` → `(status, eventId)`); its existing test may
-  need updating. CLAUDE.md says the user runs this pass, not the agent.
+- **⛔ orderId-never-reused is UNVERIFIED, and the hazard is live.** The user
+  chose to skip the delete-all on 2026-08-05. The scenario is specific: the
+  demo's `MAX(orderId)` is **165**, Girasoles now holds **166–169**, and
+  `order_counter.highWaterMark` still reads **164** (it only moves when
+  `deleteAllPurchases` runs). If Girasoles' rows are ever wiped and the
+  high-water mark does *not* advance, the next order is reissued **166** —
+  and since `validationHash = HMAC(orderId, seatIndex)`, ticket 102's
+  already-minted QR would admit a different, newer ticket. The code to
+  prevent this exists and looks correct; it has simply never been executed in
+  production. Ready-to-run script: `scratchpad/b7-orderid.mjs` (it wipes only
+  `eventId=3`, then asserts the bump, a strictly-higher next orderId, and a
+  404 on every orphaned hash).
+- **Girasoles rests dirty.** 5 test tickets (orders 166–169: 4 confirmed,
+  1 rejected), Etapa 1 `closed` 4/5, Etapa 2 `active` 0/10, and
+  **`salesOpen = 1`**. It is `isPublished = 0` so it is invisible on `/`, but
+  **anyone with the `/girasoles` link can place a real online order against a
+  fabricated event.** Set `salesOpen = 0` via `/edit` once the manual pass is
+  done. Note that after the cascade, Etapa 1 is `closed` — nothing restores
+  from `closed` by design, so if Girasoles is later edited into the first
+  real event, its stage line-up needs rebuilding rather than reopening.
+- **The click-through half of Ring B — partly closed 2026-08-05.** The user
+  walked the purchase wizard in the browser and reported it working, so the
+  6-step flow is verified in the UI as well as at the API. Still unclicked:
+  `EventSelector` across the organizer pages, the delete-all confirm dialog's
+  event name, the organizer pages' re-fetch-on-selection-change, and the demo
+  wizard's steps 2–6 + WhatsApp hand-off.
 - **The `/create-event` and `/edit` forms have never rendered in a browser.**
-  Server-side event create/update is well covered (Ring A + the fixture), but
-  the slug input's inline validation, the `sigale…/<slug>` prefix, and the
-  `isPublished`/`salesOpen` toggle rows are untested UI.
-- **The demo-rearm job is unverified.** `rearmDemoTickets` runs at
-  `'0 5 * * *'` (midnight Bogotá) and is registered but deliberately *not*
-  run at boot catch-up, so it can only be confirmed the day after a demo
-  ticket is scanned.
+  `updateEvent`'s stage reconciliation is now proven via the API (stages
+  31/32 survived the `salesOpen` flip intact), but the slug input's inline
+  validation, the `sigale…/<slug>` prefix, and the `isPublished`/`salesOpen`
+  toggle rows are untested UI.
+- **The demo-rearm job is unverified — checkable 2026-08-06.**
+  `rearmDemoTickets` runs at `'0 5 * * *'` (midnight Bogotá) and is
+  deliberately *not* run at boot catch-up. **Demo ticket 97 was left
+  `isUsed = 1` on purpose** so the job has something to reset: after midnight
+  Bogotá, `95cb147cf9b94482` should scan `ok` again instead of
+  `already_used`. Tickets 98–101 remain unscanned.
 
 **Resolved this session (kept for the audit trail):**
 
@@ -378,24 +432,30 @@ reconciliation — watch that stages 31/32 keep their ids and statuses).
 
 ## Next steps
 
-**Ring B is the only work left.** In the order the plan lays out:
+In rough priority order:
 
-1. Flip Girasoles' `salesOpen` via `/edit` — unblocked now that the pre-flip
-   409 probe has run. This is also the first real exercise of the event form
-   and of `updateEvent`'s stage reconciliation; **watch that stages 31/32
-   keep their ids and statuses**, since dropped stage ids caused the
-   2026-07-20 duplicate-active incident.
-2. A real 6-step purchase on `/girasoles/compra` → confirm at `/admin` →
-   ticket at `/tickets` → its QR scans "ok" at `/scan`.
-3. The demo's read-only 409s seen through the UI, and the demo scan loop
-   (`ok` → `already_used` → rearmed the following day).
-4. Selector scoping across every organizer page; fill Etapa 1 (5 walk-ins,
-   one per submit) to trigger the sold-out cascade; then delete-all on
-   Girasoles to prove orderIds never regress.
-5. `npm test`.
+1. **Tomorrow (2026-08-06): verify the rearm.** Scan `95cb147cf9b94482` at
+   `/scan` (or `POST /api/admin/scan`). `ok` = the nightly job works;
+   `already_used` = it did not run, and `rearmDemoTickets` needs
+   investigating on Render.
+2. **Decide on the delete-all.** Either run `scratchpad/b7-orderid.mjs` (or
+   "Delete All Tickets" with Girasoles selected, which is the same code path
+   plus the confirm dialog) to close the orderId invariant, or accept it as
+   unverified and record that. Until then Girasoles cannot reach the plan's
+   "zero tickets" resting state.
+3. **Close Girasoles' online sales** — `salesOpen = 0` via `/edit`, which
+   doubles as the browser exercise of the event form (slug input inline
+   validation, `sigale…/<slug>` prefix, both toggle rows).
+4. **The remaining click-throughs** (the purchase wizard is already done):
+   `EventSelector` across `/admin`, `/tickets`, `/dashboard`,
+   `/sell-tickets`, `/guest-passes`, `/lista-puerta`; the delete-all confirm
+   dialog naming the event; `/demo/compra` steps 2–6 and its WhatsApp
+   hand-off.
+5. ~~`npm test`~~ — **passing, 2026-08-05.**
 
 **Do not re-send Ring A's pre-flip probe** (`POST /api/purchases` on a
-Girasoles stage) once `salesOpen = 1` — it would mint a real pending order.
+Girasoles stage) — `salesOpen` is now **1**, so that request would succeed
+and mint a real pending order instead of the 409 it was written to assert.
 It is recorded as passed-once and must be skipped on any Ring A rerun.
 
 ---
@@ -470,3 +530,26 @@ UPDATE ticket_stages SET activatesAt=NULL WHERE eventId=1
                      AND activatesAt IS NOT NULL                -- 2.4, scheduler-proofing
 POST /api/events {slug:'girasoles', …}                          -- Step 3 fixture, event id 3
 ```
+
+Ring B, 2026-08-05 — all against **event 3 (Girasoles)** except the demo
+scan, which the nightly job undoes:
+
+```
+PUT    /api/events/3            salesOpen 0 -> 1
+POST   /api/purchases           {eventId:3, stageId:31, quantity:2}   -> order 166
+POST   /api/purchases/166/submitted
+POST   /api/admin/purchases/166/confirm                               -> tickets 102,103
+POST   /api/admin/scan          ticket 102's hash                     -> isUsed=1
+POST   /api/purchases           {stageId:31, quantity:1}              -> order 167 (rejected below)
+POST   /api/purchases/167/submitted
+POST   /api/admin/sales         {stageId:31, quantity:1} x2           -> orders 168, 169
+                                  ... the 2nd filled Etapa 1: stage 31 -> 'closed',
+                                      stage 32 cascade-promoted to 'active'
+POST   /api/admin/purchases/167/reject                                -> ticket 104 rejected
+POST   /api/admin/guest-passes  {eventId:3, band:'Los Cardos', …}     -> id 69, DELETED after
+POST   /api/admin/scan          demo ticket 97 (95cb147cf9b94482)     -> isUsed=1, rearms nightly
+```
+
+Net: Girasoles holds **5 ticket rows** (orders 166–169) and `salesOpen = 1`;
+the demo is unchanged except ticket 97's `isUsed` flag. Every write aimed at
+the demo was rejected 409 by `assertNotDemo`, as designed.

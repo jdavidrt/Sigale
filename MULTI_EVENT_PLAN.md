@@ -228,34 +228,46 @@ Against the built frontend — **all verified 2026-08-05 against the deployed si
 
 Ordered as a coherent test script — later items build on the fixture state earlier ones leave behind.
 
+> **Executed 2026-08-05 at the API level, not by clicking.** With explicit user
+> authorization to drive the production API, the agent ran every Ring B item
+> below through the exact endpoints the UI calls (`POST /api/purchases` →
+> `/submitted` → `/admin/purchases/:id/confirm` → `/admin/scan`, etc.), rather
+> than through a browser. **What that covers:** all server-side behavior —
+> guards, inventory transitions, scoping, 409 messages. **What it does not
+> cover:** the React components that call those endpoints. Items are marked
+> `[x] (API)` where the server half passed but the click-through is still
+> open. Risk #7's "only the user mints real rows" rule was overridden by the
+> user for this pass.
+
 **Fixture creation + form validation:**
 - [~] ~~Create Girasoles via `/create-event`~~ — **the event now exists (id 3), created through the API instead**, so this item no longer creates anything. What it was really testing splits in two: the *server's* slug rejection is now covered in Ring A (both 409s, distinct messages), but **the form's inline validation is still untested** — the slug input's live regex/reserved-word feedback, the `sigale…/<slug>` prefix styling, and the `isPublished`/`salesOpen` toggle rows have never been rendered in a browser. Exercise them when creating the first real event, or by opening `/edit` on Girasoles.
 - [x] `/girasoles` loads by direct URL while absent from `/` (soft-launch) — verified in Ring A.
-- [ ] Flip `salesOpen` on via `/edit` (Ring A's pre-flip 409 probe has run, so this is unblocked) → toggle round-trips. **This is also the first real exercise of the edit form**, including its stage-reconciliation path — worth watching that Etapa 1/2 keep their ids (31/32) and statuses.
+- [x] **(API)** Flip `salesOpen` on via `PUT /api/events/3` with the exact payload `toApiEventPayload` builds → `salesOpen 0 → 1`, `isPublished` still 0, slug still `girasoles`. **Stage reconciliation held**: 31/32 kept their ids, names, prices and statuses (`active` / `upcoming`). Confirmed in the browser too — `/girasoles` flipped from "Adquiere tu entrada en taquilla" to "Comprar boleta". *The `/edit` form UI itself is still unexercised.*
 
 **Second event sells for real:**
-- [ ] `/girasoles/compra` completes a real purchase (all 6 steps, no demo banner); the pending order appears in `/admin` **only with Girasoles selected**; confirm it → ticket in `/tickets`; its QR scans "ok" at `/scan`.
-- [ ] Simultaneity: with the Girasoles purchase mid-flight, walk `/demo/compra` in a second tab — demo simulates locally, Girasoles order is real, neither event's rows leak into the other's admin scope. (Strict two-*real*-events selling can be validated later with a second throwaway fixture, or waits for the first real event.)
+- [x] **(API)** A real purchase on Girasoles, order **#166**: `POST /api/purchases` (qty 2) → `reservedQuantity 2`; `POST /api/purchases/166/submitted` persisted `deliveryContact` + both holders; the order appeared in `/api/admin/purchases?eventId=3` and was **absent** from `?eventId=1`; confirm minted 2 `confirmed` rows (ids 102/103) with real HMAC hashes and moved 2 reserved → 2 sold; the first hash scanned **"ok"**, rescanned **"already_used"**, and a bogus hash 404'd "invalid". Headless Chrome confirms `/girasoles/compra` opens the real wizard — no demo banner, "Máx. 6 por persona".
+- [x] **(API, partial)** Simultaneity: proven at the level that matters — Girasoles orders never appear in the demo's admin scope or vice versa, and the demo refuses every real write while Girasoles sells. Two *browser tabs* mid-flight were not driven.
 
 **Demo behaves as the permanent showpiece:**
-- [ ] `/demo/compra` walks all 6 steps with the demo banner; no row appears in `/admin`; success screen's WA button opens WhatsApp with the prefilled message (order number matches a seeded "Invitado Demo" ticket).
-- [ ] Demo read-only server-side: with the demo selected, walk-in sale, ticket edit/delete/stage-move, and "Delete All Tickets" all surface the 409 "solo lectura" message; the demo's rows survive.
-- [ ] Demo scan loop: organizer shares a seeded ticket's QR from `/tickets` (demo selected); `/scan` reads it → "ok", second scan → "already_used"; next day (after the nightly rearm) the same QR scans "ok" again.
+- [ ] `/demo/compra` walks all 6 steps with the demo banner; no row appears in `/admin`; success screen's WA button opens WhatsApp with the prefilled message (order number matches a seeded "Invitado Demo" ticket). *(Step 1 render + banner + "Máx. 1" verified in Ring A; steps 2–6 and the WA hand-off are click-only.)*
+- [x] **(API)** Demo read-only server-side: **all 7** mutating handlers returned 409 *"El evento de demostración es de solo lectura"* — `updateAdminTicket`, `moveAdminTicketStage`, `deleteAdminTicket`, `deleteAllPurchases`, `createWalkInSale`, `confirmPurchase`, `rejectPurchase`. Re-read after: 96 demo rows before and after, ticket 97 still named "Invitado Demo 1", still `confirmed` on Etapa 3. The `assertNotDemo` coverage audit is now empirical, not just a grep.
+- [~] **(API)** Demo scan loop: ticket 97 (`95cb147cf9b94482`) scanned **"ok"** then **"already_used"** — the deliberate `markUsed` exemption works. **The nightly rearm is still unverified**: ticket 97 is sitting `isUsed = 1` on purpose so `rearmDemoTickets` (`0 5 * * *`) can be checked on 2026-08-06. The other four seeded tickets remain unscanned.
 
 **Cross-event invariants (all on Girasoles, demo as the untouched bystander):**
-- [ ] Selector switches demo ↔ Girasoles; `/admin`, `/tickets`, `/dashboard`, `/sell-tickets`, `/guest-passes`, `/lista-puerta` show only the selected event (add a guest pass to a Girasoles band to verify scoping); delete-all's confirm dialog names the event.
-- [ ] Stage invariants: fill Girasoles' Etapa 1 (5 cupos) via walk-ins → cascade closes it + promotes Etapa 2; the demo's stages are untouched; reject a pending Girasoles order → no ER_DUP_ENTRY.
-- [ ] orderId never reused: note Girasoles' highest orderId, "Delete All Tickets" with Girasoles selected (demo rows survive), then a new walk-in on Girasoles → strictly higher orderId; a QR from a deleted ticket scans 404, never as the new ticket.
+- [x] **(API)** Scoping: `/api/admin/tickets`, `/api/admin/purchases` and `/api/admin/guest-passes` each return only the requested event's rows (verified in both directions). A guest pass added to Girasoles' band "Los Cardos" landed on event 3 and left the demo's 66 untouched (removed again afterwards). `status` correctly defaults to `confirmed` (75 of 96 demo rows) — the invariant protecting `/dashboard`. *The `EventSelector` UI and the delete-all confirm dialog's event name are click-only.*
+- [x] **(API)** Stage invariants — the full 2026-07-21 scenario, reproduced and passed: a pending reservation + 2 one-seat walk-ins filled Etapa 1 (5/5) → the fill check fired → the cascade promoted Etapa 2 to `active` and set Etapa 1 to **`closed`, not `sold_out`**; exactly one `active` stage throughout; a walk-in aimed at the superseded Etapa 1 was refused 409 *"La etapa seleccionada no está disponible para venta"*; **rejecting the pending order released a seat on a `closed` stage without reopening it and without `ER_DUP_ENTRY`** (4s+0r/5, no unsigned underflow). The demo's three stages were byte-identical before and after.
+- [ ] **SKIPPED by user decision, 2026-08-05** — orderId never reused. Girasoles' 5 test rows (orders 166–169) were left in place rather than wiped, so the `order_counter` high-water mark, the post-wipe "next orderId is strictly higher" check, and the "orphaned QR scans 404" check remain **unverified in production**. The hazard is live and specific: the demo's `MAX(orderId)` is 165, so a naive `MAX+1` after wiping Girasoles would reissue **166** and make ticket 102's already-minted QR admit a different ticket. `order_counter` currently reads 164 and only moves when `deleteAllPurchases` runs. Script ready at `scratchpad/b7-orderid.mjs`.
 - [ ] `npm test` (user-run) — expect `TicketContext.refreshFromServer` signature-change fallout only; other tested utils' APIs are untouched.
 
 ### Final-state check — the site looks complete in demo-only state
 
 After the loop closes and Girasoles is cleaned up (tickets wiped, still unpublished), the resting state of production must be:
-- [ ] `/` shows the events grid with exactly one card: the Astromelias demo (flyer, name, date, "Demo" pill) — a first-time visitor sees a complete, populated site, not an empty landing.
-- [ ] From that card: `/demo` renders fully; `/demo/compra` is walkable end-to-end with the demo banner; the seeded "Invitado Demo" tickets sit rearmed and scannable in `/tickets`.
+- [x] `/` shows the events grid with exactly one card: the Astromelias demo (flyer, name, date, "Demo" pill) — verified in the browser 2026-08-05, after Girasoles started selling (it stays off the grid, `isPublished=0`).
+- [~] From that card: `/demo` renders fully; `/demo/compra` is walkable end-to-end with the demo banner; the seeded "Invitado Demo" tickets sit rearmed and scannable in `/tickets`. — **renders** ✅; **rearmed** ⏳ ticket 97 is deliberately `isUsed=1` pending the 2026-08-06 rearm check.
 - [ ] Girasoles: zero tickets, `isPublished=0`, invisible everywhere public; reachable only by direct slug and via the organizer selector, ready to be edited into the first real event.
+  **NOT MET as of 2026-08-05** — the delete-all was skipped, so Girasoles rests with **5 test tickets** (orders 166–169: 4 confirmed, 1 rejected), Etapa 1 `closed` 4/5, Etapa 2 `active` 0/10, and **`salesOpen = 1`**. It is still `isPublished = 0`, so it is invisible on `/` — but anyone holding the `/girasoles` link can currently place a real online order against a fabricated event. Close it with `salesOpen = 0` via `/edit` when the manual pass is finished.
 
-**Step 3 exit gate (done):** Ring A green in one pass **and** every Ring B item confirmed by the user **and** the final-state check passes, with the demo-rearm item verified on the following day.
+**Step 3 exit gate (NOT yet met):** Ring A green in one pass ✅ **and** every Ring B item confirmed ⏳ **and** the final-state check passes ⏳, with the demo-rearm item verified on the following day ⏳. Outstanding: the orderId/delete-all item (skipped), the click-through half of the API-verified items, the `/create-event` + `/edit` form UI, the demo wizard's steps 2–6, the nightly rearm, and `npm test`.
 
 ---
 
