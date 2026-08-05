@@ -296,31 +296,11 @@ export function PurchaseFlow() {
     );
   }
 
-  // Persistent cross-step notice, passed to every FlowShell below via its
-  // `banner` slot so it's visible on all 6 steps without repeating markup.
-  const demoBanner = isDemo ? (
-    <div
-      role="status"
-      style={{
-        margin: '0 var(--space-4, 16px)',
-        padding: '8px 14px',
-        borderRadius: 'var(--r-md)',
-        background: 'rgba(231,174,63,0.14)',
-        border: '1px solid rgba(231,174,63,0.35)',
-        color: 'var(--yellow)',
-        fontSize: 13,
-        fontWeight: 600,
-        textAlign: 'center',
-      }}
-    >
-    </div>
-  ) : null;
-
   // ── Step 1 · Selección ────────────────────────────────────────────────────────
   if (step === 1) {
     return (
       <FlowShell step={1} kicker="Selección" title="Elige tu boleta" onNext={next} onBack={back}
-        cta="Continuar" ctaIcon={<Ic n="chevR" s={20} />} banner={demoBanner}>
+        cta="Continuar" ctaIcon={<Ic n="chevR" s={20} />}>
         <div className="tile purple" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div className="chip" style={{ background: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.24)', color: '#fff', marginBottom: 8 }}>Etapa activa</div>
@@ -387,7 +367,7 @@ export function PurchaseFlow() {
 
     return (
       <FlowShell step={2} kicker="Datos de boletas" title="¿Para quién son?" onNext={next} onBack={back}
-        cta={reserving ? 'Reservando…' : 'Continuar'} ctaIcon={<Ic n="chevR" s={20} />} ctaDisabled={!datosValid || reserving} banner={demoBanner}>
+        cta={reserving ? 'Reservando…' : 'Continuar'} ctaIcon={<Ic n="chevR" s={20} />} ctaDisabled={!datosValid || reserving}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {holders.map((h, i) => {
             const nameInvalid = h.name.length >= 4 && !validators.name(h.name);
@@ -463,7 +443,7 @@ export function PurchaseFlow() {
   if (step === 3) {
     return (
       <FlowShell step={3} kicker="Confirmar compra" title="Tu cupo está reservado" onNext={next} onBack={back}
-        cta="Ir a pagar" ctaIcon={<Ic n="chevR" s={20} />} banner={demoBanner}>
+        cta="Ir a pagar" ctaIcon={<Ic n="chevR" s={20} />}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 8 }}>
           <div className="charly" style={{ width: 76, height: 76, fontSize: 34 }}>✦</div>
           <div className="serif" style={{ fontSize: 22, color: 'var(--cream)', marginTop: 16 }}>Apartamos {qty} boleta{qty > 1 ? 's' : ''} para ti</div>
@@ -494,7 +474,7 @@ export function PurchaseFlow() {
   if (step === 4) {
     return (
       <FlowShell step={4} kicker="Realiza el pago" title="Transfiere y guarda el pantallazo" onNext={next} onBack={back}
-        cta="Ya transferí, continuar" ctaIcon={<Ic n="check" s={20} />} banner={demoBanner}>
+        cta="Ya transferí, continuar" ctaIcon={<Ic n="check" s={20} />}>
         <div className="tile" style={{ background: 'rgba(231,174,63,0.10)', border: '1px solid rgba(231,174,63,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px' }}>
           <div>
             <div className="label" style={{ color: 'var(--cream-dim)' }}>Tienes</div>
@@ -559,7 +539,7 @@ export function PurchaseFlow() {
             <Ic n="wa" s={20} fill /> Abrir WhatsApp
           </a>
         }
-        cta="Ya lo envié" ctaClass="btn ghost" onNext={next} banner={demoBanner}>
+        cta="Ya lo envié" ctaClass="btn ghost" onNext={next}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 12 }}>
           <div style={{ width: 84, height: 84, borderRadius: '50%', background: 'rgba(95,190,123,0.14)', border: '1px solid rgba(95,190,123,0.4)', display: 'grid', placeItems: 'center', color: 'var(--green)' }}>
             <Ic n="wa" s={40} fill />
@@ -592,7 +572,6 @@ export function PurchaseFlow() {
       isDemo={isDemo}
       event={event}
       t={t}
-      banner={demoBanner}
     />
   );
 }
