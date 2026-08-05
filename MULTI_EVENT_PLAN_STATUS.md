@@ -169,18 +169,49 @@ evento de demostración es de solo lectura"**; `POST /api/admin/sales` on the
 demo → same 409. Re-inspection confirms both negative probes created nothing
 (75 confirmed rows, `MAX(orderId)` still 165).
 
-### 2.5 — Frontend deploy ⏳ PENDING
-`DEMO_ORDER_NUMBER` is now `165` in `src/components/flow/PurchaseFlow.jsx`
-and verified present in the built bundle (`ye=165` in
-`dist/assets/PurchaseFlowPage-CPEuCJVj.js`). `npm run lint` 0 errors,
-`npm run build` clean. **Not yet deployed** — `render.yaml`'s static service
-builds from a push to `origin/main`, and the `PurchaseFlow.jsx` change is
-still uncommitted. No backend redeploy is needed; nothing in `server/`
-changed after 2.1.
+### 2.5 — Frontend deploy ✅
+Commit `8ba64ab` pushed to `origin/main`; Render rebuilt the static site.
+`DEMO_ORDER_NUMBER = 165` confirmed **in the live bundle**
+(`assets/PurchaseFlowPage-C_433znk.js` → `ve=1200,ye=165`; the pre-deploy
+bundle read `ye=100`). The same commit locks the demo to a single ticket per
+purchase (`maxQty = isDemo ? 1 : …`) and disables the stepper at its bounds.
 
-Until this ships, production serves the OLD bundle, which is in a coherent
-state anyway: it calls `getActive()` (still answered, `isActive=1`) and its
-retired `ONLINE_SALES_OPEN=false` sends buyers to the box office.
+Probes: `sw.js` serves `CACHE_NAME = 'sigale-v3'` and is byte-identical to
+`public/sw.js`, including the `isApi` guard that stops `/api/` responses
+being cached; the SPA rewrite serves the shell on `/`, `/demo`,
+`/demo/compra`, `/nope`, `/a/b/c`; `GET /api/events` returns exactly the
+demo row, so the landing grid has a card.
+
+**Note the rewrite makes every path return 200**, so those status codes alone
+only prove the rewrite works. The client-side behavior was verified separately
+— see below.
+
+### Ring A's frontend items — verified early, against production ✅
+
+`jsdom` **cannot** render this app (it does not execute Vite's
+`type="module"` bundle — the body comes back empty), but headless Chrome can:
+`chrome.exe --headless=new --disable-gpu --virtual-time-budget=8000
+--dump-dom <url>`. Rendered DOM from the live site:
+
+| Route | Rendered |
+|---|---|
+| `/` | "Eventos · **Demo** · Festival Astromelias · vie, 24 de jul · Acá Parchamos", card links to `/demo` |
+| `/demo` | full landing — line-up, "Etapa activa Etapa 3 $45.000 · 3 cupos", CTA "Comprar boleta" |
+| `/demo/compra` | "**Modo demostración — esta compra es simulada**", "Paso 1 de 6", "**Máx. 1 por persona**", stepper `− 1 +`, Total $45.000 |
+| `/no-such-slug` | loads LandingPage → `by-slug` 404 → redirects to the events grid |
+| `/a/b/c` | events grid (catch-all, now outside `RequireAuth`) |
+| `/compra` | events grid (legacy redirect) |
+| `/evento/1` | the demo landing (`LegacyEventRedirect` → `/demo`) |
+| `/admin` | organizer login form |
+
+That covers every "local, against the built frontend" box in the plan's Ring A
+— though run against the deployed site rather than a local preview, which is
+strictly better.
+
+Aside: the Step 1 frontend (`745bdd9`) had **already** been deployed before
+this session — `sw.js` was serving `sigale-v3` prior to this push — so `/`
+was rendering the new events grid against an empty `isPublished` feed until
+the 2.4 flip populated it.
 
 ---
 
