@@ -333,43 +333,76 @@ reconciliation — watch that stages 31/32 keep their ids and statuses).
 
 ## Outstanding
 
-- ~~**`DEMO_ORDER_NUMBER` is a placeholder (`100`)**~~ — **resolved**: set to
-  `165` after the 2.3 seed, and confirmed present in the built bundle.
-- **The `PurchaseFlow.jsx` change is uncommitted**, so Step 2.5 (frontend
-  deploy) hasn't fired. Commit + push to `origin/main` to trigger Render.
+**Still open:**
+
+- **Ring B in full** — see the STEP 3 section above. Everything left needs a
+  human to mint real data.
 - **`npm test` hasn't been run.** `TicketContext.refreshFromServer`'s
-  signature changed; its existing test (if any asserts the old 1-arg form)
-  may need updating. CLAUDE.md says the user runs this pass, not the agent.
-- **CLAUDE.md itself still describes the pre-multi-event world**
-  (`ONLINE_SALES_OPEN`, single "the active event," no slugs) — it hasn't been
-  updated to reflect this work. Not part of the plan's Step 1 scope, but
-  worth doing before this drifts further from what the code actually does.
-- Manual click-through hasn't happened yet — nothing has been verified in a
-  live browser, only lint/build/grep and API probes. Note there is **no
-  `.env.development.local`** in the repo despite CLAUDE.md referencing one;
-  `VITE_API_URL` is simply unset in dev, so `client.js` falls back to a
-  relative `/api` and `vite.config.js`'s proxy forwards to
-  `coffeserver.onrender.com` — local `npm run dev` hits **production data**.
+  signature changed (`(status)` → `(status, eventId)`); its existing test may
+  need updating. CLAUDE.md says the user runs this pass, not the agent.
+- **The `/create-event` and `/edit` forms have never rendered in a browser.**
+  Server-side event create/update is well covered (Ring A + the fixture), but
+  the slug input's inline validation, the `sigale…/<slug>` prefix, and the
+  `isPublished`/`salesOpen` toggle rows are untested UI.
+- **The demo-rearm job is unverified.** `rearmDemoTickets` runs at
+  `'0 5 * * *'` (midnight Bogotá) and is registered but deliberately *not*
+  run at boot catch-up, so it can only be confirmed the day after a demo
+  ticket is scanned.
+
+**Resolved this session (kept for the audit trail):**
+
+- ~~`DEMO_ORDER_NUMBER` is a placeholder (`100`)~~ → set to `165` after the
+  2.3 seed and confirmed in the deployed bundle.
+- ~~The `PurchaseFlow.jsx` change is uncommitted~~ → shipped in `8ba64ab`;
+  Step 2.5 is done.
+- ~~CLAUDE.md still describes the pre-multi-event world~~ → rewritten in
+  `c1a0e2f`. It also had a pre-existing error: it cited a
+  `.env.development.local` that does not exist. `VITE_API_URL` is simply
+  unset in dev, so `client.js` falls back to a relative `/api` and
+  `vite.config.js`'s proxy forwards to `coffeserver.onrender.com` — **local
+  `npm run dev` reads and writes production data.** Now stated plainly there.
+- ~~Nothing verified in a live browser~~ → every public route verified
+  against the deployed site with headless Chrome (see STEP 3, Ring A).
+
+**Known constraints worth carrying forward:**
+
 - **`TicketForm` sells `quantity: 1` per submit** (`TicketForm.jsx:105`), so
-  the walk-in UI cannot mint a multi-seat order — only the API can. Worth
-  knowing before Step 3's Ring B stage-fill tests.
+  the walk-in UI cannot mint a multi-seat order — only the API can. This is
+  why the 2.3 demo seed went through `POST /api/admin/sales`, and it means
+  Ring B's "fill Etapa 1 (5 cupos)" step takes five separate submits.
+- **`order_counter` is only written by `deleteAllPurchases`.** Any future
+  bulk ticket deletion must bump it too, or the QR-collision hazard returns
+  (plan risk #6).
 
 ---
 
 ## Next steps
 
-- **STEP 3 Ring B** is the only work left. Start with flipping Girasoles'
-  `salesOpen` via `/edit` (unblocked — the pre-flip 409 probe has run), which
-  doubles as the first real exercise of the event form and of
-  `updateEvent`'s stage reconciliation.
-- ~~**STEP 3 — Testing & validation**~~: Ring A (automated, agent-run) + Ring B
-  (manual, user-run), using the fabricated "Girasoles" second event as the
-  multi-event test fixture. Can't meaningfully start until Step 2 has shipped
-  something to test against.
+**Ring B is the only work left.** In the order the plan lays out:
+
+1. Flip Girasoles' `salesOpen` via `/edit` — unblocked now that the pre-flip
+   409 probe has run. This is also the first real exercise of the event form
+   and of `updateEvent`'s stage reconciliation; **watch that stages 31/32
+   keep their ids and statuses**, since dropped stage ids caused the
+   2026-07-20 duplicate-active incident.
+2. A real 6-step purchase on `/girasoles/compra` → confirm at `/admin` →
+   ticket at `/tickets` → its QR scans "ok" at `/scan`.
+3. The demo's read-only 409s seen through the UI, and the demo scan loop
+   (`ok` → `already_used` → rearmed the following day).
+4. Selector scoping across every organizer page; fill Etapa 1 (5 walk-ins,
+   one per submit) to trigger the sold-out cascade; then delete-all on
+   Girasoles to prove orderIds never regress.
+5. `npm test`.
+
+**Do not re-send Ring A's pre-flip probe** (`POST /api/purchases` on a
+Girasoles stage) once `salesOpen = 1` — it would mint a real pending order.
+It is recorded as passed-once and must be skipped on any Ring A rerun.
 
 ---
 
-## Files touched (this session)
+## Files touched
+
+### Step 1 — the multi-event implementation (commit `745bdd9`)
 
 **Backend**
 ```
@@ -407,4 +440,33 @@ src/pages/DoorListPage.jsx
 src/pages/LandingPage.jsx
 src/utils/translations.js
 public/sw.js
+```
+
+### Steps 2–3 — deploy, demo wiring, docs
+
+```
+8ba64ab  src/components/flow/PurchaseFlow.jsx   DEMO_ORDER_NUMBER 100 -> 165;
+                                                 maxQty = isDemo ? 1 : …;
+                                                 stepper disabled at bounds
+         MULTI_EVENT_PLAN_STATUS.md
+c1a0e2f  CLAUDE.md                               rewritten for multi-event
+         MULTI_EVENT_PLAN_STATUS.md
+2b7fa53  MULTI_EVENT_PLAN.md                     fixture + Ring A results
+         MULTI_EVENT_PLAN_STATUS.md
+         CLAUDE.md                               two-event production state
+```
+
+**No `server/` file changed after the Step 1 sync** — every Step 2 backend
+change was data, not code, so no further backend redeploy is needed.
+
+### Production data changes (not in git)
+
+```
+UPDATE ticket_stages SET totalQuantity = 42 WHERE id = 23      -- 2.3, room for the seed
+POST /api/admin/sales {eventId:1, stageId:23, quantity:5}      -- 2.3, order #165
+UPDATE events SET slug='demo', isDemo=1, isPublished=1,
+                  salesOpen=0 WHERE id=1                        -- 2.4, the flip
+UPDATE ticket_stages SET activatesAt=NULL WHERE eventId=1
+                     AND activatesAt IS NOT NULL                -- 2.4, scheduler-proofing
+POST /api/events {slug:'girasoles', …}                          -- Step 3 fixture, event id 3
 ```
