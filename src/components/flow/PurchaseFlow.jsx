@@ -313,7 +313,6 @@ export function PurchaseFlow() {
         textAlign: 'center',
       }}
     >
-      {t('demoModeBanner')}
     </div>
   ) : null;
 
@@ -618,8 +617,8 @@ function Step6({ orderId, stage, qty, total, delivery, navigate, isDemo, event, 
   // order number is hardcoded (DEMO_ORDER_NUMBER) to match that seeded ticket.
   const demoWaLink = isDemo && event?.whatsappNumber
     ? `https://wa.me/${String(event.whatsappNumber).replace(/[^\d]/g, '')}?text=${encodeURIComponent(
-        t('demoConfirmMessage').replace('{orderId}', orderId),
-      )}`
+      t('demoConfirmMessage').replace('{orderId}', orderId),
+    )}`
     : null;
 
   return (
