@@ -5,11 +5,13 @@
 
 ## TL;DR
 
-**STEP 1 (code, sub-steps 1.1–1.6) is done and verified locally.** **STEP 2
-(deploy) is done through 2.4 — production now carries the multi-event backend
-and the Astromelias row IS the demo.** Only 2.5 (frontend deploy) remains: it
-needs a commit + push of this repo, which triggers Render's static build.
-STEP 3 (test/validate) hasn't started.
+**STEP 1 (code) and STEP 2 (deploy) are complete.** Production runs the
+multi-event platform: the Astromelias row is the read-only demo at `/demo`,
+and the frontend is deployed. **STEP 3 is underway — Ring A is fully green
+and the "Girasoles" fixture exists (event id 3).** What remains is Ring B:
+the manual click-throughs that mint real data (a real purchase, walk-ins to
+trigger the sold-out cascade, the demo scan loop, delete-all), plus the
+`npm test` pass.
 
 Exit gate passed: `npm run lint` → 0 errors (2 pre-existing unrelated
 warnings). `npm run build` → succeeds. Both grep audits from the plan's Step 1
@@ -215,6 +217,68 @@ the 2.4 flip populated it.
 
 ---
 
+## STEP 3 — testing & validation (Ring A ✅, Ring B pending)
+
+### Girasoles fixture ✅ — event id **3**
+
+Created 2026-08-05 via `POST /api/events` with organizer credentials, **not**
+through the `/create-event` form. The API path was chosen over the raw-SQL
+alternative deliberately: it runs the real slug validation and
+`insertStages()` status logic, whereas hand-written `ticket_stages` rows
+would have meant setting `status`/`sortOrder` manually and risking the
+`uqOneActiveStagePerEvent` invariant.
+
+`slug girasoles`, `isPublished 0`, `salesOpen 0`, aforo 80, lineup "Los
+Cardos / Cassette Beta / La Previa", eventDate 2026-09-12 20:00. Stage **31**
+"Etapa 1" `active` 0/5 @ $20.000; stage **32** "Etapa 2" `upcoming` 0/10 @
+$30.000, both `activatesAt NULL` so the cascade (not the scheduler) promotes
+Etapa 2. Flyer/bank-QR reuse Astromelias' Cloudinary URLs so the wizard's
+payment step renders a real QR for Ring B's purchase test.
+
+It is event id **3**, not 2: the `slug: 'demo'` duplicate probe burned an
+auto-increment value, because `ER_DUP_ENTRY` on `uqEventSlug` fires *after*
+the INSERT is attempted.
+
+### Ring A ✅ — every box green in one pass, 2026-08-05
+
+API probes: published-only landing feed; `by-slug` for demo, for
+unpublished Girasoles (soft-launch), and a clean 404 for an unknown slug;
+`/events/active` still resolving; both demo write-rejections (409 *"solo
+lectura"* on `POST /api/purchases` and on `POST /api/admin/sales`); the
+one-shot pre-flip `salesOpen=0` 409 on Girasoles; and both slug rejections
+with their two **distinct** messages — *"Esa URL está reservada, elige
+otra"* for `admin` vs *"Esa URL ya está en uso"* for `demo`, which is
+exactly what judgment call #1 was designed to produce.
+
+Frontend probes: run against the **deployed** site via headless Chrome (see
+the 2.5 section for why jsdom cannot do this) — `/`, `/demo`,
+`/demo/compra`, `/girasoles`, `/girasoles/compra`, `/nope`, `/a/b/c`,
+`/compra`, `/evento/1`, `/admin`. `/girasoles` renders "Etapa 1 activa /
+Etapa 2 Próximamente" with the CTA **"Adquiere tu entrada en taquilla"**,
+confirming the per-event `salesOpen` gate end to end.
+
+Re-inspection after the negative probes confirmed they created nothing.
+
+### Ring B ⏳ — user-driven, nothing done yet
+
+Everything left needs a human to mint real data. In the plan's order: flip
+Girasoles' `salesOpen` via `/edit`; a real 6-step purchase on
+`/girasoles/compra` + confirm + scan; the demo's read-only 409s seen through
+the UI; the demo scan loop (`ok` → `already_used` → rearmed next day); the
+selector scoping every organizer page; filling Etapa 1 to trigger the
+sold-out cascade; and the orderId-never-reused check via delete-all.
+
+**One Ring B item is now differently scoped:** "create Girasoles via
+`/create-event`" no longer creates anything. Its server half is covered by
+Ring A, but **the form's inline validation has still never rendered in a
+browser** — the slug input's live regex/reserved-word feedback, the
+`sigale…/<slug>` prefix, and the `isPublished`/`salesOpen` toggle rows.
+Exercise those when creating the first real event, or by opening `/edit` on
+Girasoles (which is also the first real test of `updateEvent`'s stage
+reconciliation — watch that stages 31/32 keep their ids and statuses).
+
+---
+
 ## Verification
 
 - `npm run lint` → **0 errors** (2 pre-existing warnings in files this work
@@ -294,10 +358,11 @@ the 2.4 flip populated it.
 
 ## Next steps
 
-- **STEP 2.5 — Frontend deploy**: commit + push; then the probe (hard-reload
-  `sigale.onrender.com`, SW cache should read `sigale-v3`, `/` shows the
-  events grid with the Astromelias demo card, tapping it lands on `/demo`).
-- **STEP 3 — Testing & validation**: Ring A (automated, agent-run) + Ring B
+- **STEP 3 Ring B** is the only work left. Start with flipping Girasoles'
+  `salesOpen` via `/edit` (unblocked — the pre-flip 409 probe has run), which
+  doubles as the first real exercise of the event form and of
+  `updateEvent`'s stage reconciliation.
+- ~~**STEP 3 — Testing & validation**~~: Ring A (automated, agent-run) + Ring B
   (manual, user-run), using the fabricated "Girasoles" second event as the
   multi-event test fixture. Can't meaningfully start until Step 2 has shipped
   something to test against.

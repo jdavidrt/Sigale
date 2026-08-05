@@ -178,20 +178,25 @@ Later cleanup (separate change, not part of this rollout): remove `/api/events/a
 
 Two rings. **Ring A** is fully automated — the agent runs it end-to-end after every deploy and loops on failures. **Ring B** is the user's manual click-through — the agent hands over the checklist only once Ring A is green, then loops on any failure the user reports. Every failure goes through the routing table at the top: classify → fix in Step 1 or 2 → redeploy → **rerun the whole ring** (a fix can regress a neighboring check).
 
-### Test fixture — the "Girasoles" second event
+### Test fixture — the "Girasoles" second event ✅ CREATED 2026-08-05 (event id **3**)
 
-Multi-event behavior can't be validated with one event, and no real second event exists yet — so Step 3 opens by creating a fabricated sister event with Astromelias-like data, **through the new `/create-event` form in production** (creating it is itself the first Ring B test: slug input, regex + reserved-words mirror, both toggles). Suggested data (user may adjust):
+Multi-event behavior can't be validated with one event, and no real second event exists yet — so Step 3 opens by creating a fabricated sister event with Astromelias-like data.
 
-| Field | Value |
-|---|---|
-| Name | **Noche de Girasoles** (fictional mirror of Astromelias) |
-| slug | `girasoles` |
-| artists | "Los Cardos", "Cassette Beta", "La Previa" (made-up lineup, ≥2 bands so guest-pass band counts are testable) |
-| eventDate / openingTime | any near-future date, evening time |
-| venue / address | copy Astromelias' style (or reuse the same venue text) |
-| Stages | Etapa 1: 5 cupos, $20,000 · Etapa 2: 10 cupos, $30,000 — Etapa 1 tiny on purpose so the sold-out cascade is cheap to trigger; **no `activatesAt`** on Etapa 2 (cascade-promoted, not scheduler-promoted) |
-| isPublished | **0** — invisible on `/` (public landing stays demo-only) and doubles as the soft-launch test: `/girasoles` loads by direct URL only |
-| salesOpen | **0 at creation → flipped to 1** via the edit form once Ring A's `salesOpen=0` 409 probe has run — the flip itself tests `updateEvent`'s toggle handling, then Girasoles sells for real |
+**Created via `POST /api/events` with organizer credentials, not through the `/create-event` form.** That was a deliberate substitution: the API path exercises the real slug validation and stage-status logic, whereas hand-writing `ticket_stages` rows (the alternative that was asked about) would have meant setting `status`/`sortOrder` by hand and risking the `uqOneActiveStagePerEvent` invariants. **Consequence: the form UI itself is still unverified** — the slug input's inline regex/reserved-word feedback and the two toggle rows have never been exercised in a browser. That check moves to Ring B and should be done when the first real event is created (or by editing Girasoles).
+
+| Field | Value | Actual |
+|---|---|---|
+| Name | **Noche de Girasoles** (fictional mirror of Astromelias) | ✅ |
+| slug | `girasoles` | ✅ |
+| artists | "Los Cardos", "Cassette Beta", "La Previa" (made-up lineup, ≥2 bands so guest-pass band counts are testable) | ✅ |
+| eventDate / openingTime | any near-future date, evening time | 2026-09-12 20:00 |
+| venue / address | copy Astromelias' style (or reuse the same venue text) | Acá Parchamos, Calle 49 #9-85, aforo 80 |
+| flyer / bank QR | — | reuses Astromelias' Cloudinary URLs, so the wizard's payment step renders a real QR for the Ring B purchase test |
+| Stages | Etapa 1: 5 cupos, $20,000 · Etapa 2: 10 cupos, $30,000 — Etapa 1 tiny on purpose so the sold-out cascade is cheap to trigger; **no `activatesAt`** on Etapa 2 (cascade-promoted, not scheduler-promoted) | ✅ stage id **31** `active` 0/5, stage id **32** `upcoming` 0/10, both `activatesAt NULL` |
+| isPublished | **0** — invisible on `/` (public landing stays demo-only) and doubles as the soft-launch test: `/girasoles` loads by direct URL only | ✅ verified both ways |
+| salesOpen | **0 at creation → flipped to 1** via the edit form once Ring A's `salesOpen=0` 409 probe has run — the flip itself tests `updateEvent`'s toggle handling, then Girasoles sells for real | ✅ still 0; the 409 probe has run, so the flip is now unblocked |
+
+> Note: Girasoles is event id **3**, not 2 — the `slug: 'demo'` duplicate probe burned an auto-increment value, since `ER_DUP_ENTRY` on `uqEventSlug` fires *after* the INSERT is attempted.
 
 **Lifecycle:** created at the start of Step 3 → serves every multi-event check in both rings → after validation, "Delete All Tickets" with Girasoles selected wipes its rows (which is itself the event-scoped delete + high-water-mark test) → the event row **stays**, unpublished (there is no event-delete endpoint by design); it can be edited into the first real event later, or left as a permanent staging fixture.
 
@@ -199,31 +204,34 @@ Multi-event behavior can't be validated with one event, and no real second event
 
 The Girasoles-dependent probes activate once the fixture exists (first Ring B item); before that they're *skipped*, not failed.
 
-Public API, no credentials needed:
-- [ ] `GET /api/events` → only `isPublished=1` rows; demo row present (the landing feed is never empty); Girasoles absent (unpublished).
-- [ ] `GET /api/events/by-slug/demo` → 200, `isDemo=1`, `salesOpen=0`.
-- [ ] `GET /api/events/by-slug/girasoles` → 200 despite `isPublished=0` (soft-launch invariant).
-- [ ] `GET /api/events/by-slug/no-such-slug` → 404, not 500.
-- [ ] `GET /api/events/active` → still 200 (deploy-window compat).
-- [ ] `POST /api/purchases` against a demo stage → 409 (negative-path write; creates nothing).
-- [ ] **One-shot, pre-flip only:** `POST /api/purchases` against a Girasoles stage while its `salesOpen` is still 0 → 409. **Never re-sent after the flip** — once `salesOpen=1` this request would *succeed* and mint a real pending order from the automated loop (risk #7). On Ring A reruns it's recorded as passed-once and skipped, like the fixture-dependent skips above.
-- [ ] `POST /api/events` with a reserved slug (`admin`) → 409 Spanish message; with a duplicate slug (`demo`) → 409 "Esa URL ya está en uso". (Requires organizer creds — if the agent doesn't hold them, this pair folds into the Ring B fixture-creation item.)
+Public API, no credentials needed — **all verified 2026-08-05**:
+- [x] `GET /api/events` → only `isPublished=1` rows; demo row present (the landing feed is never empty); Girasoles absent (unpublished).
+- [x] `GET /api/events/by-slug/demo` → 200, `isDemo=1`, `salesOpen=0`.
+- [x] `GET /api/events/by-slug/girasoles` → 200 despite `isPublished=0` (soft-launch invariant).
+- [x] `GET /api/events/by-slug/no-such-slug` → 404, not 500.
+- [x] `GET /api/events/active` → still 200 (deploy-window compat); resolves to the demo, which keeps `isActive=1`.
+- [x] `POST /api/purchases` against a demo stage → 409 *"El evento de demostración es de solo lectura"* (negative-path write; created nothing — re-inspection confirmed row count and `MAX(orderId)` unchanged).
+- [x] **One-shot, pre-flip only:** `POST /api/purchases` against a Girasoles stage while its `salesOpen` is still 0 → 409 *"Las ventas en línea están cerradas para este evento"*. **Never re-sent after the flip** — once `salesOpen=1` this request would *succeed* and mint a real pending order from the automated loop (risk #7). Recorded as passed-once; skip on reruns.
+- [x] `POST /api/events` with a reserved slug (`admin`) → 409 *"Esa URL está reservada, elige otra"*; with a duplicate slug (`demo`) → 409 *"Esa URL ya está en uso"*. Two distinct messages, confirming judgment call #1 (`demo` is DB-protected data, not a reserved word).
+- [x] `POST /api/admin/sales` against the demo → 409 *"…solo lectura"* (`assertNotDemo` on the walk-in path).
 
-Local, against the built frontend (`npm run build` + `npm run preview`, or the dev server proxying prod per `.env.development.local` — **read-only pages only**, never submit real purchases from the loop):
-- [ ] `/` renders the events list; `/nope` and `/a/b/c` land on `/` while logged out — via two distinct mechanisms, both under test: `/nope` matches `/:slug`, gets a 404 from `by-slug`, and LandingPage redirects to `/`; `/a/b/c` matches no route and hits the catch-all (moved out of `RequireAuth`).
-- [ ] `/demo` renders with the demo pill; `/demo/compra` loads step 1 with the "Modo demostración" banner.
-- [ ] Direct refresh on `/:slug/compra` resolves the event without a landing-page visit.
-- [ ] `/evento/<oldId>` redirects to `/${slug}`; a slugless or unknown id falls back to `/`.
+Against the built frontend — **all verified 2026-08-05 against the deployed site**, which is strictly better than a local preview. jsdom cannot do this (it does not execute Vite's `type="module"` bundle); headless Chrome can: `chrome.exe --headless=new --disable-gpu --virtual-time-budget=8000 --dump-dom <url>`.
+- [x] `/` renders the events list; `/nope` and `/a/b/c` land on `/` while logged out — via two distinct mechanisms, both confirmed: `/nope` matches `/:slug`, gets a 404 from `by-slug`, and LandingPage redirects to `/`; `/a/b/c` matches no route and hits the catch-all (moved out of `RequireAuth`).
+- [x] `/demo` renders with the demo pill; `/demo/compra` loads step 1 with the "Modo demostración" banner **and quantity pinned to "Máx. 1 por persona"**.
+- [x] Direct refresh on `/:slug/compra` resolves the event without a landing-page visit (every check above is a cold load straight to the URL).
+- [x] `/evento/1` redirects to `/demo`; `/compra` falls back to `/`.
+- [x] `/girasoles` renders by direct URL with "Etapa 1 activa / Etapa 2 Próximamente", and its CTA reads **"Adquiere tu entrada en taquilla"** because `salesOpen=0`; `/girasoles/compra` shows the closed-sales screen.
 
-**Ring A exit gate:** every box checked in a single uninterrupted pass after the latest deploy.
+**Ring A exit gate:** every box checked in a single uninterrupted pass after the latest deploy. **✅ MET 2026-08-05.**
 
 ### Ring B — manual click-throughs (user-run; agent triages reports and loops)
 
 Ordered as a coherent test script — later items build on the fixture state earlier ones leave behind.
 
 **Fixture creation + form validation:**
-- [ ] Create Girasoles via `/create-event` per the fixture table. Before the valid submit, attempt slug `admin` (reserved) and slug `demo` (duplicate) → both rejected inline with the Spanish messages.
-- [ ] `/girasoles` loads by direct URL while absent from `/` (soft-launch); flip `salesOpen` on via `/edit` (after Ring A's pre-flip 409 probe) → toggle round-trips.
+- [~] ~~Create Girasoles via `/create-event`~~ — **the event now exists (id 3), created through the API instead**, so this item no longer creates anything. What it was really testing splits in two: the *server's* slug rejection is now covered in Ring A (both 409s, distinct messages), but **the form's inline validation is still untested** — the slug input's live regex/reserved-word feedback, the `sigale…/<slug>` prefix styling, and the `isPublished`/`salesOpen` toggle rows have never been rendered in a browser. Exercise them when creating the first real event, or by opening `/edit` on Girasoles.
+- [x] `/girasoles` loads by direct URL while absent from `/` (soft-launch) — verified in Ring A.
+- [ ] Flip `salesOpen` on via `/edit` (Ring A's pre-flip 409 probe has run, so this is unblocked) → toggle round-trips. **This is also the first real exercise of the edit form**, including its stage-reconciliation path — worth watching that Etapa 1/2 keep their ids (31/32) and statuses.
 
 **Second event sells for real:**
 - [ ] `/girasoles/compra` completes a real purchase (all 6 steps, no demo banner); the pending order appears in `/admin` **only with Girasoles selected**; confirm it → ticket in `/tickets`; its QR scans "ok" at `/scan`.
