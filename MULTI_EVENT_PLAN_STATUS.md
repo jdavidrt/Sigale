@@ -1,14 +1,15 @@
 # Multi-event plan — implementation status
 
-**Last updated:** 2026-08-04
+**Last updated:** 2026-08-05
 **Reads alongside:** `MULTI_EVENT_PLAN.md` (the plan this tracks — see it for the full design/decisions)
 
 ## TL;DR
 
-**STEP 1 (code, sub-steps 1.1–1.6) is done and verified locally.** Nothing has
-touched production. STEP 2 (deploy) has not started — it's a gated sequence
-that needs explicit go-ahead per sub-step, per the plan. STEP 3 (test/validate)
-hasn't started either.
+**STEP 1 (code, sub-steps 1.1–1.6) is done and verified locally.** **STEP 2
+(deploy) is done through 2.4 — production now carries the multi-event backend
+and the Astromelias row IS the demo.** Only 2.5 (frontend deploy) remains: it
+needs a commit + push of this repo, which triggers Render's static build.
+STEP 3 (test/validate) hasn't started.
 
 Exit gate passed: `npm run lint` → 0 errors (2 pre-existing unrelated
 warnings). `npm run build` → succeeds. Both grep audits from the plan's Step 1
@@ -115,6 +116,74 @@ deleted/unpublished event).
 
 ---
 
+## STEP 2 — deployment (2.1–2.4 done 2026-08-05, 2.5 pending)
+
+### 2.1 — Backend sync + deploy ✅
+Synced into the BlackCoffe repo and redeployed by the user. Probes green:
+`008_multi_event.sql` recorded in `schema_migrations` at 2026-08-05 13:25:39;
+`order_counter` seeded with `highWaterMark = 164` (= `MAX(orderId)` at the
+time); `GET /api/health` 200; `GET /api/events` 200; `GET /api/events/active`
+still 200 (deploy-window compat); `GET /api/events/by-slug/anything` a clean
+404; `GET /api/events/all` 401 without credentials. Route ordering verified
+(`/active` → `/all` → `/by-slug/:slug` → `/` → `/:id`).
+
+### 2.2 — Pre-flip inspection (read-only) ✅
+Event 1 "Festival Astromelias": `slug=NULL, isActive=1, isPublished=0,
+isDemo=0, salesOpen=0`. Tickets: 70 confirmed / 9 rejected / 12 expired,
+orders 100–164, 66 guest passes. Stages: Etapa 2 (id 22) `sold_out` 17/17;
+Etapa 3 (id 23) **`active`** 34/37, `activatesAt` 2026-07-23 21:27; Etapa 1
+(id 18) `closed` 19/23. Because a stage was already `active`, the plan's
+`closed`→`active` SQL rescue was **not** needed.
+
+### 2.3 — Demo ticket seed ✅ — **order #165**
+Two writes. (1) One-off SQL `UPDATE ticket_stages SET totalQuantity = 42
+WHERE id = 23` (37 → 42) to make room; chosen over the plan's "event edit"
+route because driving `updateEvent`'s stage reconciliation by hand-crafted
+payload is far riskier than a single scoped column update. (2) One walk-in
+through the production API — `POST /api/admin/sales {eventId:1, stageId:23,
+quantity:5}`, holders "Invitado Demo 1–5", IDs 1000000001–1000000005 →
+**orderId 165**, 5 `confirmed` rows (ids 97–101) with real server-minted
+`SCAN_HASH_SECRET` HMACs, `isUsed = 0`, `orderAnchor` on row 0 only.
+
+Net effect on the stage: 39/42 `active`, **3 cupos libres — identical to its
+pre-seed appearance**. The demo's dashboard now reads 75 confirmed tickets
+(70 real + 5 seeded), revenue +$225.000 vs the real Astromelias history; this
+is a known, accepted cost of making the demo scannable.
+
+### 2.4 — Demo flip ✅
+```sql
+UPDATE events SET slug='demo', isDemo=1, isPublished=1, salesOpen=0 WHERE id=1;
+UPDATE ticket_stages SET activatesAt=NULL WHERE eventId=1 AND activatesAt IS NOT NULL;
+```
+The second statement satisfies the plan's "demo stages must have
+`activatesAt IS NULL`" check (only Etapa 3 carried one; it was already
+`active`, and `activateDueStages` only promotes `upcoming` rows, so it was
+never actually reachable). **`isActive` deliberately left at 1** so
+`/api/events/active` keeps answering old cached bundles through the deploy
+window.
+
+Probes all green: `by-slug/demo` → 200 with `slug=demo, isPublished=1,
+isDemo=1, salesOpen=0`; `GET /api/events` → exactly one row, the demo (the
+landing feed is not empty); `POST /api/purchases` on stage 23 → **409 "El
+evento de demostración es de solo lectura"**; `POST /api/admin/sales` on the
+demo → same 409. Re-inspection confirms both negative probes created nothing
+(75 confirmed rows, `MAX(orderId)` still 165).
+
+### 2.5 — Frontend deploy ⏳ PENDING
+`DEMO_ORDER_NUMBER` is now `165` in `src/components/flow/PurchaseFlow.jsx`
+and verified present in the built bundle (`ye=165` in
+`dist/assets/PurchaseFlowPage-CPEuCJVj.js`). `npm run lint` 0 errors,
+`npm run build` clean. **Not yet deployed** — `render.yaml`'s static service
+builds from a push to `origin/main`, and the `PurchaseFlow.jsx` change is
+still uncommitted. No backend redeploy is needed; nothing in `server/`
+changed after 2.1.
+
+Until this ships, production serves the OLD bundle, which is in a coherent
+state anyway: it calls `getActive()` (still answered, `isActive=1`) and its
+retired `ONLINE_SALES_OPEN=false` sends buyers to the box office.
+
+---
+
 ## Verification
 
 - `npm run lint` → **0 errors** (2 pre-existing warnings in files this work
@@ -167,13 +236,12 @@ deleted/unpublished event).
 
 ---
 
-## Outstanding before Step 2 (deploy)
+## Outstanding
 
-- **`DEMO_ORDER_NUMBER` in `src/components/flow/PurchaseFlow.jsx` is a
-  placeholder (`100`).** It must be updated to the real orderId once Step
-  2.3's production walk-in seed runs (seeding the 5 "Invitado Demo" tickets)
-  — the constant is what the demo wizard's terminal WhatsApp message
-  references, and it has to match a real ticket the organizer can share back.
+- ~~**`DEMO_ORDER_NUMBER` is a placeholder (`100`)**~~ — **resolved**: set to
+  `165` after the 2.3 seed, and confirmed present in the built bundle.
+- **The `PurchaseFlow.jsx` change is uncommitted**, so Step 2.5 (frontend
+  deploy) hasn't fired. Commit + push to `origin/main` to trigger Render.
 - **`npm test` hasn't been run.** `TicketContext.refreshFromServer`'s
   signature changed; its existing test (if any asserts the old 1-arg form)
   may need updating. CLAUDE.md says the user runs this pass, not the agent.
@@ -181,20 +249,23 @@ deleted/unpublished event).
   (`ONLINE_SALES_OPEN`, single "the active event," no slugs) — it hasn't been
   updated to reflect this work. Not part of the plan's Step 1 scope, but
   worth doing before this drifts further from what the code actually does.
-- Manual click-through hasn't happened yet (`npm run dev` locally against
-  prod data, per `.env.development.local`) — nothing in Step 1 was verified
-  in a live browser, only lint/build/grep.
+- Manual click-through hasn't happened yet — nothing has been verified in a
+  live browser, only lint/build/grep and API probes. Note there is **no
+  `.env.development.local`** in the repo despite CLAUDE.md referencing one;
+  `VITE_API_URL` is simply unset in dev, so `client.js` falls back to a
+  relative `/api` and `vite.config.js`'s proxy forwards to
+  `coffeserver.onrender.com` — local `npm run dev` hits **production data**.
+- **`TicketForm` sells `quantity: 1` per submit** (`TicketForm.jsx:105`), so
+  the walk-in UI cannot mint a multi-seat order — only the API can. Worth
+  knowing before Step 3's Ring B stage-fill tests.
 
 ---
 
 ## Next steps
 
-- **STEP 2 — Deployment** (`MULTI_EVENT_PLAN.md` §"STEP 2"): gated sequence,
-  backend-first. Sub-steps 2.1 (sync + deploy backend), 2.2 (read-only
-  pre-flip inspection), **2.3 and 2.4 mutate production and require explicit
-  user confirmation before each** (seed the demo walk-in tickets, then flip
-  `isDemo=1`), 2.5 (frontend deploy). Do not start this without the user's
-  go-ahead.
+- **STEP 2.5 — Frontend deploy**: commit + push; then the probe (hard-reload
+  `sigale.onrender.com`, SW cache should read `sigale-v3`, `/` shows the
+  events grid with the Astromelias demo card, tapping it lands on `/demo`).
 - **STEP 3 — Testing & validation**: Ring A (automated, agent-run) + Ring B
   (manual, user-run), using the fabricated "Girasoles" second event as the
   multi-event test fixture. Can't meaningfully start until Step 2 has shipped

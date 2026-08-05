@@ -30,9 +30,11 @@ const MAX_QTY = 6;
 const COUNTDOWN_SECONDS = 20 * 60; // cosmetic only (real hold is 24h server-side)
 // Demo mode never calls the server — this fake order number is hardcoded to
 // match the real seeded "Invitado Demo" walk-in's orderId (Step 2.3 of
-// MULTI_EVENT_PLAN.md, run once against production before the demo flag is
-// flipped). Update this constant once that one-off records the real value.
-const DEMO_ORDER_NUMBER = 100;
+// MULTI_EVENT_PLAN.md, run once against production before the demo flag was
+// flipped). Order 165 = five confirmed "Invitado Demo 1–5" tickets on the
+// demo event's Etapa 3, seeded 2026-08-05; the organizer shares any of their
+// QRs back from /tickets when a visitor sends the WhatsApp hand-off below.
+const DEMO_ORDER_NUMBER = 165;
 
 // ── Field validators (regex-driven) ─────────────────────────────────────────────
 const RE_NUMERIC = /^[0-9]+$/;
@@ -91,7 +93,6 @@ export function PurchaseFlow() {
   const event = ctxEvent;
   const stage = resolveActiveStage(event);
   const cupos = stageCupos(stage);
-  const maxQty = Math.max(1, Math.min(MAX_QTY, cupos));
 
   const hasRealEvent = !!ctxEvent && Number.isFinite(Number(ctxEvent.id));
   const hasRealStage = !!stage && Number.isFinite(Number(stage.id));
@@ -100,6 +101,11 @@ export function PurchaseFlow() {
   // own salesOpen value.
   const isDemo = !!ctxEvent?.isDemo;
   const salesOpenForBuyer = !!ctxEvent && (ctxEvent.salesOpen || isDemo);
+
+  // The demo is always a single-ticket purchase: it hands off to one seeded
+  // "Invitado Demo" ticket (order DEMO_ORDER_NUMBER) that the organizer shares
+  // back, so a simulated order of 2+ would promise boletas that don't exist.
+  const maxQty = isDemo ? 1 : Math.max(1, Math.min(MAX_QTY, cupos));
 
   const total = (Number(stage?.price) || 0) * qty;
 
@@ -335,9 +341,21 @@ export function PurchaseFlow() {
             <div className="muted" style={{ fontSize: 13 }}>Máx. {maxQty} por persona</div>
           </div>
           <div className="stepper">
-            <button type="button" onClick={() => setQuantity(qty - 1)} aria-label="Quitar">−</button>
+            <button
+              type="button"
+              onClick={() => setQuantity(qty - 1)}
+              aria-label="Quitar"
+              disabled={qty <= 1}
+              style={{ opacity: qty <= 1 ? 0.4 : 1 }}
+            >−</button>
             <span className="qv">{qty}</span>
-            <button type="button" onClick={() => setQuantity(qty + 1)} aria-label="Agregar">+</button>
+            <button
+              type="button"
+              onClick={() => setQuantity(qty + 1)}
+              aria-label="Agregar"
+              disabled={qty >= maxQty}
+              style={{ opacity: qty >= maxQty ? 0.4 : 1 }}
+            >+</button>
           </div>
         </div>
 
