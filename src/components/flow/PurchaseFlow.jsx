@@ -73,6 +73,9 @@ export function PurchaseFlow() {
   const [step, setStep] = useState(1);
   const [qty, setQty] = useState(1);
   const [holders, setHolders] = useState([{ name: '', idNumber: '' }]);
+  // Buyer's chosen act (Phase 2, migration 011) — required whenever the
+  // event has a line-up; captured on step 1 alongside quantity.
+  const [preferredArtist, setPreferredArtist] = useState('');
   const [delivery, setDelivery] = useState({ method: 'whatsapp', contact: '' });
   const [orderId, setOrderId] = useState(null);
   const [reserving, setReserving] = useState(false);
@@ -96,6 +99,8 @@ export function PurchaseFlow() {
 
   const hasRealEvent = !!ctxEvent && Number.isFinite(Number(ctxEvent.id));
   const hasRealStage = !!stage && Number.isFinite(Number(stage.id));
+  const artists = Array.isArray(event?.artists) ? event.artists : [];
+  const artistRequired = artists.length > 0;
   // Per-event replacement for the retired global ONLINE_SALES_OPEN flag. The
   // demo always allows walking the wizard (it's simulated) regardless of its
   // own salesOpen value.
@@ -146,6 +151,14 @@ export function PurchaseFlow() {
     return () => clearInterval(id);
   }, [step]);
 
+  // Preselect the sole artist on a single-act line-up (Phase 2) — matches
+  // TicketForm's walk-in dropdown behavior. A multi-act line-up starts
+  // unselected so the buyer makes an explicit choice.
+  useEffect(() => {
+    if (artists.length === 1 && !preferredArtist) setPreferredArtist(artists[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [artists.length]);
+
   const reserve = async () => {
     if (orderId || reserving) return;
     // Demo mode never touches the server — the wizard is a simulation. The
@@ -183,6 +196,7 @@ export function PurchaseFlow() {
         deliveryMethod: delivery.method,
         deliveryContact: delivery.contact,
         holders,
+        preferredArtist: artistRequired ? preferredArtist : undefined,
       });
       setOrderId(res.orderId);
     } catch (err) {
@@ -300,7 +314,7 @@ export function PurchaseFlow() {
   if (step === 1) {
     return (
       <FlowShell step={1} kicker="Selección" title="Elige tu boleta" onNext={next} onBack={back}
-        cta="Continuar" ctaIcon={<Ic n="chevR" s={20} />}>
+        cta="Continuar" ctaIcon={<Ic n="chevR" s={20} />} ctaDisabled={artistRequired && !preferredArtist}>
         <div className="tile purple" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div className="chip" style={{ background: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.24)', color: '#fff', marginBottom: 8 }}>Etapa activa</div>
@@ -337,6 +351,22 @@ export function PurchaseFlow() {
             >+</button>
           </div>
         </div>
+
+        {artistRequired && (
+          <div className="card" style={{ padding: 16, marginTop: 14 }}>
+            <div className="label" style={{ color: 'var(--cream-dim)', marginBottom: 10 }}>¿A qué artista vienes a ver?</div>
+            <select
+              className="input"
+              value={preferredArtist}
+              onChange={(e) => setPreferredArtist(e.target.value)}
+            >
+              <option value="" disabled>Selecciona un artista</option>
+              {artists.map((a) => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="card" style={{ padding: 16, marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderColor: 'rgba(231,174,63,0.25)' }}>
           <div className="label" style={{ color: 'var(--cream-dim)' }}>Total</div>

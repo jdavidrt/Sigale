@@ -85,8 +85,8 @@ Format rules (from `runMigrations.js` + `007`'s style): one statement per line, 
 - New public `GET /api/events/by-slug/:slug` (clone of `getEventById`; `by-slug` prefix avoids colliding with `/:id`).
 - New organizer `GET /api/events/all` (requireOrganizer) — every event for the panel selector.
 - Route order: `/active` → `/all` → `/by-slug/:slug` → `/` (list) → `/:id`.
-- `createEvent`: **delete** the single-active demotion (`UPDATE events SET isActive = 0...`, L187) and hardcoded `isActive=1` (L197 → 0). Insert `slug, isPublished, salesOpen` (never `isDemo` via API). Slug validation **applies only when a slug is present** — `slug` may be NULL/absent (old-frontend compat; the new form requires it client-side): `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤80 chars, `RESERVED_SLUGS` list (admin, scan, compra, demo, tickets, dashboard, evento, edit, edit-event, create-event, sell-tickets, guest-passes, lista-puerta, validate-qr, api, assets, sw.js, manifest.json…) → 409 Spanish message; catch `ER_DUP_ENTRY` on `uqEventSlug` → 409 "Esa URL ya está en uso".
-- `updateEvent`: same columns + validation (this is also how a slugless deploy-window event gets its slug later); on a demo row, **ignore** submitted `slug`/`isDemo` entirely — skip their validation and never write them (a validate-then-reject order would 409 an innocent demo copy-edit, since the form re-submits the unchanged slug `demo`, which sits on the `RESERVED_SLUGS` list). **Stage-reconciliation logic untouched** (all stage-status invariants live there). Edits to a demo event stay allowed (copy/flyer fixes) — read-only is enforced on ticket-level writes via `assertNotDemo`, not on the event form.
+- `createEvent`: **delete** the single-active demotion (`UPDATE events SET isActive = 0...`, L187) and hardcoded `isActive=1` (L197 → 0). Insert `slug, isPublished, salesOpen` (never `isDemo` via API). Slug validation **applies only when a slug is present** — `slug` may be NULL/absent (old-frontend compat; the new form requires it client-side): `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤80 chars, `RESERVED_SLUGS` list (admin, scan, compra, tickets, dashboard, evento, edit, edit-event, create-event, sell-tickets, guest-passes, lista-puerta, validate-qr, api, assets, sw.js, manifest.json…) → 409 Spanish message; catch `ER_DUP_ENTRY` on `uqEventSlug` → 409 "Esa URL ya está en uso".
+- `updateEvent`: same columns + validation (this is also how a slugless deploy-window event gets its slug later); on a demo row, **ignore** submitted `slug`/`isDemo` entirely — skip their validation and never write them (`demo` is deliberately NOT a reserved word, see judgment call #1 in the status file; this carve-out is an independent safety net). **Stage-reconciliation logic untouched** (all stage-status invariants live there). Edits to a demo event stay allowed (copy/flyer fixes) — read-only is enforced on ticket-level writes via `assertNotDemo`, not on the event form.
 - `getEventBySlug` deliberately does **not** filter `isPublished` (soft-launch by private link — see Context).
 
 **`controllers/purchases.controllers.js`:**
@@ -121,7 +121,7 @@ No new router files → `index.js` / `integration.js` mounts unchanged (verify p
 
 **`src/context/TicketContext.jsx`:** `refreshFromServer(status, eventId)` (early-return without eventId); `fromServerTicket` maps `eventId`. Callers re-fetch on eventId change — also fixes cross-event stage-name price collisions in `getStats`.
 
-**Public pages:** `LandingPage` reads `useParams().slug` → `loadEventBySlug`; 404 → `/`; `goBuy()` → `/${event.slug}/compra`; CTA gate = `event.salesOpen || event.isDemo` (+ existing `resolveActiveStage` null guard). **`PurchaseFlowPage` also reads `useParams().slug` → `loadEventBySlug` itself** — with auto-`getActive()` gone from the context, a refresh or deep link straight to `/:slug/compra` must resolve the event without passing through the landing page; same gate; back-nav `/evento/${id}` → `/${slug}`; **demo mode** = stub `purchases.create/submit` with local fakes + persistent "Modo demostración" banner, all 6 steps visually identical. The demo's fake order number is a hardcoded constant matching the seeded walk-in's real `orderId` (set after the Step 2.3 one-off), and the terminal success screen adds a **"Enviar confirmación por WhatsApp"** button → `wa.me/${event.whatsappNumber}?text=<prefilled demo confirmation with that order number>` — so the visitor hands off to the organizer exactly like a real buyer, and the number in the WA message matches the ticket the organizer sends back from `/tickets`. No QR is ever rendered in the wizard (delivery stays organizer-driven, matching production). Retire `ONLINE_SALES_OPEN` from `src/config.js`. Remove the `SAMPLE_EVENT` fallback usage (helpers `resolveActiveStage`/`stageCupos` stay).
+**Public pages:** `LandingPage` reads `useParams().slug` → `loadEventBySlug`; 404 → `/`; `goBuy()` → `/${event.slug}/compra`; CTA gate = `event.salesOpen || event.isDemo` (+ existing `resolveActiveStage` null guard). **`PurchaseFlowPage` also reads `useParams().slug` → `loadEventBySlug` itself** — with auto-`getActive()` gone from the context, a refresh or deep link straight to `/:slug/compra` must resolve the event without passing through the landing page; same gate; back-nav `/evento/${id}` → `/${slug}`; **demo mode** = stub `purchases.create/submit` with local fakes + a (since removed, 2026-08-05) "Modo demostración" banner, all 6 steps visually identical. The demo's fake order number is a hardcoded constant matching the seeded walk-in's real `orderId` (set after the Step 2.3 one-off), and the terminal success screen adds a **"Enviar confirmación por WhatsApp"** button → `wa.me/${event.whatsappNumber}?text=<prefilled demo confirmation with that order number>` — so the visitor hands off to the organizer exactly like a real buyer, and the number in the WA message matches the ticket the organizer sends back from `/tickets`. No QR is ever rendered in the wizard (delivery stays organizer-driven, matching production). Retire `ONLINE_SALES_OPEN` from `src/config.js`. Remove the `SAMPLE_EVENT` fallback usage (helpers `resolveActiveStage`/`stageCupos` stay).
 
 **`src/utils/translations.js`:** ES+EN keys for demo banner, demo WA confirmation button + prefilled message, root-landing copy, event-form fields (URL del evento, visible en la página principal, ventas en línea), slug validation errors, event-selector labels.
 
@@ -280,3 +280,134 @@ After the loop closes and Girasoles is cleaned up (tickets wiped, still unpublis
 5. `assertNotDemo` coverage — a missed mutating admin path silently erodes the read-only demo; the Step 1 exit-gate grep audit must be rerun any time a new handler is added later.
 6. `order_counter` is only written by `deleteAllPurchases` — if a future feature deletes ticket rows in bulk some other way, it must update the high-water mark too, or the QR-collision hazard returns.
 7. **Loop discipline:** Ring A's negative-path probes are the only writes the automated loop may send to production (they're designed to be rejected). Anything that would create/mutate real rows belongs in Ring B with the user driving.
+8. **No per-organizer access control** — this plan built a per-event *selector*, not per-event *ownership*. Any valid organizer login sees and can manage every event. See the new section below, added 2026-09-11.
+
+---
+
+## Phase 2 — roles, archive, public scanner, preferred artist (spec, 2026-09-15)
+
+Buildable spec for the next slice. Schema is drafted as migrations `010`–`013`
+(column-level reference: `docs/architecture/DB_SCHEMA.md`). **Application code
+was written 2026-09-15** (backend + frontend, per this spec) but **nothing has
+been deployed or verified against a database** — see
+`MULTI_EVENT_PLAN_STATUS.md` for what exists and what's still open. Everything
+above this heading is shipped history.
+
+### Why
+
+1. **Bug.** `refreshOrganizerEvents` (`src/context/EventContext.jsx:80-82`) has no
+   `try/catch`. A failed `GET /api/events/all` (stale creds, cold dyno, network
+   blip) leaves `organizerEvents = []`, which `AdminPage`
+   (`src/pages/AdminPage.jsx:125-131`) reads as "no events" and bounces to
+   `/create-event`. Production has one `organizers` row and the query has no
+   `WHERE`, so this is a swallowed failure, not an ownership problem — today.
+2. **Feature.** A super admin who manages every event and every account, and
+   event admins scoped to their own events. Decided alongside it: events are
+   archived (never deleted), the door scanner becomes public per event, and
+   every order records the artist the buyer came for.
+
+### Decisions (final)
+
+| # | Decision |
+|---|---|
+| 1 | Two roles on `organizers.role`: `super_admin`, `event_admin`. New rows default to `event_admin`. |
+| 2 | Ownership is many-to-many via `organizer_events`. For an `event_admin` a row grants access; for a `super_admin` it is attribution only ("my events"). Access always branches on `role` first. |
+| 3 | **The one existing account becomes `super_admin` inside migration 010** (a guarded `UPDATE` that runs only in the pass that creates the column). No manual one-off, no lockout window. |
+| 4 | `super_admin` only: create event, archive/unarchive, edit `slug`, toggle `isPublished`, "Delete all tickets", manage accounts. `event_admin`: everything else on its assigned events, including `salesOpen`. |
+| 5 | No event deletion, ever. `events.isArchived` is the reversible replacement. |
+| 6 | `/scan` becomes **one public flow**: pick event → type its `scanKeyword` → scan that event only. No organizer login, any number of concurrent scanners, organizers use the same flow. |
+| 7 | `preferredArtist` is required on every new order (wizard and walk-in) **when the event has a line-up**; captured on wizard step 1. The walk-in form drops its phone field. |
+| 8 | Guest passes are role-scoped like everything else. |
+
+### Schema — migrations 010–013 (drafted, not applied)
+
+| Migration | Adds |
+|---|---|
+| `010_organizer_roles.sql` | `organizers.role`, `organizers.isActive`, table `organizer_events(organizerId, eventId, createdAt)`, plus the guarded promotion of pre-existing rows to `super_admin`. |
+| `011_preferred_artist.sql` | `tickets.preferredArtist VARCHAR(160) NULL` — order-invariant; `NULL` = legacy row or event without a line-up. |
+| `012_event_archive.sql` | `events.isArchived TINYINT(1) NOT NULL DEFAULT 0`. |
+| `013_scan_keyword.sql` | `events.scanKeyword VARCHAR(80) NULL` — `NULL` = not publicly scannable. |
+
+`009` stays reserved for the fresh-DB bootstrap fix (on a never-cut-over DB,
+the `AFTER deliveryContact` in 011 fails loudly — same known gap). Note that
+`sync-sigale-server.ps1` mirrors `server/migrations/`, so these four apply on
+the **next backend deploy** whether or not the code below ships with it. That
+is safe: they are additive, and 010 promotes the existing account itself.
+
+### Authorization
+
+- `verifyOrganizer` selects `role, isActive`; `isActive = 0` → `null` (401). `req.organizer = { id, username, role }`.
+- `POST /api/login` returns `{ ok, username, role }`. The client keeps `role` in the auth blob for UI gating only; the server is the gate.
+- `requireSuperAdmin` (after `requireOrganizer`): 403 unless `role === 'super_admin'`.
+- `assertOwnsEvent(conn, organizer, eventId)`: `super_admin` passes; `event_admin` needs an `organizer_events` row, else 403. Same shape as `assertNotDemo`.
+- **Every `/api/admin/*` handler calls it, reads included.** `eventId` becomes required (400) on `getAdminPurchases`, `getAdminTickets`, `listGuestPasses`. Handlers keyed by row id resolve `eventId` first — `updateAdminTicket`, `deleteAdminTicket`, `moveAdminTicketStage`, `confirmPurchase`, `rejectPurchase` already do; `updateGuestPass` and `deleteGuestPass` need a `SELECT eventId` added.
+- `POST /api/events` → `requireSuperAdmin`. `PUT /api/events/:id` → `assertOwnsEvent`; for an `event_admin` caller, submitted `slug` and `isPublished` are ignored and the stored values kept (same pattern as the demo carve-out).
+- `GET /api/events/all`: `super_admin` → every event, archived excluded unless `?includeArchived=1`; `event_admin` → `JOIN organizer_events`, archived excluded. Its row shape grows to `isPublished, salesOpen, isArchived, scanKeyword` (the public list keeps its shape). **This is the only response that carries `scanKeyword`.**
+- `deleteAllPurchases` → `requireSuperAdmin`.
+- Delete the dead `GET /api/admin/scan/manifest` and `POST /api/admin/scan/sync` routes instead of guarding them.
+- `seed/seedOrganizer.js` inserts `role = 'super_admin'` — it only ever bootstraps the first account.
+
+### Accounts API (all `requireSuperAdmin`)
+
+| Method | Route | Body / notes |
+|---|---|---|
+| GET | `/api/admin/organizers` | `{ id, username, role, isActive, createdAt, eventIds[] }[]`, never `passwordHash` |
+| POST | `/api/admin/organizers` | `{ username, password, role }`; password ≥ 8 chars; duplicate username → 409 |
+| PATCH | `/api/admin/organizers/:id` | any of `{ role, isActive, password }` |
+| PUT | `/api/admin/organizers/:id/events` | `{ eventIds: [] }` — replaces that account's `organizer_events` rows |
+
+Guards: a caller cannot change its own `role` or `isActive`, and no write may
+leave zero active `super_admin`s (409). Deactivation is the only "removal".
+
+### Archive
+
+- `PATCH /api/events/:id/archive` body `{ isArchived: 0 | 1 }` — `requireSuperAdmin` + `assertNotDemo`. One route, both directions.
+- Archived means **no new sales**: `createPurchase` and `createWalkInSale` 409 *"El evento está archivado"* regardless of `salesOpen`. Everything else keeps working (confirm/reject pending orders, ticket edits, guest passes, scanning, door list) so an organizer can finish an archived event.
+- Excluded from `GET /api/events` and from `/all` by default; `by-slug` and `/:id` still resolve. The `LandingPage`/`PurchaseFlow` gate becomes `(salesOpen && !isArchived) || isDemo`.
+- `activateDueStages` skips stages of archived events.
+- If the persisted selected event is archived, `refreshOrganizerEvents` already falls back to the most recent visible one.
+
+### Public scanner
+
+- `GET /api/scan/events` → `{ id, name, eventDate }[]` where `scanKeyword IS NOT NULL AND isArchived = 0`. Nothing else leaks.
+- `POST /api/scan` body `{ eventId, keyword, hash }` → 400 missing field; **403** wrong keyword; **404** unknown/unconfirmed hash; **409** *"Esta boleta es de otro evento"* when `ticket.eventId !== eventId`; 200 `ok` | `already_used`. `markUsed(hash, eventId)` gains the event check. Demo exemption + nightly rearm unchanged.
+- Keyword compare in JS: trimmed, case-insensitive (do not rely on collation). `PUT /api/events/:id`: `scanKeyword` omitted → keep; `''` → `NULL`; else 6–80 chars, stored trimmed. Never in `EVENT_SELECT` / the public `EVENT_LIST_SELECT`.
+- Rate-limit both public routes at 120 req/min per IP (a busy door is ~20/min). `POST /api/admin/scan` stays API-only for compatibility; no UI calls it.
+- Client: `scanAndAdmit(hash, { eventId, keyword })` → `/api/scan`. `ScanPage` = event picker + keyword input, then the camera; remember `{ eventId, keyword }` in `sessionStorage` so a refresh does not re-ask. Give the demo a keyword (via `/edit`) so visitors can try it.
+
+### Preferred artist
+
+- **Wizard step 1**: dropdown under the quantity stepper, from `event.artists`. Hidden when the line-up is empty; preselected when it has one entry; "Continuar" disabled until chosen. Sent on `POST /api/purchases`. The demo wizard shows the same control (simulated).
+- **Walk-in** `TicketForm`: same required dropdown from the selected event; **phone input removed** (`holderPhone` sent `null`; the `NO_PHONE` display sentinel stays for old rows).
+- API: `createPurchase` and `createWalkInSale` require it **iff** `events.artists` is non-empty; 400 on missing or not-in-line-up (exact string match); written to every row of the order.
+- Surfacing: `getAdminPurchases` adds `MIN(t.preferredArtist) AS preferredArtist`; `getAdminTickets` adds the column; `fromServerTicket` maps it; `/tickets` table + CSV column; `/dashboard` "Boletas por artista" (confirmed only — the query in `DB_SCHEMA.md`).
+
+### Frontend
+
+- Auth blob gains `role`; a `RequireRole('super_admin')` wrapper guards `/events-admin`, `/organizers` and `/create-event`.
+- `OrganizerMenu`: "Eventos" and "Organizadores" entries for `super_admin` only. **Add `events-admin` and `organizers` to `RESERVED_SLUGS` in both `src/utils/slug.js` and `events.controllers.js`.**
+- `AdminPage` zero-events state: `super_admin` → `/create-event`; `event_admin` → `EmptyStateCard` *"No tienes eventos asignados"*. **Fix the swallowed failure:** `refreshOrganizerEvents` catches, exposes `organizerEventsError`, and the panel shows an error + retry instead of redirecting.
+- `CreateEvent`: create mode super-only; edit mode hides `slug` and `isPublished` for `event_admin`; new `scanKeyword` field on create + edit, read in edit mode from the `organizerEvents` entry (the only place it is served).
+- **Events admin** (`/events-admin`): all events with a "show archived" toggle, per-row published / salesOpen / archived / ticket count, edit, archive/unarchive, assign `event_admin`s.
+- **Organizers admin** (`/organizers`): list, create, change role, activate/deactivate, reset password, edit event assignments.
+- `ScanPage` rebuilt per "Public scanner".
+
+### Deploy order
+
+1. Backend (`./sync-sigale-server.ps1` → commit/push BlackCoffe → Render). Migrations 010–013 apply on boot; 010 promotes the existing account itself. Probe: `SELECT username, role, isActive FROM organizers` shows one `super_admin`, and `GET /api/events/all` with the existing creds still lists both events.
+2. Frontend, immediately after. Bump `CACHE_NAME` to `sigale-v4`. **Deploy-window caveat:** an old cached bundle sends no `preferredArtist`, so its purchases 400 on any event with a line-up until it refreshes — keep the window short. **Also:** an organizer who stays logged in across the deploy has `role` missing from their locally stored auth blob (the old `POST /api/login` response never returned it) — `isSuperAdmin()` then reads `false`, hiding `/create-event`, `/events-admin`, `/organizers` and the slug/isPublished fields even for the real super_admin. Log out and back in once after the deploy to pick up `role`.
+3. Data: set the demo's `scanKeyword` via `/edit`. (Girasoles cleanup — `salesOpen = 0`, optional delete-all — is still pending from Phase 1; see the status file.)
+
+### Verification
+
+`npm run lint` + `npm run build` clean; then, against production with the user
+driving every write (Ring B discipline): login returns `role`; a test
+`event_admin` sees only its assigned event and 403s on another `eventId`;
+archiving hides an event from `/` and makes a purchase 409; `/scan` with the
+demo keyword returns `ok` → `already_used`, and a Girasoles hash under the
+demo's `eventId` returns 409; a wizard purchase and a walk-in both persist
+`preferredArtist`; the dashboard breakdown matches the SQL.
+
+### Open
+
+- One more `super_admin`-only item was ticked but not named in the 2026-09-15 review — confirm before building. `salesOpen` stays `event_admin`-editable.

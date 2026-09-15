@@ -38,6 +38,10 @@ export const fromServerTicket = (row) => {
     folio: String(row.orderId),
     deliveryMethod: row.deliveryMethod,
     deliveryContact: row.deliveryContact,
+    // Buyer's chosen act (Phase 2, migration 011) — null for legacy rows and
+    // for events with no line-up. Order-invariant, same on every seat of one
+    // orderId (see resolvePreferredArtist in purchases.controllers.js).
+    preferredArtist: row.preferredArtist || null,
     // Order lifecycle status. Only 'confirmed' rows have a validationHash
     // (and thus a scannable QR) — see docs/architecture/TICKETS_SCHEMA.md.
     status: row.status,

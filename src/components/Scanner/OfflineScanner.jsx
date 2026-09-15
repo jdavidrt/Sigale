@@ -21,6 +21,8 @@ const VERDICT = {
   [SCAN_RESULT.OK]: { pill: 'ok', icon: 'check', title: 'Adelante', sub: 'Ingreso registrado' },
   [SCAN_RESULT.ALREADY_USED]: { pill: 'no', icon: 'lock', title: 'Ya ingresó', sub: 'Boleta usada' },
   [SCAN_RESULT.INVALID]: { pill: 'dead', icon: 'bell', title: 'No válida', sub: 'Boleta no encontrada' },
+  [SCAN_RESULT.WRONG_EVENT]: { pill: 'no', icon: 'warn', title: 'Otro evento', sub: 'Esta boleta es de otro evento' },
+  [SCAN_RESULT.WRONG_KEYWORD]: { pill: 'dead', icon: 'lock', title: 'Palabra clave incorrecta', sub: 'Cambia de evento e ingrésala de nuevo' },
   [SCAN_RESULT.ERROR]: { pill: 'dead', icon: 'bell', title: 'Sin conexión', sub: 'Reintenta el escaneo' },
 };
 

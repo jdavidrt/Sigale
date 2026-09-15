@@ -13,10 +13,13 @@ import { Link, useLocation } from 'react-router-dom';
 import { Ic } from '../ui/Ic';
 import { useLanguage } from '../../context/LanguageContext';
 import { useEvent } from '../../context/EventContext';
+import { isSuperAdmin } from '../../api/admin';
 import { EventSelector } from './EventSelector';
 
 // Destination list. Icons are Astromelias `Ic` glyph names. /admin is the
 // single organizer home — there's no longer a separate /admin/create page.
+// `superOnly` entries (Phase 2) are hidden for an event_admin — the server
+// would 403 them anyway, so there's no reason to show a dead link.
 const LINKS = [
   { to: '/admin', icon: 'bell', es: 'Panel de compras', en: 'Purchases panel' },
   { to: '/sell-tickets', icon: 'plus', es: 'Vender en taquilla', en: 'Sell at the door' },
@@ -26,6 +29,8 @@ const LINKS = [
   { to: '/scan', icon: 'qr', es: 'Escanear boletas', en: 'Scan tickets' },
   { to: '/dashboard', icon: 'sparkle', es: 'Tablero', en: 'Dashboard' },
   { to: '/edit', icon: 'cal', es: 'Editar evento', en: 'Edit event' },
+  { to: '/events-admin', icon: 'cal', es: 'Eventos', en: 'Events', superOnly: true },
+  { to: '/organizers', icon: 'user', es: 'Organizadores', en: 'Organizers', superOnly: true },
 ];
 
 export function OrganizerMenu({ onLogout }) {
@@ -34,13 +39,17 @@ export function OrganizerMenu({ onLogout }) {
   const { refreshOrganizerEvents } = useEvent();
   const location = useLocation();
   const label = (l) => (language === 'en' ? l.en : l.es);
+  const visibleLinks = LINKS.filter((l) => !l.superOnly || isSuperAdmin());
 
   // OrganizerMenu is the one chrome shared by every organizer page (both
   // AdminLayout-wrapped pages and the hand-rolled /admin + /scan topbars), so
   // it's the natural place to populate + restore the selected event — run
   // unconditionally on mount, not gated behind the slide-out panel being open.
+  // refreshOrganizerEvents now throws on failure (Phase 2 fix) — the pages
+  // that need to react to that read organizerEventsError from context, so
+  // here we just need to stop it from surfacing as an unhandled rejection.
   useEffect(() => {
-    refreshOrganizerEvents();
+    refreshOrganizerEvents().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -95,7 +104,7 @@ export function OrganizerMenu({ onLogout }) {
 
             <EventSelector />
 
-            {LINKS.map((l) => {
+            {visibleLinks.map((l) => {
               const active = location.pathname === l.to;
               return (
                 <Link

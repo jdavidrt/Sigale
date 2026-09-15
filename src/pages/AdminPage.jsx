@@ -21,7 +21,8 @@ import { useEvent } from '../context/EventContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useDialog } from '../context/DialogContext';
 import { fromServerTicket } from '../context/TicketContext';
-import { admin, isLoggedIn, logout } from '../api/admin';
+import { admin, isLoggedIn, logout, isSuperAdmin } from '../api/admin';
+import { EmptyStateCard } from '../components/ui/EmptyStateCard';
 import { statusMeta } from '../api/purchases';
 import { formatCurrency, formatDateTime, formatTo12Hour, parseLocalDate } from '../utils/timeFormat';
 
@@ -110,7 +111,7 @@ function Login({ onIn }) {
 // ── Panel (post-login) ─────────────────────────────────────────────────────────
 function Panel({ onLogout }) {
   const { t } = useLanguage();
-  const { event, eventLoading, refreshEvent, organizerEvents } = useEvent();
+  const { event, eventLoading, refreshEvent, organizerEvents, organizerEventsError, refreshOrganizerEvents } = useEvent();
 
   if (eventLoading) {
     return (
@@ -123,11 +124,39 @@ function Panel({ onLogout }) {
   }
 
   if (!event) {
+    // Phase 2 fix: a failed GET /api/events/all used to read exactly like
+    // "this organizer has zero events" and silently redirect to
+    // /create-event. Surface the error with a retry instead — it might be a
+    // stale-creds/cold-dyno blip, and redirecting hides that from the user.
+    if (organizerEventsError && organizerEvents.length === 0) {
+      return (
+        <Screen seed={11}>
+          <div className="scr-body pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, textAlign: 'center', zIndex: 1 }}>
+            <p style={{ color: 'var(--red, #f87171)' }}>{t('organizerEventsLoadError')}</p>
+            <button className="btn sm" type="button" onClick={() => refreshOrganizerEvents().catch(() => {})}>
+              {t('retry')}
+            </button>
+          </div>
+        </Screen>
+      );
+    }
     // Multi-event: `event` can be transiently null while OrganizerMenu's
-    // mount-time refreshOrganizerEvents() is still in flight, so only bounce
-    // to the create form once we know for sure the organizer has no events.
+    // mount-time refreshOrganizerEvents() is still in flight, so only branch
+    // once we know for sure the organizer has no events.
     if (organizerEvents.length === 0) {
-      return <Navigate to="/create-event" replace />;
+      // super_admin with zero events is the create-first-event onboarding
+      // path; an event_admin has no create rights (server 403s it anyway),
+      // so it gets a plain empty state instead of a dead-end redirect.
+      if (isSuperAdmin()) {
+        return <Navigate to="/create-event" replace />;
+      }
+      return (
+        <Screen seed={11}>
+          <div className="scr-body pad" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+            <EmptyStateCard icon="🗓️" title={t('noEventsAssigned')} description={t('noEventsAssignedDesc')} />
+          </div>
+        </Screen>
+      );
     }
     return (
       <Screen seed={11}>

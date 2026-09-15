@@ -6,7 +6,7 @@
 //   3. Poisoned cache entries are detected and purged
 //   4. Fetch requests have timeouts to survive iOS suspension
 
-const CACHE_NAME = 'sigale-v3';
+const CACHE_NAME = 'sigale-v4';
 const NAVIGATION_TIMEOUT_MS = 4000;
 const urlsToCache = [
   '/',

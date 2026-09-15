@@ -20,6 +20,8 @@ const TicketsPage = lazy(() => import("./pages/TicketsPage").then((m) => ({ defa
 const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const GuestPassesPage = lazy(() => import("./pages/GuestPassesPage").then((m) => ({ default: m.GuestPassesPage })));
 const DoorListPage = lazy(() => import("./pages/DoorListPage").then((m) => ({ default: m.DoorListPage })));
+const EventsAdminPage = lazy(() => import("./pages/EventsAdminPage").then((m) => ({ default: m.EventsAdminPage })));
+const OrganizersAdminPage = lazy(() => import("./pages/OrganizersAdminPage").then((m) => ({ default: m.OrganizersAdminPage })));
 // 2.0 public routes (Astromelias) — rendered outside the organizer Layout.
 const EventsListPage = lazy(() => import("./pages/EventsListPage").then((m) => ({ default: m.EventsListPage })));
 const LandingPage = lazy(() => import("./pages/LandingPage").then((m) => ({ default: m.LandingPage })));
@@ -30,7 +32,7 @@ import { loadFlyerImage } from "./utils/svgTicketTemplate";
 import { FLYER_IMAGE_BASE64 } from "./assets/flyerImage";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import { usePageVisibility } from "./hooks/usePageVisibility";
-import { isLoggedIn } from "./api/admin";
+import { isLoggedIn, isSuperAdmin } from "./api/admin";
 import { eventsApi } from "./api/events";
 
 // Organizer chrome (Astromelias topbar + OrganizerMenu sidebar) for every
@@ -47,6 +49,15 @@ function OrganizerLayout() {
 // server still re-validates organizer credentials on each write.
 function RequireAuth({ children }) {
   return isLoggedIn() ? children : <Navigate to="/admin" replace />;
+}
+
+// Phase 2 (roles): gate for super_admin-only tools (create event, events
+// admin, organizers admin). A logged-out visitor gets bounced to /admin like
+// RequireAuth; a logged-in event_admin gets bounced to the organizer home
+// rather than a route the server would 403 anyway.
+function RequireSuperAdmin({ children }) {
+  if (!isLoggedIn()) return <Navigate to="/admin" replace />;
+  return isSuperAdmin() ? children : <Navigate to="/admin" replace />;
 }
 
 // Legacy /evento/:id links (pre-2.0 multi-event) → /:slug. Falls back to the
@@ -112,7 +123,11 @@ function AppContent() {
                   {/* Organizer tools — all share the AdminLayout chrome, gated
                       by RequireAuth. /admin itself paints its own chrome. */}
                   <Route element={<RequireAuth><OrganizerLayout /></RequireAuth>}>
-                    <Route path="/create-event" element={<CreateEventPage />} />
+                    {/* Phase 2: creating an event, and the two account/event
+                        management pages, are super_admin-only — the server
+                        403s an event_admin anyway (requireSuperAdmin), so the
+                        UI doesn't offer a route that would just fail. */}
+                    <Route path="/create-event" element={<RequireSuperAdmin><CreateEventPage /></RequireSuperAdmin>} />
                     <Route path="/edit" element={<EditEventPage />} />
                     <Route path="/edit-event" element={<Navigate to="/edit" replace />} />
                     <Route path="/sell-tickets" element={<SellTicketsPage />} />
@@ -121,6 +136,8 @@ function AppContent() {
                     <Route path="/tickets" element={<TicketsPage />} />
                     <Route path="/validate-qr" element={<Navigate to="/scan" replace />} />
                     <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/events-admin" element={<RequireSuperAdmin><EventsAdminPage /></RequireSuperAdmin>} />
+                    <Route path="/organizers" element={<RequireSuperAdmin><OrganizersAdminPage /></RequireSuperAdmin>} />
                   </Route>
 
                   {/* Public per-event routes — every event lives at /:slug

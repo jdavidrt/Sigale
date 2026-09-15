@@ -81,6 +81,22 @@ transitions rows that already existed since the reservation.
 | `isUsed` | `TINYINT(1) NOT NULL DEFAULT 0` | door scan (`markUsed`) | Whether this seat has been checked in. Independent per row — each seat in a multi-ticket order is scanned separately. |
 | `usedAt` | `DATETIME NULL` | door scan (`markUsed`) | When it was scanned. On a scan conflict (two offline devices), the earliest `usedAt` wins. |
 
+## Planned column — `preferredArtist` (migration 011, NOT yet applied)
+
+Drafted in `server/migrations/011_preferred_artist.sql`. **Application code
+now reads/writes it** (`resolvePreferredArtist()` in
+`purchases.controllers.js`, used by `createPurchase` and `createWalkInSale`;
+`getAdminPurchases`/`getAdminTickets` surface it; `TicketForm` and
+`PurchaseFlow` collect it — written 2026-09-15), but the migration itself
+**has not been applied anywhere** (not local, not production) and none of
+this has run against a real database — listed here so the live column set
+above stays the source of truth while the addition is tracked. See
+`MULTI_EVENT_PLAN_STATUS.md` for what's built vs. deployed.
+
+| Column | Type | Set when | Meaning |
+|---|---|---|---|
+| `preferredArtist` | `VARCHAR(160) NULL` (placed `AFTER deliveryContact`) | `createPurchase` and `createWalkInSale`; `NULL` only on legacy rows or when the event has no line-up | The band/artist the buyer is coming to see, chosen from the event's own line-up (`events.artists`). **Order-invariant** — the same value on every row of an `orderId`, exactly like `deliveryMethod`/`deliveryContact`/`status`, because the buyer picks one act for the whole order. Free-form at the DB level (like `guest_passes.band`); the wizard constrains it to the event's artists. Powers a "which act sold the most tickets" report — see `docs/architecture/DB_SCHEMA.md`. |
+
 ## Indexes / constraints
 
 - `PRIMARY KEY (id)`

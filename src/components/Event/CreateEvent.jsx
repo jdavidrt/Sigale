@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useEvent } from "../../context/EventContext";
 import { useLanguage } from "../../context/LanguageContext";
 import { useDialog } from "../../context/DialogContext";
+import { isSuperAdmin } from "../../api/admin";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faWandMagicSparkles, faFloppyDisk, faTriangleExclamation, faTrash,
-  faCalendarDay, faPlus, faUsers, faLayerGroup,
+  faCalendarDay, faPlus, faUsers, faLayerGroup, faQrcode,
 } from "@fortawesome/free-solid-svg-icons";
 import { sanitizeSlugInput, isSlugFormatValid } from "../../utils/slug";
 import s from "./CreateEvent.module.css";
@@ -17,7 +18,7 @@ const emptyStage = () => ({ id: null, name: "", price: 0, totalQuantity: 0, acti
 
 export const CreateEvent = ({ isEditing = false }) => {
   const navigate = useNavigate();
-  const { createEvent, updateEvent, event } = useEvent();
+  const { createEvent, updateEvent, event, organizerEvents } = useEvent();
   const { t } = useLanguage();
   const { notify } = useDialog();
 
@@ -41,6 +42,7 @@ export const CreateEvent = ({ isEditing = false }) => {
     slug: "",
     isPublished: false,
     salesOpen: false,
+    scanKeyword: "",
     stages: [emptyStage()],
   });
 
@@ -49,10 +51,21 @@ export const CreateEvent = ({ isEditing = false }) => {
   // events.controllers.js) — lock the slug field to match, so the organizer
   // isn't misled into thinking a copy-edit could change it.
   const isDemoEvent = isEditing && !!event?.isDemo;
+  // Phase 2: slug and isPublished are super_admin-only edits — the server
+  // silently keeps the stored value for either field from a non-super_admin
+  // caller, so lock them client-side too rather than let an event_admin
+  // change a value that won't actually save.
+  const canEditSlugAndPublish = isSuperAdmin();
+  const slugLocked = isDemoEvent || !canEditSlugAndPublish;
   const [slugError, setSlugError] = useState("");
 
   useEffect(() => {
     if (isEditing && event) {
+      // scanKeyword is served ONLY on GET /api/events/all (never on the
+      // getById response CreateEvent's `event` comes from — a deliberate
+      // security invariant, migration 013) — so it's read from the matching
+      // organizerEvents entry instead.
+      const listEntry = organizerEvents.find((e) => String(e.id) === String(event.id));
       const stages =
         Array.isArray(event.stages) && event.stages.length > 0
           ? event.stages.map((st) => ({
@@ -78,9 +91,11 @@ export const CreateEvent = ({ isEditing = false }) => {
         slug: event.slug || "",
         isPublished: !!event.isPublished,
         salesOpen: !!event.salesOpen,
+        scanKeyword: listEntry?.scanKeyword || "",
         stages,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditing, event]);
 
   // ── Capacity meter — Σ stage quotas vs aforo ──────────────────────────────────
@@ -115,15 +130,20 @@ export const CreateEvent = ({ isEditing = false }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Demo row: slug is fixed server-side regardless of what's submitted, so
-    // skip client-side slug validation entirely for it (mirrors the backend
-    // carve-out). Every other event requires a valid slug.
-    if (!isDemoEvent) {
+    // Demo row (or a non-super_admin caller): slug is fixed server-side
+    // regardless of what's submitted, so skip client-side slug validation
+    // entirely for it (mirrors the backend carve-out). Every other event
+    // requires a valid slug.
+    if (!slugLocked) {
       if (!isSlugFormatValid(formData.slug)) {
         setSlugError(t("eventSlugInvalid"));
         return;
       }
       setSlugError("");
+    }
+    if (formData.scanKeyword && (formData.scanKeyword.trim().length < 6 || formData.scanKeyword.trim().length > 80)) {
+      notify({ message: t("eventScanKeywordInvalid") || "La palabra clave debe tener entre 6 y 80 caracteres", tone: "error" });
+      return;
     }
 
     const named = formData.stages.filter((st) => st.name.trim() !== "");
@@ -172,6 +192,10 @@ export const CreateEvent = ({ isEditing = false }) => {
       slug: formData.slug,
       isPublished: formData.isPublished,
       salesOpen: formData.salesOpen,
+      // '' means "clear it" server-side; omitting the key entirely means
+      // "keep whatever is stored" — see toApiEventPayload's scanKeyword
+      // mapping (`undefined` only when the field is untouched).
+      scanKeyword: formData.scanKeyword.trim(),
       stages,
     };
 
@@ -243,10 +267,10 @@ export const CreateEvent = ({ isEditing = false }) => {
 
                 <div className={s.field}>
                   <label className={s.fieldLabel}>{t("eventSlugLabel")}</label>
-                  {isDemoEvent ? (
+                  {slugLocked ? (
                     <>
                       <input type="text" value={formData.slug} disabled />
-                      <p className={s.demoNotice}>{t("eventIsDemoNotice")}</p>
+                      {isDemoEvent && <p className={s.demoNotice}>{t("eventIsDemoNotice")}</p>}
                     </>
                   ) : (
                     <>
@@ -267,18 +291,20 @@ export const CreateEvent = ({ isEditing = false }) => {
                 </div>
 
                 <div className={s.fieldRow}>
-                  <label className={s.toggleRow}>
-                    <input
-                      type="checkbox"
-                      className={s.toggleInput}
-                      checked={formData.isPublished}
-                      onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
-                    />
-                    <span className={s.toggleText}>
-                      <span>{t("eventPublishedLabel")}</span>
-                      <span className={s.toggleHint}>{t("eventPublishedHint")}</span>
-                    </span>
-                  </label>
+                  {canEditSlugAndPublish && (
+                    <label className={s.toggleRow}>
+                      <input
+                        type="checkbox"
+                        className={s.toggleInput}
+                        checked={formData.isPublished}
+                        onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                      />
+                      <span className={s.toggleText}>
+                        <span>{t("eventPublishedLabel")}</span>
+                        <span className={s.toggleHint}>{t("eventPublishedHint")}</span>
+                      </span>
+                    </label>
+                  )}
                   <label className={s.toggleRow}>
                     <input
                       type="checkbox"
@@ -291,6 +317,24 @@ export const CreateEvent = ({ isEditing = false }) => {
                       <span className={s.toggleHint}>{t("eventSalesOpenHint")}</span>
                     </span>
                   </label>
+                </div>
+
+                {/* Public scan keyword (Phase 2) — never prefilled from the
+                    getById response (security invariant), only from the
+                    matching organizerEvents entry; see the effect above. */}
+                <div className={s.field}>
+                  <label className={s.fieldLabel}>
+                    <FontAwesomeIcon icon={faQrcode} style={{ marginRight: 6 }} />
+                    {t("eventScanKeywordLabel")}
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={80}
+                    value={formData.scanKeyword}
+                    onChange={(e) => setFormData({ ...formData, scanKeyword: e.target.value })}
+                    placeholder={t("scanKeywordPlaceholder")}
+                  />
+                  <p className={s.toggleHint} style={{ marginTop: 4 }}>{t("eventScanKeywordHint")}</p>
                 </div>
 
                 <div className={s.field}>

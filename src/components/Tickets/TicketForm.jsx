@@ -11,7 +11,7 @@ import { QRDisplay } from "./QRDisplay";
 import { FieldLabel } from "../ui/FieldLabel";
 import { EmptyStateCard } from "../ui/EmptyStateCard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTicketSimple, faPenToSquare, faUser, faIdCard, faPhone, faChevronDown, faPlusCircle, faCheckCircle, faPaste, faLock } from "@fortawesome/free-solid-svg-icons";
+import { faTicketSimple, faPenToSquare, faUser, faIdCard, faChevronDown, faPlusCircle, faCheckCircle, faPaste, faLock } from "@fortawesome/free-solid-svg-icons";
 import s from "./TicketForm.module.css";
 import btn from "../Common/Button.module.css";
 
@@ -39,8 +39,13 @@ export const TicketForm = () => {
 
   const editTicket = location.state?.editTicket;
   const isEditMode = !!editTicket;
+  // Required whenever the event has a line-up (Phase 2, migration 011) — the
+  // server 400s a walk-in sale that omits it in that case. Sourced straight
+  // from the event, same list the wizard's step 1 dropdown uses.
+  const artists = Array.isArray(event?.artists) ? event.artists : [];
+  const artistRequired = artists.length > 0;
 
-  const [formData, setFormData] = useState({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "" });
+  const [formData, setFormData] = useState({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "", preferredArtist: "" });
   const [createdTicket, setCreatedTicket] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -74,6 +79,10 @@ export const TicketForm = () => {
       notify({ message: t("idInvalid"), tone: "error" });
       return;
     }
+    if (!isEditMode && artistRequired && !formData.preferredArtist) {
+      notify({ message: t("artistRequired"), tone: "error" });
+      return;
+    }
     setIsSubmitting(true);
     const payload = {
       ...formData,
@@ -103,6 +112,7 @@ export const TicketForm = () => {
           eventId: event.id,
           stageId: stage.id,
           quantity: 1,
+          preferredArtist: artistRequired ? formData.preferredArtist : undefined,
           holders: [
             {
               name: payload.buyerName.trim(),
@@ -120,6 +130,7 @@ export const TicketForm = () => {
           buyerName: payload.buyerName.trim(),
           buyerId: payload.buyerId.trim(),
           buyerPhone: payload.buyerPhone, // sentinel kept for display
+          preferredArtist: artistRequired ? formData.preferredArtist : null,
           ticketType: formData.ticketType,
           validationHash: minted?.validationHash ?? null,
           orderId: res?.orderId ?? null,
@@ -128,7 +139,7 @@ export const TicketForm = () => {
         });
         // Keep the in-memory list in sync so /tickets reflects the new order.
         refreshFromServer('confirmed', event.id);
-        setFormData({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "" });
+        setFormData({ buyerName: "", buyerId: "", buyerPhone: "", ticketType: "", preferredArtist: "" });
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } catch (error) {
@@ -227,8 +238,8 @@ export const TicketForm = () => {
                       <p className={s.detailValueMuted}>{createdTicket.buyerId}</p>
                     </div>
                     <div className={s.detailsGridRight}>
-                      <p className={s.detailKey}>{t("detailPhone")}</p>
-                      <p className={s.detailValueMuted}>{createdTicket.buyerPhone}</p>
+                      <p className={s.detailKey}>{t("preferredArtist")}</p>
+                      <p className={s.detailValueMuted}>{createdTicket.preferredArtist || "—"}</p>
                     </div>
                   </div>
                 </div>
@@ -274,39 +285,46 @@ export const TicketForm = () => {
                     )}
                   </div>
 
-                  {/* ID + Phone two-col — phone is OPTIONAL */}
-                  <div className={s.twoCol}>
-                    <div>
-                      <FieldLabel icon={faIdCard} rowClass={s.fieldLabelRow} textClass={s.fieldLabelText}>
-                        {t("idNumber")}
-                      </FieldLabel>
-                      <input
-                        type="tel"
-                        required
-                        maxLength={30}
-                        value={formData.buyerId}
-                        onChange={(e) => setFormData({ ...formData, buyerId: e.target.value })}
-                        placeholder="ID..."
-                        className="text-mono"
-                      />
-                      {idError && (
-                        <p className={s.fieldError}>{t("idInvalid")}</p>
-                      )}
-                    </div>
-                    <div>
-                      <FieldLabel icon={faPhone} rowClass={s.fieldLabelRow} textClass={s.fieldLabelText}>
-                        {t("phoneNumber")} <span className={s.fieldHint}>· {t("optional")}</span>
-                      </FieldLabel>
-                      <input
-                        type="tel"
-                        maxLength={30}
-                        value={formData.buyerPhone}
-                        onChange={(e) => setFormData({ ...formData, buyerPhone: e.target.value })}
-                        placeholder={t("optional")}
-                        className="text-mono"
-                      />
-                    </div>
+                  {/* ID number */}
+                  <div>
+                    <FieldLabel icon={faIdCard} rowClass={s.fieldLabelRow} textClass={s.fieldLabelText}>
+                      {t("idNumber")}
+                    </FieldLabel>
+                    <input
+                      type="tel"
+                      required
+                      maxLength={30}
+                      value={formData.buyerId}
+                      onChange={(e) => setFormData({ ...formData, buyerId: e.target.value })}
+                      placeholder="ID..."
+                      className="text-mono"
+                    />
+                    {idError && (
+                      <p className={s.fieldError}>{t("idInvalid")}</p>
+                    )}
                   </div>
+
+                  {/* Preferred artist — required whenever the event has a
+                      line-up (migration 011); hidden for an event with none,
+                      and not offered when editing an already-sold ticket. */}
+                  {!isEditMode && artistRequired && (
+                    <div className={s.selectWrapper}>
+                      <FieldLabel icon={faUser} rowClass={s.fieldLabelRow} textClass={s.fieldLabelText}>
+                        {t("preferredArtist")}
+                      </FieldLabel>
+                      <select
+                        required
+                        value={formData.preferredArtist}
+                        onChange={(e) => setFormData({ ...formData, preferredArtist: e.target.value })}
+                      >
+                        <option value="">{t("selectArtist")}</option>
+                        {artists.map((a) => (
+                          <option key={a} value={a}>{a}</option>
+                        ))}
+                      </select>
+                      <FontAwesomeIcon icon={faChevronDown} className={s.selectChevron} />
+                    </div>
+                  )}
 
                   {/* Ticket Type */}
                   <div className={s.selectWrapper}>

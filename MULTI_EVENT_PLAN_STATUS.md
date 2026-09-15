@@ -1,7 +1,64 @@
 # Multi-event plan — implementation status
 
-**Last updated:** 2026-08-05
-**Reads alongside:** `MULTI_EVENT_PLAN.md` (the plan this tracks — see it for the full design/decisions)
+**Last updated:** 2026-09-15
+**Reads alongside:** `MULTI_EVENT_PLAN.md` (design history + the Phase 2 spec)
+
+## Current state (2026-09-15)
+
+**Phase 1 (multi-event platform) is shipped and in production** since
+2026-08-05. Everything from "TL;DR" down is that day's snapshot and has not
+changed since — `git log` shows no code commit after `fb3d4fc` (2026-08-05).
+
+**Phase 2 (roles, archive, public scanner, preferred artist) is implemented
+in code (2026-09-15 session), not deployed or verified.** Spec:
+`MULTI_EVENT_PLAN.md` → "Phase 2". Schema: `docs/architecture/DB_SCHEMA.md`
+(+ `DB_SCHEMA.svg`). Migrations `server/migrations/010`–`013` were already
+drafted; this session wrote the backend (`server/utils/authz.js`,
+`requireOrganizer.js`'s `requireSuperAdmin`, every controller/route touched
+by roles/archive/scanner/artist, new `organizers.controllers.js` +
+`organizers.routes.js`) and the frontend (`RequireSuperAdmin` in `App.jsx`,
+role-gated `OrganizerMenu`, `CreateEvent`'s scan-keyword field and
+event_admin carve-outs, new `EventsAdminPage`/`OrganizersAdminPage`, a
+rebuilt public-scan `ScanPage`, `preferredArtist` in `TicketForm` and
+`PurchaseFlow`). `npm run lint` and `npm run build` are both clean.
+**Nothing has been deployed, no migration has run against any database, and
+none of it has been exercised against a live server** — that's the entire
+remaining scope: sync + deploy the backend, confirm migrations 010–013 apply
+cleanly and promote the existing account to `super_admin`, then work through
+the "Verification" checklist at the bottom of `MULTI_EVENT_PLAN.md`'s Phase 2
+section with the user driving every write (Ring B discipline). Known gaps
+left for a follow-up: the dashboard's "Boletas por artista" breakdown and a
+`preferredArtist` CSV column were deliberately skipped to avoid touching
+`TicketContext.getStats`/`csvUtils`'s tested public API.
+
+**Corrections to the 2026-08-05 snapshot below:**
+- The "Modo demostración" banner no longer exists — commits `ea3187e` /
+  `f4f55f3` removed it the same afternoon, after the snapshot's text was
+  written. Demo wizard steps 1–5 give no on-screen hint that the purchase is
+  simulated while step 4 still renders the real bank QR. Left as-is by user
+  decision (2026-09-11). Orphaned: the `demoModeBanner` translation keys and
+  the always-`undefined` `banner` prop on `Step6` / `FlowShell`.
+- Every "still open" item below is **unverified as of today**, not just as of
+  2026-08-05. They were DB/API actions, so git can't confirm them either way.
+
+**Still open from Phase 1 (production data, not code):**
+1. **Girasoles rests dirty** — 5 test tickets (orders 166–169), Etapa 1
+   `closed` 4/5, Etapa 2 `active` 0/10, and **`salesOpen = 1`**: anyone with
+   the `/girasoles` link can place a real order. Set `salesOpen = 0` via
+   `/edit`, which also exercises the never-clicked event form.
+2. **orderId-never-reused is unverified** — `order_counter.highWaterMark` is
+   164 while `MAX(orderId)` is 169. Run "Delete All Tickets" on Girasoles (or
+   `scratchpad/b7-orderid.mjs`) to close it, or record it as accepted-unverified.
+3. **Nightly rearm unverified** — demo ticket 97 (`95cb147cf9b94482`) was
+   left `isUsed = 1` on 2026-08-05; a scan returning `ok` proves the job runs.
+4. **Never clicked** — `EventSelector` across the organizer pages, the
+   delete-all confirm naming the event, `/demo/compra` steps 2–6 + WhatsApp
+   hand-off, the `/create-event` + `/edit` form UI.
+
+**Do not re-send Ring A's pre-flip probe** (`POST /api/purchases` on a
+Girasoles stage): `salesOpen` is 1, so it would mint a real pending order.
+
+---
 
 ## TL;DR
 
@@ -427,36 +484,6 @@ reconciliation is now proven, but the form that drives it is not.
 - **`order_counter` is only written by `deleteAllPurchases`.** Any future
   bulk ticket deletion must bump it too, or the QR-collision hazard returns
   (plan risk #6).
-
----
-
-## Next steps
-
-In rough priority order:
-
-1. **Tomorrow (2026-08-06): verify the rearm.** Scan `95cb147cf9b94482` at
-   `/scan` (or `POST /api/admin/scan`). `ok` = the nightly job works;
-   `already_used` = it did not run, and `rearmDemoTickets` needs
-   investigating on Render.
-2. **Decide on the delete-all.** Either run `scratchpad/b7-orderid.mjs` (or
-   "Delete All Tickets" with Girasoles selected, which is the same code path
-   plus the confirm dialog) to close the orderId invariant, or accept it as
-   unverified and record that. Until then Girasoles cannot reach the plan's
-   "zero tickets" resting state.
-3. **Close Girasoles' online sales** — `salesOpen = 0` via `/edit`, which
-   doubles as the browser exercise of the event form (slug input inline
-   validation, `sigale…/<slug>` prefix, both toggle rows).
-4. **The remaining click-throughs** (the purchase wizard is already done):
-   `EventSelector` across `/admin`, `/tickets`, `/dashboard`,
-   `/sell-tickets`, `/guest-passes`, `/lista-puerta`; the delete-all confirm
-   dialog naming the event; `/demo/compra` steps 2–6 and its WhatsApp
-   hand-off.
-5. ~~`npm test`~~ — **passing, 2026-08-05.**
-
-**Do not re-send Ring A's pre-flip probe** (`POST /api/purchases` on a
-Girasoles stage) — `salesOpen` is now **1**, so that request would succeed
-and mint a real pending order instead of the 409 it was written to assert.
-It is recorded as passed-once and must be skipped on any Ring A rerun.
 
 ---
 

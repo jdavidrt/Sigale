@@ -27,6 +27,12 @@ export const EventProvider = ({ children }) => {
   const [event, setEvent] = useState(null);
   const [eventLoading, setEventLoading] = useState(false);
   const [organizerEvents, setOrganizerEvents] = useState([]);
+  // Phase 2 fix: refreshOrganizerEvents used to swallow a failed
+  // GET /api/events/all silently, which AdminPage read as "zero events" and
+  // bounced to /create-event even when the organizer legitimately has
+  // events (stale creds, cold dyno, network blip). Surfacing the error lets
+  // the page show a retry instead of a wrong redirect.
+  const [organizerEventsError, setOrganizerEventsError] = useState(null);
   const [selectedEventId, setSelectedEventId] = useLocalStorageValue("sigale-selected-event-id", "");
 
   /** Public pages: resolve an event by its URL slug (LandingPage, PurchaseFlowPage). */
@@ -78,19 +84,27 @@ export const EventProvider = ({ children }) => {
    * (AdminLayout-wrapped pages, plus the hand-rolled /admin and /scan).
    */
   const refreshOrganizerEvents = useCallback(async () => {
-    const rows = await eventsApi.listAll(authOpts());
-    setOrganizerEvents(rows);
-    const stillExists = selectedEventId && rows.some((r) => String(r.id) === String(selectedEventId));
-    if (stillExists) {
-      if (!event || String(event.id) !== String(selectedEventId)) {
-        await selectEvent(selectedEventId);
+    try {
+      const rows = await eventsApi.listAll(authOpts());
+      setOrganizerEvents(rows);
+      setOrganizerEventsError(null);
+      const stillExists = selectedEventId && rows.some((r) => String(r.id) === String(selectedEventId));
+      if (stillExists) {
+        if (!event || String(event.id) !== String(selectedEventId)) {
+          await selectEvent(selectedEventId);
+        }
+      } else if (rows.length > 0) {
+        await selectEvent(rows[0].id);
+      } else {
+        setEvent(null);
       }
-    } else if (rows.length > 0) {
-      await selectEvent(rows[0].id);
-    } else {
-      setEvent(null);
+      return rows;
+    } catch (err) {
+      // Leave organizerEvents/event untouched — a transient failure must not
+      // erase an already-loaded list, and must not read as "no events".
+      setOrganizerEventsError(err?.message || 'No se pudieron cargar los eventos');
+      throw err;
     }
-    return rows;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedEventId, selectEvent]);
 
@@ -159,6 +173,7 @@ export const EventProvider = ({ children }) => {
       refreshEvent,
       // Multi-event additions — organizer selector + public slug resolution.
       organizerEvents,
+      organizerEventsError,
       selectedEventId,
       selectEvent,
       refreshOrganizerEvents,
@@ -173,6 +188,7 @@ export const EventProvider = ({ children }) => {
       hasEvent,
       refreshEvent,
       organizerEvents,
+      organizerEventsError,
       selectedEventId,
       selectEvent,
       refreshOrganizerEvents,

@@ -32,45 +32,58 @@ These audiences share a server-side source of truth (MySQL) for inventory. The Q
 | Crypto | Web Crypto API | Client-side: ticket IDs for walk-ins only |
 | Backend | Express + `mysql2/promise` | Separate `server/` app; `dateStrings:true`, SSL CA cert |
 | Database | MySQL 8 on DigitalOcean | Dedicated `sigale` database; shared cluster with BlackCoffe |
-| Door scan | `POST /api/admin/scan` | **Online-only**: one request per QR, validates + admits. No IndexedDB, no manifest |
+| Door scan | `POST /api/admin/scan` (organizer, API-only) / `POST /api/scan` (public, keyword-gated — Phase 2, written 2026-09-15, not deployed) | **Online-only**: one request per QR, validates + admits. No IndexedDB, no manifest |
 | Jobs | `node-cron` (`scheduler.js`) | Stage auto-activation + expired-hold sweep |
 
 ---
 
 ## Route groups
 
-`App.jsx` defines two layout contexts that never mix:
+> **Multi-event (Phase 1, shipped 2026-08-05).** The platform moved from one
+> "active event" to many events sold concurrently, each at its own URL
+> `slug`. `/` is now a public grid, not a single landing page, and there is
+> no more auto-loaded "the" event — every page resolves one explicitly, by
+> slug (public) or by organizer selection (`useEvent()`). This section
+> reflects that shipped state, plus **Phase 2** additions (roles, archive,
+> public scanner — written 2026-09-15, code exists but **nothing is
+> deployed or verified**; marked inline below).
+
+`App.jsx` defines two layout contexts that never mix. `BrowserRouter` wraps
+every provider (not the other way around); every routed page is lazy-loaded.
 
 **Public (Astromelias, no organizer nav)**
 
 | Route | Page |
 |-------|------|
-| `/` | LandingPage |
-| `/evento/:id` | LandingPage (specific event) |
-| `/compra` | PurchaseFlowPage — 6-step wizard. Steps 1–3 reversible; from step 4 ("Ir a pagar") onward the back chevron is hidden. Step 6 is a terminal success screen with a single "Volver al inicio" CTA. |
-| `/admin` | AdminPage — login → purchase queue. "+ Registrar Venta" navigates to `/sell-tickets` (no inline walk-in stepper). Slide-out `OrganizerMenu` links to every organizer tool; with no active event it redirects to `/create-event`. |
-| `/scan` | ScanPage (door scan, online). Public route so the door device isn't behind the auth funnel, but the call still needs organizer credentials from a prior login. |
+| `/` | EventsListPage — grid of `isPublished` events (flyer/name/date/venue cards, a "Demo" pill on the demo). Never empty in practice: the demo is always published. |
+| `/:slug` | LandingPage for one event, resolved by `loadEventBySlug(slug)`. A 404 redirects to `/`. **Unpublished events are still reachable here** (soft-launch by private link) — `isPublished` gates only the `/` grid. |
+| `/:slug/compra` | PurchaseFlowPage — 6-step wizard, resolves its own event via `loadEventBySlug` (works on a cold deep link, not just after visiting the landing page). Steps 1–3 reversible; from step 4 ("Ir a pagar") onward the back chevron is hidden; step 6 is a terminal success screen with a single "Volver al inicio" CTA. Gate to enter: `event.salesOpen \|\| event.isDemo` (Phase 2 tightens this to `(salesOpen && !isArchived) \|\| isDemo`, not deployed). Step 1 also collects `preferredArtist` when the event has a line-up (Phase 2, not deployed). |
+| `/compra` | (legacy) — redirects to `/` |
+| `/evento/:id` | (legacy) — `LegacyEventRedirect`: fetches the event by id, navigates to `/${slug}`; falls back to `/` on a 404 or a slugless (deploy-window) event |
+| `/admin` | AdminPage — login → purchase queue, scoped to the organizer's selected event (`OrganizerMenu`'s `EventSelector`). "+ Registrar Venta" navigates to `/sell-tickets`. With zero events, redirects to `/create-event` (Phase 2: only for a `super_admin`; an `event_admin` with none sees an empty state instead — not deployed). |
 | `/admin/create` | (legacy) — redirects to `/admin` |
+| `/scan` | ScanPage. **Phase 2 rebuild (not deployed):** no organizer login — pick an event, type its shared `scanKeyword`, then scan; the choice is remembered in `sessionStorage`. Still public route either way, but no longer depends on a prior `/admin` login. |
 
 The old `/compra/:orderId` status page and `GET /api/recover` were removed in favor of an organizer-driven delivery model: the buyer is told *"Tan pronto nuestro equipo valide tu pago te enviaremos la boleta a `<deliveryContact>` por `<WhatsApp|correo>`"* and the organizer reaches out from `/tickets` once the order is confirmed.
 
 **Organizer (wrapped in `AdminLayout`, gated by `RequireAuth`)**
 
-All organizer routes require the admin login (`isLoggedIn()` in `api/admin.js`); unauthenticated visits redirect to `/admin`. The client gate is a UX funnel — the server is still the authority, re-validating credentials per request.
+All organizer routes require the admin login (`isLoggedIn()` in `api/admin.js`); unauthenticated visits redirect to `/admin`. The client gate is a UX funnel — the server is still the authority, re-validating credentials per request. Every page here reads the organizer's currently selected event from `useEvent()` and re-fetches on selection change.
 
 | Route | Page |
 |-------|------|
-| `/create-event` | CreateEvent (create mode) — the single API-backed event form |
-| `/edit` | CreateEvent (edit mode); `/edit-event` redirects here |
-| `/sell-tickets` | SellTicketsPage (walk-in registration). Phone field is **optional**; name + ID don't pop inline validation errors until the user has typed ≥ 4 characters. |
-| `/guest-passes` | GuestPassesPage — artist/crew/courtesy free-entry roster, scoped to the active event and grouped by band (sourced from `events.artists`). Editable spreadsheet (`GuestPassTable`/`GuestPassTableRow`) with inline edit/delete, a "Pegar lista" paste-to-bulk-add flow (reuses `parseTicketRows`), and a single-add modal. Deliberately separate from `tickets`: no price, no `validationHash`, no scan integration — see the Data model section below. |
-| `/tickets` | TicketsPage (cards / table view, search, CSV). Hydrates from `/api/admin/tickets` on mount via `TicketContext.refreshFromServer()` so every confirmed purchase shows up; this is where the organizer edits holder data and generates / shares each QR. |
+| `/create-event` | CreateEvent (create mode) — the single API-backed event form; fields include the URL slug, `isPublished`, `salesOpen`. **Phase 2 (not deployed):** gated to `super_admin` only, both by a `RequireSuperAdmin` route wrapper and server-side (`requireSuperAdmin` on `POST /api/events`). |
+| `/edit` | CreateEvent (edit mode); `/edit-event` redirects here. Slug is locked on the demo event. **Phase 2 (not deployed):** slug and `isPublished` are also locked for an `event_admin` (kept server-side regardless of what's submitted); a new `scanKeyword` field is read from the organizer's event-selector list, the only response that ever carries it. |
+| `/sell-tickets` | SellTicketsPage (walk-in registration, `TicketForm`). Phone field is **optional**; name + ID don't pop inline validation errors until the user has typed ≥ 4 characters. **Phase 2 (not deployed):** adds a required `preferredArtist` dropdown when the event has a line-up and **drops the phone field entirely** (superseding the previous sentence). |
+| `/guest-passes` | GuestPassesPage — artist/crew/courtesy free-entry roster, scoped to the selected event and grouped by band (sourced from `events.artists`). Editable spreadsheet (`GuestPassTable`/`GuestPassTableRow`) with inline edit/delete, a "Pegar lista" paste-to-bulk-add flow (reuses `parseTicketRows`), and a single-add modal. Deliberately separate from `tickets`: no price, no `validationHash`, no scan integration — see the Data model section below. |
+| `/tickets` | TicketsPage (cards / table view, search, CSV). Hydrates from `/api/admin/tickets` for the selected event via `TicketContext.refreshFromServer(status, eventId)`; this is where the organizer edits holder data and generates / shares each QR. "Delete All Tickets" is event-scoped and names the event in its confirm dialog. |
 | `/lista-puerta` | DoorListPage — printable door list (confirmed holders + guest passes, grouped by type) for staff working without a device. |
-| `/dashboard` | DashboardPage — same server hydration as `/tickets`, so sales + check-in stats match `/admin`. |
+| `/dashboard` | DashboardPage — same server hydration as `/tickets`, scoped to the selected event, so sales + check-in stats match `/admin`. |
+| `/events-admin` | **Phase 2, not deployed.** EventsAdminPage — `super_admin` only. Every event with a "show archived" toggle, per-row published/salesOpen/archived state, a link into `/edit`, and archive/unarchive. |
+| `/organizers` | **Phase 2, not deployed.** OrganizersAdminPage — `super_admin` only. List every account, create one, change role/active state, reset a password, edit event assignments. |
 | `/validate-qr` | (legacy) — redirects to `/scan`. The former separate validation page and its `QRScanner`/`ValidationResult` components were removed. |
-| `*` | redirect → `/` |
 
-Note that `/validate-qr` and the `*` catch-all sit **inside** `RequireAuth`, so a logged-out visitor to either lands on `/admin` rather than on the nominal target.
+`*` (catch-all → `/`) sits **outside** `RequireAuth` at the top level, so a logged-out visitor to an unknown URL lands on the public root rather than the login funnel.
 
 There is one event form (`CreateEvent`), used for both create and edit and wired to the API. The minimal inline create form that once lived inside `/admin` has been removed; `/admin` now delegates to `/create-event`.
 
@@ -78,15 +91,30 @@ There is one event form (`CreateEvent`), used for both create and edit and wired
 
 ## Data model (MySQL `sigale` DB)
 
-Current shape below. `001_init.sql` shows the *original* two-table split and is pre-cutover history — see `server/README.md` for the migration table and `TICKETS_SCHEMA.md` for the column-by-column reference. All timestamps stored UTC; read back with `CONVERT_TZ` for Bogotá display.
+Current shape below (through migration `008_multi_event.sql`, live in
+production). `001_init.sql` shows the *original* two-table split and is
+pre-cutover history — see `server/README.md` for the migration table and
+`TICKETS_SCHEMA.md` for the column-by-column reference. All timestamps
+stored UTC; read back with `CONVERT_TZ` for Bogotá display. **Migrations
+`010`–`013` below are Phase 2: drafted, and the application code that reads/
+writes them now exists (2026-09-15), but they have not been applied to any
+database** — don't assume the columns/tables they add are queryable yet.
 
 ```
 organizers
   id, username, passwordHash
+  -- + role ENUM('super_admin','event_admin'), isActive TINYINT(1) — migration 010, NOT APPLIED
+
+organizer_events                      -- NEW table, migration 010, NOT APPLIED
+  organizerId → organizers, eventId → events, createdAt
+  -- many-to-many: which events an event_admin may manage (a super_admin needs no row — role alone grants access)
 
 events
-  id, name, description, artists (JSON), eventDate, openingTime,
-  venue, address, venueCapacity, flyerImageUrl, bankQrImageUrl, whatsappNumber, isActive
+  id, slug, name, description, artists (JSON), eventDate, openingTime,
+  venue, address, venueCapacity, flyerImageUrl, bankQrImageUrl, whatsappNumber,
+  isActive (retired — nothing new writes it), isPublished, isDemo, salesOpen
+  -- + isArchived TINYINT(1) — migration 012, NOT APPLIED
+  -- + scanKeyword VARCHAR(80) NULL — migration 013, NOT APPLIED; never in a public payload
 
 ticket_stages
   id, eventId → events, name, price, totalQuantity, soldQuantity,
@@ -98,6 +126,7 @@ tickets                       -- ONE ROW PER SEAT, created at reservation time.
   eventId → events, stageId → ticket_stages, unitPrice,
   holderName, holderIdNumber, holderPhone,
   deliveryMethod, deliveryContact, idempotencyKey, reservationExpiresAt,
+  -- + preferredArtist VARCHAR(160) NULL, AFTER deliveryContact — migration 011, NOT APPLIED
   status (pending_payment|payment_submitted|confirmed|rejected|expired),
   validationHash CHAR(64) NULL UNIQUE (minted ONLY at confirm), isUsed, usedAt,
   confirmedAt, confirmedBy
@@ -107,7 +136,13 @@ tickets                       -- ONE ROW PER SEAT, created at reservation time.
 guest_passes
   id, eventId → events, band, holderName, holderIdNumber,
   type ENUM(artist|crew|courtesy), createdAt
+
+order_counter                         -- ONE row: persisted orderId high-water mark
+  id (always 1), highWaterMark INT UNSIGNED
+  -- written only by deleteAllPurchases; read only by nextOrderId — see below
 ```
+
+**`slug` / `isPublished` / `isDemo` / `salesOpen`** (migration `008_multi_event.sql`, live): every event has an optional unique URL `slug`; `isPublished` gates the `/` grid only (a slug is still reachable directly, unpublished — soft launch); `isDemo` marks the one permanent read-only Astromelias showpiece at `/demo`; `salesOpen` is the per-event replacement for the retired global `ONLINE_SALES_OPEN` flag and does not gate walk-ins. `order_counter` is a floor on `nextOrderId()` so a per-event "Delete All Tickets" can never make an already-issued `orderId` assignable again — `validationHash = HMAC(orderId, seatIndex)`, so reissuing one would let an already-delivered QR admit a different, newer ticket.
 
 `guest_passes` (added by `server/migrations/006_guest_passes.sql`) is a standalone roster for people who get free entry without a ticket — performing artists, their crew, and courtesy guests. It's intentionally disconnected from the purchase/ticket pipeline: no `unitPrice`/`stageId`, no `validationHash`, no `status` lifecycle, and it's never joined into `/api/admin/tickets`, `/dashboard` stats, or the door scanner — staff check `holderName`/`holderIdNumber` manually rather than scanning a QR. `band` is a plain string but the UI (`GuestPassesPage`) sources it from `events.artists` as a dropdown so per-band counts (shown as a summary strip) aren't split by typos.
 
@@ -165,15 +200,18 @@ The ENUM is `('upcoming', 'active', 'sold_out', 'closed')` — `closed` added by
 ## Provider tree
 
 ```
-LanguageProvider       # i18n — outermost so error UI can be localized
-  └── EventProvider    # event CRUD via api/events.js
-      └── TicketProvider  # organizer ticket list; refreshFromServer() hydrates from
-      │                    # /api/admin/tickets, getStats(), addTicketsFromCSV()
-          └── DialogProvider  # confirm/notify/openCustom + Modal/Toast at root
-              └── BrowserRouter / Routes
+BrowserRouter            # outermost — wraps every provider (moved here in the multi-event work)
+  └── LanguageProvider   # i18n
+      └── EventProvider  # event CRUD + multi-event selection via api/events.js:
+      │                  #   loadEventBySlug(slug) for public pages;
+      │                  #   organizerEvents / selectedEventId / selectEvent(id) for the panel
+          └── TicketProvider  # organizer ticket list; refreshFromServer(status, eventId)
+          │                    # hydrates from /api/admin/tickets, getStats(event), addTicketsFromCSV()
+              └── DialogProvider  # confirm/notify/openCustom + Modal/Toast at root
+                  └── Routes
 ```
 
-Public 2.0 pages (`LandingPage`, `PurchaseFlowPage`, `AdminPage`, `ScanPage`) call the API directly through `src/api/*.js` rather than through context. `TicketsPage` and `DashboardPage` go through `TicketContext.refreshFromServer()` so the organizer-side cache is consistent across tabs.
+Public pages (`EventsListPage`, `LandingPage`, `PurchaseFlowPage`, `AdminPage`, `ScanPage`) call the API directly through `src/api/*.js` rather than through context, except for the event itself (`useEvent()`). `TicketsPage` and `DashboardPage` go through `TicketContext.refreshFromServer()`, always passing the currently selected `eventId`, so the organizer-side cache never leaks another event's tickets.
 
 ---
 
@@ -183,11 +221,12 @@ Public 2.0 pages (`LandingPage`, `PurchaseFlowPage`, `AdminPage`, `ScanPage`) ca
 
 | File | Exports |
 |------|---------|
-| `events.js` | `eventsApi.{getActive, getById, create, update}` + mappers `toApiEventPayload` / `fromApiEvent` / `deriveTicketTypes`. `create`/`update` take an auth-header `opts` and round-trip `address`, `artists`, `flyerImageUrl`, `bankQrImageUrl`. |
-| `purchases.js` | `purchases.{create, submit}`. No `get` / `recover` — the public flow is one-way. |
-| `admin.js` | `admin.{login, list, confirm, reject, walkIn, listTickets, updateTicket}` + session auth helpers `getAuth` / `isLoggedIn` / `logout` (used by `RequireAuth` and the event write calls) |
+| `events.js` | `eventsApi.{getActive (legacy), getById, getBySlug, list (published), listAll (organizer, role-scoped — Phase 2 adds an `includeArchived` option, not deployed), create, update, archive (Phase 2, not deployed)}` + mappers `toApiEventPayload` / `fromApiEvent` / `fromApiEventListItem` / `deriveTicketTypes`. `create`/`update`/`archive` take an auth-header `opts`. |
+| `purchases.js` | `purchases.{create, submit}`. No `get` / `recover` — the public flow is one-way. `create`'s payload gains `preferredArtist` (Phase 2, not deployed). |
+| `admin.js` | `admin.{login, list, confirm, reject, walkIn, listTickets, updateTicket, updateTicketStage, deleteTicket, deleteAllPurchases}` + session auth helpers `getAuth` / `isLoggedIn` / `logout` / `getRole` / `isSuperAdmin` (Phase 2 additions, not deployed — `login`'s response and the stored auth blob gain `role`, UI-gating only). |
+| `organizers.js` | **Phase 2, not deployed.** `organizersApi.{list, create, update, setEvents}` — account management, every call `super_admin`-only server-side. |
 | `guestPasses.js` | `guestPasses.{list, create, bulkCreate, update, remove}` — artist/crew/courtesy roster, separate domain from tickets/purchases |
-| `scan.js` | `downloadManifest`, `syncScans` |
+| `scan.js` | `scanAndAdmit(hash, { eventId, keyword })`, `listScanEvents()`, `SCAN_RESULT` — one request per scan against the live `tickets` table. The `{ eventId, keyword }` scope and `listScanEvents` are Phase 2 (not deployed); today's live shape is `scanAndAdmit(hash)` against `POST /api/admin/scan`. |
 
 ---
 
@@ -209,26 +248,37 @@ migrations/                   # 001–005 are PRE-CUTOVER HISTORY: the runner ma
   006_guest_passes.sql        # LIVE — creates guest_passes (artist/crew/courtesy roster)
   007_single_active_stage.sql # LIVE — adds `closed` stage status + uqOneActiveStagePerEvent
                               # unique constraint (ticket_stages.activeFlag)
+  008_multi_event.sql         # LIVE — events.slug/isPublished/isDemo/salesOpen + order_counter
+  009                         # RESERVED, not written — fresh-DB bootstrap fix (see server/README.md)
+  010_organizer_roles.sql     # DRAFTED, code written, NOT APPLIED — organizers.role/isActive + organizer_events
+  011_preferred_artist.sql    # DRAFTED, code written, NOT APPLIED — tickets.preferredArtist
+  012_event_archive.sql       # DRAFTED, code written, NOT APPLIED — events.isArchived
+  013_scan_keyword.sql        # DRAFTED, code written, NOT APPLIED — events.scanKeyword
   runMigrations.js            # Ledger-backed (schema_migrations) + post-cutover self-heal
-controllers/        # events, purchases, admin, guestPasses, scan
-routes/             # health, events, purchases, admin, guestPasses, scan
+controllers/        # events, purchases, admin, guestPasses, scan, organizers (Phase 2, not deployed)
+routes/             # health, events, purchases, admin, guestPasses, scan, organizers (Phase 2, not deployed)
 middleware/
-  requireOrganizer  # Validates Basic credentials on every /api/admin/* request
+  requireOrganizer  # Validates Basic credentials on every /api/admin/* request;
+                    # req.organizer gains { role } (Phase 2, not deployed)
+  requireSuperAdmin # Phase 2, not deployed — chains after requireOrganizer, 403s a non-super_admin
 jobs/
-  scheduler.js      # node-cron: stage auto-activation + expired-hold sweep
+  scheduler.js      # node-cron: stage auto-activation + expired-hold sweep + nightly demo rearm
 seed/
   seedOrganizer.js
   seedSampleEvent.js
 utils/
   emailNotifier.js  # sendErrorEmail — mirrors BlackCoffe's error reporting
   time.js           # UTC ↔ Bogotá helpers
+  authz.js          # Phase 2, not deployed — shared assertNotDemo + assertOwnsEvent(conn, organizer, eventId)
 ```
 
 **Inventory rule:** every path that touches `soldQuantity` or `reservedQuantity` uses `pool.getConnection()` → `beginTransaction()` → `SELECT … FOR UPDATE` → mutate → `COMMIT`/`ROLLBACK` in a `finally` that calls `conn.release()`. Never `pool.query` for inventory. After every increment, run the `active → sold_out` fill check; after every decrement, run the `sold_out → active` restore check. See the "Stage status lifecycle" table in the Data model section for the full matrix. Never use `GREATEST(INT UNSIGNED − n, 0)` as a safe no-op — unsigned underflow wraps to ~4 294 967 295 and violates `chkStageCapacity`.
 
-**Auth model:** no JWT/session. `requireOrganizer` re-validates bcrypt credentials on every `/api/admin/*` request **and** on the event write routes (`POST`/`PUT /api/events`), Basic header over HTTPS. `/api/login` is rate-limited. On the client, `RequireAuth` gates every organizer route on the session-stored login — a UX funnel only; the server check is the real boundary.
+**Auth model:** no JWT/session. `requireOrganizer` re-validates bcrypt credentials on every `/api/admin/*` request **and** on the event write routes (`POST`/`PUT /api/events`), Basic header over HTTPS. `/api/login` is rate-limited. On the client, `RequireAuth` gates every organizer route on the session-stored login — a UX funnel only; the server check is the real boundary. **Phase 2 (not deployed):** `req.organizer` gains `{ role: 'super_admin' | 'event_admin' }`; `requireSuperAdmin` chains after `requireOrganizer` on account management, event creation/archiving, and the full-event wipe; every eventId-scoped handler additionally calls `assertOwnsEvent(conn, organizer, eventId)` (a `super_admin` always passes; an `event_admin` needs a row in the new `organizer_events` table).
 
-**Admin endpoints (`/api/admin/*`):** `GET /purchases`, `POST /purchases/:orderId/confirm`, `POST /purchases/:orderId/reject`, `POST /sales` (walk-in), `GET /tickets` (every minted ticket joined with its stage + order — feeds `/tickets` and `/dashboard`), `PATCH /tickets/:id` (edit `holderName / holderIdNumber / holderPhone`; `validationHash` is immutable once minted), `POST /scan` (the only scan endpoint in use; `/scan/manifest` and `/scan/sync` survive as dead endpoints with no client callers), `PATCH /tickets/:id/stage` (reassign a ticket to another stage, moving both stages' counters), `DELETE /tickets/:id` (confirmed rows only — 409 otherwise), `DELETE /purchases` (wipe all), and the guest-passes endpoints `GET /guest-passes?eventId=`, `POST /guest-passes` (single add), `POST /guest-passes/bulk` (paste-to-bulk-add, one multi-row `INSERT`), `PATCH /guest-passes/:id`, `DELETE /guest-passes/:id` — a fully separate table from `tickets`, no price/QR/scan involved.
+**Admin endpoints (`/api/admin/*`):** `GET /purchases?eventId=` (required — 400 without it), `POST /purchases/:orderId/confirm`, `POST /purchases/:orderId/reject`, `POST /sales` (walk-in), `GET /tickets?eventId=` (required; every minted ticket joined with its stage + order — feeds `/tickets` and `/dashboard`), `PATCH /tickets/:id` (edit `holderName / holderIdNumber / holderPhone`; `validationHash` is immutable once minted), `POST /scan` (organizer-credentialed; API-only, no UI calls it anymore — see "Door scan architecture"), `PATCH /tickets/:id/stage` (reassign a ticket to another stage, moving both stages' counters), `DELETE /tickets/:id` (confirmed rows only — 409 otherwise), `DELETE /purchases?eventId=` (event-scoped wipe; **Phase 2, not deployed: `requireSuperAdmin`**), and the guest-passes endpoints `GET /guest-passes?eventId=`, `POST /guest-passes` (single add), `POST /guest-passes/bulk` (paste-to-bulk-add, one multi-row `INSERT`), `PATCH /guest-passes/:id`, `DELETE /guest-passes/:id` — a fully separate table from `tickets`, no price/QR/scan involved. The old `GET /scan/manifest` and `POST /scan/sync` (dead, no client ever called them) have been **removed**, not just left dead.
+
+**Phase 2 endpoints (written, not deployed):** `POST /api/events/:id/archive` (`super_admin`), `GET/POST /api/admin/organizers` + `PATCH /api/admin/organizers/:id` + `PUT /api/admin/organizers/:id/events` (all `super_admin`), and the public, rate-limited `GET /api/scan/events` + `POST /api/scan { eventId, keyword, hash }` (see "Door scan architecture").
 
 **Security floor:**
 - Organizer password stored bcrypt-hashed in `organizers.passwordHash`. Seed by hashing — never store plaintext.
@@ -236,15 +286,16 @@ utils/
 - Parameterized queries everywhere; `helmet` on the Express app.
 - SSL to the DB: `ssl: { ca: fs.readFileSync(process.env.DB_CA_CERT) }` — no `rejectUnauthorized:false`.
 - `validationHash` is a deterministic HMAC keyed by `SCAN_HASH_SECRET` over `(orderId, seatIndex)` — unguessable without the secret, so it functions as an entry secret even though it's not random. **`SCAN_HASH_SECRET` must be set in production;** the code falls back to an insecure dev default otherwise.
+- **Phase 2 (not deployed):** `events.scanKeyword` is a plaintext, per-event shared door code — deliberately excluded from every public event payload (only `GET /api/events/all` for an authenticated organizer ever returns it), and both public scan endpoints are rate-limited (120 req/min/IP) against brute-forcing it.
 
 ---
 
 ## Door scan architecture
 
-**Scanning is online-only.** Each QR is one round trip:
+**Scanning is online-only.** Each QR is one round trip. **Live in production today:**
 
 1. `OfflineScanner.jsx` (html5-qrcode) decodes the QR into a bare `validationHash` string.
-2. `scanAndAdmit(hash)` in `src/api/scan.js` sends `POST /api/admin/scan { hash }`.
+2. `scanAndAdmit(hash)` in `src/api/scan.js` sends `POST /api/admin/scan { hash }` with the organizer's Basic credentials (device must have logged in once via `/admin`).
 3. The server's `markUsed()` looks up the **confirmed** ticket by that hash and stamps `isUsed` / `usedAt` in one idempotent write, returning `ok` or `already_used`; an unknown or unconfirmed hash returns 404.
 4. The UI maps the response to `SCAN_RESULT`: `OK`, `ALREADY_USED`, `INVALID`, or `ERROR`.
 
@@ -252,7 +303,9 @@ utils/
 
 Because the database is the single arbiter, two devices scanning the same ticket simultaneously cannot both admit it — the second gets `already_used`. That is the main reason the earlier offline-first design was dropped.
 
-> **Historical note.** `/scan` used to pre-cache a manifest of confirmed hashes in IndexedDB (`useOfflineScan`, `scanDb.js`) and queue admits for later sync. Those modules were removed. `components/Scanner/OfflineScanner.jsx` keeps its name only for historical reasons, and the server still exposes `GET /api/admin/scan/manifest` and `POST /api/admin/scan/sync` as **dead endpoints with no client callers**.
+> **Historical note.** `/scan` used to pre-cache a manifest of confirmed hashes in IndexedDB (`useOfflineScan`, `scanDb.js`) and queue admits for later sync. Those modules were removed, and the server's own `GET /api/admin/scan/manifest` / `POST /api/admin/scan/sync` (dead code, no client callers) have since been **deleted outright** as part of the Phase 2 work below.
+
+> **Phase 2 rebuild (written 2026-09-15, not deployed).** `ScanPage` no longer requires an organizer login at all: the operator opens `/scan`, picks an event from `GET /api/scan/events` (only events with a `scanKeyword` set and not archived), types that keyword, and the choice is cached in `sessionStorage`. Every scan then calls `scanAndAdmit(hash, { eventId, keyword })` → `POST /api/scan { eventId, keyword, hash }`, which the server validates (keyword match, trimmed + case-insensitive) before calling the **same** `markUsed()` — now given the `eventId` so it 409s with "Esta boleta es de otro evento" if the hash belongs to a different event. Both public endpoints are rate-limited. `POST /api/admin/scan` (organizer-credentialed) is kept for API compatibility, but no UI calls it once this ships.
 
 ---
 
@@ -263,13 +316,13 @@ Because the database is the single arbiter, two devices scanning the same ticket
 | File | Role |
 |------|------|
 | `FlowShell.jsx` | Step container, progress indicator, back/forward. Renders an empty 44px placeholder where the back chevron would be when `onBack` is `null`, so the wordmark stays centered when the back button is intentionally suppressed. |
-| `PurchaseFlow.jsx` | Steps 1–6 wired to `api/purchases.js`; WhatsApp deep-link on step 5; step 6 is a terminal success screen. `back` returns `null` for `step >= 4`, hiding the back chevron from "Ir a pagar" onward. Blocks the flow with "Ninguna etapa está activa" when `resolveActiveStage(event)` returns `null` (sold_out or all upcoming). |
+| `PurchaseFlow.jsx` | Steps 1–6 wired to `api/purchases.js`; WhatsApp deep-link on step 5; step 6 is a terminal success screen. `back` returns `null` for `step >= 4`, hiding the back chevron from "Ir a pagar" onward. Blocks the flow with "Ninguna etapa está activa" when `resolveActiveStage(event)` returns `null` (sold_out or all upcoming). Resolves its own event via `useParams().slug` + `loadEventBySlug` (works on a cold deep link). Demo mode stubs the API calls entirely and locks quantity to 1. **Phase 2 (not deployed):** step 1 gains a required `preferredArtist` dropdown when the event has a line-up. |
 
 ### Organizer — Tickets
 
 | File | Role |
 |------|------|
-| `TicketForm.jsx` | Create / edit one ticket; clipboard paste fills name+id. Phone is optional (blank stored as `"000"` sentinel so `TicketCard` keeps hiding it). Inline "no válido" errors on name + ID are suppressed until the user has typed ≥ 4 characters; submit re-validates with a `useDialog().notify` error toast on failure. |
+| `TicketForm.jsx` | Create / edit one ticket; clipboard paste fills name+id. Phone is optional (blank stored as `"000"` sentinel so `TicketCard` keeps hiding it). Inline "no válido" errors on name + ID are suppressed until the user has typed ≥ 4 characters; submit re-validates with a `useDialog().notify` error toast on failure. **Phase 2 (not deployed):** the phone input is removed entirely (always sends `null`) and a required `preferredArtist` dropdown is added, sourced from `event.artists`, whenever the event has a line-up. |
 | `TicketCard.jsx` | Mobile-friendly card row |
 | `TicketTable.jsx` + `TicketTableRow.jsx` | Inline-editable spreadsheet view |
 | `TicketsViewToggle.jsx` | Cards ↔ Table segment control, persisted |
@@ -288,7 +341,7 @@ Because the database is the single arbiter, two devices scanning the same ticket
 
 | File | Role |
 |------|------|
-| `OfflineScanner.jsx` | The single door scanner: `html5-qrcode` camera + `scanAndAdmit()` per QR, inline color-coded verdict (valid / already-used / invalid / error). **The name is historical** — scanning is online-only; there is no offline path left. Replaced the old `QRScanner.jsx` + `ValidationResult.jsx` pair, which were removed with `/validate-qr`. |
+| `OfflineScanner.jsx` | The single door scanner: `html5-qrcode` camera + `scanAndAdmit()` per QR, inline color-coded verdict (valid / already-used / invalid / error). **The name is historical** — scanning is online-only; there is no offline path left. Replaced the old `QRScanner.jsx` + `ValidationResult.jsx` pair, which were removed with `/validate-qr`. **Phase 2 (not deployed):** two more verdicts, `wrong_event` and `wrong_keyword`, for the public scan flow's own failure modes. |
 
 ### UI primitives (`src/components/ui/`)
 
@@ -330,20 +383,23 @@ Because the database is the single arbiter, two devices scanning the same ticket
 | `guestPassImage.js` | Shareable PNG for a guest pass (no QR — free entry) |
 | `storage.js` | `loadFromStorage`, `saveToStorage`, `clearStorage`, version migration |
 | `translations.js` | `translations` dictionary, `detectBrowserLanguage` |
+| `slug.js` | `SLUG_PATTERN`, `RESERVED_SLUGS` (must stay byte-identical to the server's copy in `events.controllers.js`), `sanitizeSlugInput`, `isSlugFormatValid` |
 
 ---
 
 ## End-user workflows
 
-**Public purchase (6 steps).** Buyer opens `/` → selects ticket stage + quantity → confirms order → enters holder names + chooses WhatsApp/email delivery → is shown the payment QR and bank details (back button is now locked) → opens WhatsApp with the pre-filled message and taps "Ya lo envié" → lands on a terminal success screen with their orden number and the line *"Tan pronto nuestro equipo valide tu pago te enviaremos la boleta a `<deliveryContact>` por `<WhatsApp|correo>`"*. The only exit is "Volver al inicio", which `navigate('/', { replace: true })`s back to the landing so back-navigating doesn't pop the wizard back onto the stack.
+**Public purchase (6 steps).** Buyer opens `/` (a grid of published events), taps a card → `/:slug` → "Comprar boleta" → `/:slug/compra` → selects quantity (and, once Phase 2 ships, a preferred artist) → confirms order → enters holder names + chooses WhatsApp/email delivery → is shown the payment QR and bank details (back button is now locked) → opens WhatsApp with the pre-filled message and taps "Ya lo envié" → lands on a terminal success screen with their orden number and the line *"Tan pronto nuestro equipo valide tu pago te enviaremos la boleta a `<deliveryContact>` por `<WhatsApp|correo>`"*. The only exit is "Volver al inicio", which `navigate('/', { replace: true })`s back to the landing grid so back-navigating doesn't pop the wizard back onto the stack.
 
-**Organizer — confirm payment + deliver ticket.** `/admin` shows the order queue. The organizer finds the orderId from the WhatsApp message, verifies the transfer, hits Confirmar pago → server marks `confirmed`, then flips every row of the order to `confirmed` and mints each seat's `validationHash` (holder names / IDs / phones already live on the rows from reservation time). The organizer can pass an overriding `holders` array in the confirm body to change them before minting. Newly minted tickets appear on `/tickets` (and totals on `/dashboard`) — that's where the organizer generates / copies / shares the QR and sends it to the buyer via `deliveryMethod` + `deliveryContact`.
+**Organizer — confirm payment + deliver ticket.** `/admin` shows the order queue for the organizer's selected event (`OrganizerMenu`'s `EventSelector`). The organizer finds the orderId from the WhatsApp message, verifies the transfer, hits Confirmar pago → server marks `confirmed`, then flips every row of the order to `confirmed` and mints each seat's `validationHash` (holder names / IDs / phones already live on the rows from reservation time). The organizer can pass an overriding `holders` array in the confirm body to change them before minting. Newly minted tickets appear on `/tickets` (and totals on `/dashboard`) — that's where the organizer generates / copies / shares the QR and sends it to the buyer via `deliveryMethod` + `deliveryContact`.
 
-**Door scan.** Organizer opens `/scan` on a device that has logged in at least once (the call carries Basic organizer credentials). Each scanned QR is validated against the live database in one request, which both checks and admits. The device needs connectivity — there is no offline cache.
+**Door scan.** Live today: organizer opens `/scan` on a device that has logged in at least once (the call carries Basic organizer credentials). Each scanned QR is validated against the live database in one request, which both checks and admits. The device needs connectivity — there is no offline cache. **Phase 2 (not deployed):** no login at all — pick the event, type its `scanKeyword`, then scan; the choice is remembered per browser tab (`sessionStorage`) so a refresh doesn't re-ask.
 
-**Walk-in registration.** `/admin` → "+ Registrar Venta" → `/sell-tickets` (`TicketForm`) → organizer enters buyer info (phone optional) → ticket is created. The legacy inline walk-in stepper on `/admin` has been removed; collecting holder name/ID/phone up front means walk-ins appear in the same `/tickets`, `/dashboard`, and door scanner as purchased orders. Walk-ins sell **only from the currently `active` stage**: `createWalkInSale` locks the stage `WHERE status = 'active'` (409 otherwise), and the ticket-type dropdown lists only active stages — a superseded/`closed` etapa can never be sold at the door.
+**Walk-in registration.** `/admin` → "+ Registrar Venta" → `/sell-tickets` (`TicketForm`) → organizer enters buyer info (phone optional) → ticket is created. The legacy inline walk-in stepper on `/admin` has been removed; collecting holder name/ID/phone up front means walk-ins appear in the same `/tickets`, `/dashboard`, and door scanner as purchased orders. Walk-ins sell **only from the currently `active` stage**: `createWalkInSale` locks the stage `WHERE status = 'active'` (409 otherwise), and the ticket-type dropdown lists only active stages — a superseded/`closed` etapa can never be sold at the door. **Phase 2 (not deployed):** the phone field is dropped and a required preferred-artist dropdown takes its place whenever the event has a line-up.
 
 **Guest passes (artist/crew/courtesy).** `/admin` → "+ Agregar un artista" → `/guest-passes` → either the single-add modal (band + name + id + type) or "Pegar lista" to bulk-paste a whole band's list under one default band+type. Entries live in their own `guest_passes` table — they never appear on `/tickets`, `/dashboard`, or the door scanner; staff check the name/ID against this list manually. The per-band summary strip helps the organizer track how many free passes each band has used.
+
+**Manage accounts and events (Phase 2, not deployed).** A `super_admin` opens `/organizers` to create an `event_admin` account, reset a password, or assign it to specific events; `/events-admin` lists every event with a "show archived" toggle and lets the `super_admin` archive/unarchive one (the reversible replacement for event deletion — see the Data model section). An `event_admin` never sees either page and is scoped to whatever events it's assigned to via `organizer_events`.
 
 **Ticket sales / bulk add.** `/tickets` → Table view → "Paste Tickets" → `parseTicketRows` splits clipboard TSV → `addTicketsFromCSV` dedupes and inserts.
 
@@ -369,6 +425,7 @@ Because the database is the single arbiter, two devices scanning the same ticket
 - **Admin auth**: bcrypt credentials re-validated on every request by `requireOrganizer`. Rate-limited login.
 - **CSV injection guard**: `csvUtils.formatCell` prepends `'` to cells starting with `=`, `+`, `-`, `@`, tab, or CR.
 - **Organizer-side context**: `addTicketsFromCSV` dedupes by `buyerId|buyerName|ticketType`; `checkInTicket` returns `{ ok, reason }` to distinguish stale state from genuine duplicates.
+- **Phase 2, written 2026-09-15, not deployed:** role-based access (`super_admin` full control; `event_admin` scoped via `organizer_events`, checked server-side by `assertOwnsEvent` on every eventId-scoped handler — the client's `isSuperAdmin()` only hides UI, never the actual gate); an inactive account (`organizers.isActive = 0`) fails login the same way a wrong password does, so it can't be distinguished by an attacker; `events.scanKeyword` is a plaintext per-event door code, excluded from every public payload and rate-limited on both public scan endpoints; account writes refuse to leave zero active `super_admin`s and refuse to let an account change its own role/active state.
 
 ---
 
@@ -405,6 +462,8 @@ node seed/seedSampleEvent.js
 ## Cross-references
 
 - Agent quick-reference — `/CLAUDE.md`
+- Multi-event platform (Phase 1, shipped) + roles/archive/scanner/artist (Phase 2, written not deployed) — `/MULTI_EVENT_PLAN.md` and `/MULTI_EVENT_PLAN_STATUS.md`
+- Phase 2 schema reference + ER diagram — `docs/architecture/DB_SCHEMA.md`
 - Backend architecture decisions — `docs/architecture/ADR-0001-migracion-sql-express.md`
 - Design tokens + Astromelias — `docs/design2.0/IMPLEMENTATION_GUIDE.md`
 - Merged tickets schema — `docs/architecture/TICKETS_SCHEMA.md`

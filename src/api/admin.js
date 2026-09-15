@@ -134,12 +134,26 @@ export const adminApi = {
     api.del(`/api/admin/purchases?eventId=${encodeURIComponent(eventId)}`, { headers: authHeader() }),
 };
 
+/**
+ * The logged-in organizer's role ('super_admin' | 'event_admin'), or null
+ * when logged out. UI gating only — every actual permission check happens
+ * server-side (requireSuperAdmin / assertOwnsEvent); this just decides what
+ * to show (menu entries, form fields) so a lower-privileged organizer isn't
+ * shown controls the server will 403 anyway.
+ */
+export function getRole() {
+  return getAuth()?.role || null;
+}
+export function isSuperAdmin() {
+  return getRole() === 'super_admin';
+}
+
 // ── Facade the UI imports. Flipped to real API (backend now live). ─────────────
 export const admin = {
   login: async (username, password, { persist = false } = {}) => {
-    await adminApi.login(username, password); // throws ApiError on wrong creds
-    setAuth({ username, basic: btoa(`${username}:${password}`) }, { persist });
-    return { ok: true, username };
+    const res = await adminApi.login(username, password); // throws ApiError on wrong creds
+    setAuth({ username, basic: btoa(`${username}:${password}`), role: res?.role }, { persist });
+    return { ok: true, username, role: res?.role };
   },
   list: async (params) => {
     return adminApi.listPurchases(params);

@@ -13,7 +13,7 @@ export const RESERVED_SLUGS = new Set([
   'admin', 'scan', 'compra', 'tickets', 'dashboard', 'evento', 'edit',
   'edit-event', 'create-event', 'sell-tickets', 'guest-passes',
   'lista-puerta', 'validate-qr', 'api', 'assets', 'sw.js', 'manifest.json',
-  'robots.txt', 'favicon.ico',
+  'robots.txt', 'favicon.ico', 'events-admin', 'organizers',
 ]);
 
 /** Strip characters a slug may never contain as the user types. */
