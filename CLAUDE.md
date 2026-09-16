@@ -2,7 +2,7 @@
 
 Mobile-first React 19 + Vite ticket-management PWA with an Express + MySQL backend. Styled with **plain CSS only** (design tokens + CSS Modules, no Tailwind). Bilingual ES/EN. The Astromelias visual identity ships in `src/styles/astromelias.css`. Public buyers purchase tickets online; organizers confirm payments, mint tickets, deliver them out-of-band (WhatsApp / email), and scan QR codes at the door.
 
-**The platform is multi-event** (shipped 2026-08-05, `MULTI_EVENT_PLAN.md`). Every event has a URL `slug`; several can sell at once; `/` is a public grid of `isPublished` events; each event carries its own `salesOpen` switch; and the organizer panel is scoped by an event selector in `OrganizerMenu`. There is no "the active event" anymore — read the selected/loaded one from `useEvent()`.
+**The platform is multi-event** (shipped 2026-08-05, `MULTI_EVENT_PLAN.md`). Every event has a URL `slug`; several can sell at once; `/` is a public grid of `isPublished` events; each event carries its own `salesOpen` switch; and the organizer panel is scoped by an event switcher (`EventBadge`, rendered in `OrganizerTopbar` and inside `OrganizerMenu`) (added 2026-09-15, replacing the old plain-`<select>` `EventSelector`). There is no "the active event" anymore — read the selected/loaded one from `useEvent()`.
 
 **Buyer flow at a glance (purchases never auto-deliver):** the public 6-step wizard at `/:slug/compra` ends on a terminal success screen — *"Tan pronto nuestro equipo valide tu pago te enviaremos la boleta a `<deliveryContact>` por `<WhatsApp|correo>`"*. There is no `/compra/:orderId` status page and no `/api/recover`; ticket delivery is the organizer's responsibility from `/tickets`.
 
@@ -29,6 +29,7 @@ For depth, read `docs/architecture/PROJECT_OVERVIEW.md`. This file is the agent 
 - **Sales are server-side, never localStorage-only**: every ticket that must appear at `/admin`, `/tickets`, `/dashboard`, or the door scanner has to exist as a row in the `tickets` table. Walk-in sales (`/sell-tickets` → `TicketForm`) **must** go through `admin.walkIn()` → `POST /api/admin/sales` so they mint `confirmed` row(s) under a sequential `orderId`. Walk-ins draw **only from the currently `active` stage** — `createWalkInSale` locks the stage `WHERE status = 'active'` (mirroring the public `createPurchase`) and returns 409 otherwise, and the `/sell-tickets` dropdown lists only active stages — so the door can never keep selling a superseded/`closed` etapa. Do **not** use the localStorage-only `addTicket()` for real sales — `/tickets` and `/dashboard` overwrite local state with `refreshFromServer()` on mount, so anything not persisted server-side silently disappears.
 - **Dashboard stats need the live event**: `EventContext` keeps the loaded event in memory only (never localStorage, per 2.0), so `TicketContext.data.event` is `null`. Always call `getStats(event)` with the event from `useEvent()` — bare `getStats()` resolves every price to `0` and the dashboard reads empty.
 - **Every organizer read must be scoped by `eventId`.** `EventContext` no longer auto-loads "the active event" on mount — public pages call `loadEventBySlug(slug)`, organizer pages use `selectedEventId` / `selectEvent(id)` (persisted in `sigale-selected-event-id`) over the `organizerEvents` list. `TicketContext.refreshFromServer(status, eventId)` **early-returns without an `eventId`**, so a page that forgets to pass one silently renders empty rather than leaking another event's tickets. Re-fetch whenever the selection changes. Same for `admin.list`/`admin.listTickets`/`deleteAllPurchases` — all take `eventId`.
+- **`refreshOrganizerEvents` must stay referentially stable (`useCallback` deps `[]`) and read `event`/`selectedEventId`/`selectEvent` through refs, never through closed-over state** (fixed 2026-09-15). It's called from two places — `EventProvider`'s own mount-time bootstrap (once per session, gated by `isLoggedIn()` and a `bootstrappedRef`, so a page whose loading/error/empty branch never rendered `OrganizerMenu` still gets the fetch) and `OrganizerMenu`'s mount effect (fires again after a fresh login). Closing over `event`/`selectedEventId` instead of refs was the previous bug: the "already on the right event" check always compared against a stale value, so it never actually skipped the redundant `selectEvent()` call, and `GET /api/events/:id` refired every time `OrganizerMenu` remounted. An in-flight guard (`inFlightRef`) also collapses the two callers firing close together into one request. **`AdminPage.Panel` must gate its "zero events" branch on `organizerEventsLoaded`** (true once `GET /api/events/all` has resolved at least once) — the initial `organizerEvents = []` is indistinguishable from "no events" otherwise, and with roles live a `super_admin` was being `<Navigate>`d to `/create-event` on the very first render of a cold `/admin` load, before the list could come back (reproduced 2026-09-15 with a 2.5s API; the fix keeps it on "Cargando evento…" with the chrome up). `Panel` also owns the `Screen` + `OrganizerTopbar` and only swaps the body, so the chrome mounts once per visit rather than remounting on every state transition.
 - **Stage `sold_out` must be toggled on every inventory path**: after any increment to `soldQuantity`/`reservedQuantity` check if the stage is now full and flip to `sold_out`; after any decrement check if spots opened up and flip back to `active`. See the "Stage status & inventory invariants" section below for the exact SQL pattern and which code paths carry each check. `sold_out` means "temporarily full, may reopen" — several handlers auto-restore it to `active` once capacity frees up. A stage that must **never** reopen (orphaned by an event edit, or superseded by the next stage) gets `closed` instead — nothing ever restores from `closed`. Don't use `sold_out` as a stand-in for "permanently done." In particular, when a stage fills and the sold-out cascade in `createPurchase`/`createWalkInSale` promotes the next `upcoming` stage to `active`, the just-filled stage is set to `closed` (not left `sold_out`) so a later reservation-release can't reopen it — the fix for the 2026-07-21 Etapa 1 incident (see "Production environment").
 - **At most one stage per event may be `active` — enforced by the DB, not just app logic**: `uqOneActiveStagePerEvent` (migration `007_single_active_stage.sql`) is a unique index on `ticket_stages(eventId, activeFlag)`, where `activeFlag` is a generated column that's `1` only when `status = 'active'`. Any code path that promotes a stage to `active` (an event edit inserting/reordering stages, `activateDueStages`, or the sold-out cascade in `createPurchase`/`createWalkInSale` promoting the next stage) **must first demote whatever else is currently `active` for that event to `closed`**, or the write throws `ER_DUP_ENTRY`. This exists because two stages of the same name both reached `active` in production once already — see the incident note under "Production environment" below before touching stage-status code.
 - **`GREATEST(INT UNSIGNED − n, 0)` is NOT safe**: when `n > col`, MySQL evaluates the subtraction as unsigned first, wrapping to ~4 294 967 295. That value violates `chkStageCapacity`. Only decrement `soldQuantity`/`reservedQuantity` for ticket rows whose status proves they still hold inventory — `rejected` and `expired` have already been decremented by their own handlers.
@@ -96,10 +97,18 @@ src/
 │   ├── ErrorBoundary/
 │   ├── GuestPasses/               # GuestPassCard, GuestPassTable, GuestPassTableRow —
 │   │                              # editable roster for artist/crew/courtesy free-entry passes
-│   ├── Layout/                    # AdminLayout (organizer dark chrome + OrganizerMenu),
-│   │                              # OrganizerMenu (slide-out nav; hosts EventSelector and
-│   │                              # calls refreshOrganizerEvents() on mount),
-│   │                              # EventSelector (plain <select> scoping every organizer page)
+│   ├── Layout/                    # AdminLayout (organizer dark chrome; renders OrganizerTopbar),
+│   │                              # OrganizerTopbar (brand + EventBadge + OrganizerMenu — shared by
+│   │                              # AdminLayout AND AdminPage's hand-rolled /admin chrome, including
+│   │                              # its loading/error/empty branches, added 2026-09-15 to fix a
+│   │                              # cold-load dead end),
+│   │                              # EventBadge (flyer thumbnail + event name + switcher sheet;
+│   │                              # tappable only when organizerEvents.length > 1; used in both
+│   │                              # OrganizerTopbar and OrganizerMenu's slide-out panel — replaced
+│   │                              # EventSelector, now in legacy/src/),
+│   │                              # OrganizerMenu (slide-out nav; calls refreshOrganizerEvents() on
+│   │                              # mount — idempotent, EventProvider also bootstraps it once per
+│   │                              # session)
 │   ├── Scanner/                   # OfflineScanner (html5-qrcode camera wrapper). NOTE: the name
 │   │                              # is historical — scanning is online-only, see api/scan.js.
 │   ├── Tickets/                   # TicketForm, TicketCard, QRDisplay,
@@ -248,7 +257,7 @@ There is no public status page. Buyers see their orden number on the success scr
 
 Every organizer route below requires the admin login (`isLoggedIn()`); unauthenticated visits redirect to `/admin`. The gate is a UX funnel only — the server still re-validates organizer credentials per request.
 
-**Every organizer page is scoped by `EventSelector`** (in `OrganizerMenu`) — `/admin`, `/tickets`, `/dashboard`, `/sell-tickets`, `/guest-passes` and `/lista-puerta` all read the selected event and re-fetch when it changes.
+**Every organizer page is scoped by the event switcher** (`EventBadge`, rendered in `OrganizerTopbar` and inside `OrganizerMenu`'s slide-out panel — `EventSelector` is retired, moved to `legacy/src/`) — `/admin`, `/tickets`, `/dashboard`, `/sell-tickets`, `/guest-passes` and `/lista-puerta` all read the selected event and re-fetch when it changes.
 
 `/validate-qr` is still gated (a logged-out visit lands on `/admin`), but **the `*` catch-all now lives at top level, outside `RequireAuth`** — a logged-out visitor to an unknown URL gets `/`, not the login funnel.
 
@@ -375,7 +384,7 @@ Only `confirmed` rows have held `soldQuantity`; only `pending_payment` and `paym
 | GET | `/api/health` | Public |
 | GET | `/api/events` | Public — landing feed: `WHERE isPublished = 1 ORDER BY eventDate DESC`, lightweight rows for the `/` grid |
 | GET | `/api/events/active` | Public — **legacy**, kept only for old cached bundles. Don't build on it |
-| GET | `/api/events/all` | Organizer — every event, for the panel's `EventSelector` |
+| GET | `/api/events/all` | Organizer — every event, for the panel's event switcher (`EventBadge`) |
 | GET | `/api/events/by-slug/:slug` | Public — one event by slug. **Does not filter `isPublished`** (soft-launch by private link) |
 | GET | `/api/events/:id` | Public |
 | POST | `/api/events` | Organizer (create) — accepts `slug`/`isPublished`/`salesOpen`, never `isDemo`. 409 on a reserved or duplicate slug. **Phase 2 (not deployed): gated to `super_admin`** |

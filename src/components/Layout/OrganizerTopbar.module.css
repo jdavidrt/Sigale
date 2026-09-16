@@ -1,0 +1,36 @@
+/*
+ * OrganizerTopbar — mobile-first: the "Administración" subtitle is hidden by
+ * default so EventBadge (flex: 1 1 auto below) gets the width on a narrow
+ * phone; a min-width query brings it back once there's room to spare.
+ */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--black);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px 14px;
+}
+
+.brand {
+  flex: none;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.badgeSlot {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.subtitle {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .subtitle {
+    display: block;
+  }
+}

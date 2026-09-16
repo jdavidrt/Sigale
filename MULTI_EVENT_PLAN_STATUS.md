@@ -31,6 +31,49 @@ left for a follow-up: the dashboard's "Boletas por artista" breakdown and a
 `preferredArtist` CSV column were deliberately skipped to avoid touching
 `TicketContext.getStats`/`csvUtils`'s tested public API.
 
+**⚠ Deployment note (2026-09-15, later the same day):** the "nothing has
+been deployed" claim above is **no longer true for the backend** —
+`GET https://coffeserver.onrender.com/api/scan/events` answers `200` with the
+demo event, and that route only exists in the Phase 2 code, so the BlackCoffe
+server is running the synced Phase 2 backend. Whether migrations 010–013 ran
+and the existing account was promoted to `super_admin` has not been confirmed
+from the DB, but the `/admin` reload symptom below is only reachable when the
+login response carries `role: 'super_admin'`, which implies 010 did apply.
+Treat every "Phase 2, not deployed" label in this file, `CLAUDE.md` and
+`docs/architecture/*` as stale until the deploy is written up here properly
+(what was synced, which migrations applied, which Verification items passed).
+
+**Frontend fix + UX pass shipped same day (2026-09-15, after Phase 2 above):**
+the organizer panel had a cold-load dead end — `refreshOrganizerEvents` closed
+over `event`/`selectedEventId` instead of reading current state, so its
+"already on the right event" check never actually skipped, and
+`GET /api/events/:id` refired on every `OrganizerMenu` remount; worse,
+`AdminPage`'s `Panel` only ever rendered `OrganizerMenu` (the one thing that
+triggered the fetch) once an event was already loaded, so a fresh `/admin`
+load with a "zero events" first paint had nothing to correct it. Fixed by
+making `refreshOrganizerEvents` ref-based + idempotent (deps `[]`, no
+eslint-disable, in-flight guard) and moving the bootstrap fetch into
+`EventProvider` itself (once per session, gated on `isLoggedIn()`). New
+`OrganizerTopbar` component (brand + event switcher + `OrganizerMenu`) now
+renders in every `Panel` branch, including loading/error/empty, so there's
+always a working menu even mid-fetch. **Second pass, same day, after the
+user reported the reload still happening:** reproduced locally (headless
+Chrome against a mock API with 2.5s latency and a `super_admin` login) —
+`Panel` was reading the initial `organizerEvents = []` as "zero events" and,
+since roles are live in production (`GET /api/scan/events` answers 200 — see
+the deployment note below), `isSuperAdmin()` is now true, so every cold load
+of `/admin` `<Navigate>`d to `/create-event` before `/api/events/all` could
+resolve. Fix: `EventContext` exposes `organizerEventsLoaded`; `Panel` treats
+"not loaded yet" as loading and only branches on zero events once the list
+has resolved; `Panel` also owns the `Screen` + chrome and swaps only the
+body, so `OrganizerTopbar` mounts once per visit (`/api/events/all` ×1,
+`/api/events/:id` ×1 on a cold load — verified). Also replaced the old plain-`<select>`
+`EventSelector` with `EventBadge` — a flyer-thumbnail + name trigger that
+opens a switcher sheet, gated on `organizerEvents.length > 1` rather than
+`isSuperAdmin()` (which is dead in production until Phase 2 deploys).
+`EventSelector` is retired to `legacy/src/`. `npm run lint` / `npm run build`
+clean; not yet click-tested by the user (bullet 4 below updated accordingly).
+
 **Corrections to the 2026-08-05 snapshot below:**
 - The "Modo demostración" banner no longer exists — commits `ea3187e` /
   `f4f55f3` removed it the same afternoon, after the snapshot's text was
@@ -51,9 +94,10 @@ left for a follow-up: the dashboard's "Boletas por artista" breakdown and a
    `scratchpad/b7-orderid.mjs`) to close it, or record it as accepted-unverified.
 3. **Nightly rearm unverified** — demo ticket 97 (`95cb147cf9b94482`) was
    left `isUsed = 1` on 2026-08-05; a scan returning `ok` proves the job runs.
-4. **Never clicked** — `EventSelector` across the organizer pages, the
-   delete-all confirm naming the event, `/demo/compra` steps 2–6 + WhatsApp
-   hand-off, the `/create-event` + `/edit` form UI.
+4. **Never clicked** — the event switcher (`EventBadge`, in `OrganizerTopbar`/
+   `OrganizerMenu` — replaced `EventSelector` 2026-09-15) across the organizer
+   pages, the delete-all confirm naming the event, `/demo/compra` steps 2–6 +
+   WhatsApp hand-off, the `/create-event` + `/edit` form UI.
 
 **Do not re-send Ring A's pre-flip probe** (`POST /api/purchases` on a
 Girasoles stage): `salesOpen` is 1, so it would mint a real pending order.

@@ -54,6 +54,10 @@ component the app does not actually use.
   `src/utils/timeFormat.js`.
 - `Wordmark.jsx` — logotype. The Astromelias wordmark is rendered as a CSS class
   from `src/styles/astromelias.css`, not as a component.
+- `EventSelector.jsx` — the plain `<select>` organizers used to switch events
+  from `OrganizerMenu`'s slide-out panel. Replaced by `EventBadge` (thumbnail +
+  name + a switcher sheet, also surfaced in the new `OrganizerTopbar`) so
+  there's exactly one switcher UI instead of two.
 
 If you genuinely want one of these, move it back and wire it up — don't import
 across the `legacy/` boundary.

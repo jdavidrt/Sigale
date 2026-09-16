@@ -14,7 +14,7 @@ import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { Screen } from '../components/ui/Screen';
 import { Ic } from '../components/ui/Ic';
 import { SlideToConfirm } from '../components/Common/SlideToConfirm';
-import { OrganizerMenu } from '../components/Layout/OrganizerMenu';
+import { OrganizerTopbar } from '../components/Layout/OrganizerTopbar';
 import { StorageErrorBanner } from '../components/Common/StorageErrorBanner';
 import { QRDisplay } from '../components/Tickets/QRDisplay';
 import { useEvent } from '../context/EventContext';
@@ -109,69 +109,74 @@ function Login({ onIn }) {
 }
 
 // ── Panel (post-login) ─────────────────────────────────────────────────────────
+// Panel owns the Screen + chrome and only swaps the body underneath, so
+// OrganizerTopbar (and OrganizerMenu's mount-time refreshOrganizerEvents)
+// mounts exactly once per visit instead of once per state transition.
 function Panel({ onLogout }) {
   const { t } = useLanguage();
-  const { event, eventLoading, refreshEvent, organizerEvents, organizerEventsError, refreshOrganizerEvents } = useEvent();
+  const { event, eventLoading, refreshEvent, organizerEvents, organizerEventsError, organizerEventsLoaded, refreshOrganizerEvents } = useEvent();
 
-  if (eventLoading) {
-    return (
-      <Screen seed={11}>
-        <div className="scr-body pad" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-          <p className="muted">{t('loadingEvent')}</p>
-        </div>
-      </Screen>
+  const centered = { display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 };
+  let body;
+  if (eventLoading || (!event && !organizerEventsLoaded && !organizerEventsError)) {
+    body = (
+      <div className="scr-body pad" style={centered}>
+        <p className="muted">{t('loadingEvent')}</p>
+      </div>
     );
-  }
-
-  if (!event) {
+  } else if (!event && organizerEventsError && organizerEvents.length === 0) {
     // Phase 2 fix: a failed GET /api/events/all used to read exactly like
     // "this organizer has zero events" and silently redirect to
     // /create-event. Surface the error with a retry instead — it might be a
     // stale-creds/cold-dyno blip, and redirecting hides that from the user.
-    if (organizerEventsError && organizerEvents.length === 0) {
-      return (
-        <Screen seed={11}>
-          <div className="scr-body pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, textAlign: 'center', zIndex: 1 }}>
-            <p style={{ color: 'var(--red, #f87171)' }}>{t('organizerEventsLoadError')}</p>
-            <button className="btn sm" type="button" onClick={() => refreshOrganizerEvents().catch(() => {})}>
-              {t('retry')}
-            </button>
-          </div>
-        </Screen>
-      );
-    }
-    // Multi-event: `event` can be transiently null while OrganizerMenu's
-    // mount-time refreshOrganizerEvents() is still in flight, so only branch
-    // once we know for sure the organizer has no events.
-    if (organizerEvents.length === 0) {
-      // super_admin with zero events is the create-first-event onboarding
-      // path; an event_admin has no create rights (server 403s it anyway),
-      // so it gets a plain empty state instead of a dead-end redirect.
-      if (isSuperAdmin()) {
-        return <Navigate to="/create-event" replace />;
-      }
-      return (
-        <Screen seed={11}>
-          <div className="scr-body pad" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-            <EmptyStateCard icon="🗓️" title={t('noEventsAssigned')} description={t('noEventsAssignedDesc')} />
-          </div>
-        </Screen>
-      );
-    }
-    return (
-      <Screen seed={11}>
-        <div className="scr-body pad" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-          <p className="muted">{t('loadingEvent')}</p>
-        </div>
-      </Screen>
+    body = (
+      <div className="scr-body pad" style={{ ...centered, flexDirection: 'column', gap: 12, textAlign: 'center' }}>
+        <p style={{ color: 'var(--red, #f87171)' }}>{t('organizerEventsLoadError')}</p>
+        <button className="btn sm" type="button" onClick={() => refreshOrganizerEvents().catch(() => {})}>
+          {t('retry')}
+        </button>
+      </div>
     );
+  } else if (!event && organizerEvents.length === 0) {
+    // Only reached once GET /api/events/all has actually resolved
+    // (organizerEventsLoaded). Before that, `organizerEvents` is just the
+    // initial [] — on a cold reload of /admin it read exactly like "no
+    // events", and a super_admin was bounced to /create-event on the very
+    // first render, before the fetch could come back.
+    // super_admin with zero events is the create-first-event onboarding
+    // path; an event_admin has no create rights (server 403s it anyway),
+    // so it gets a plain empty state instead of a dead-end redirect.
+    if (isSuperAdmin()) {
+      return <Navigate to="/create-event" replace />;
+    }
+    body = (
+      <div className="scr-body pad" style={centered}>
+        <EmptyStateCard icon="🗓️" title={t('noEventsAssigned')} description={t('noEventsAssignedDesc')} />
+      </div>
+    );
+  } else if (!event) {
+    // List is loaded and non-empty; selectEvent() is about to run.
+    body = (
+      <div className="scr-body pad" style={centered}>
+        <p className="muted">{t('loadingEvent')}</p>
+      </div>
+    );
+  } else {
+    body = <Home event={event} onRefreshEvent={refreshEvent} />;
   }
 
-  return <Home event={event} onLogout={onLogout} onRefreshEvent={refreshEvent} />;
+  return (
+    <Screen seed={11}>
+      <StorageErrorBanner />
+      <OrganizerTopbar onLogout={onLogout} />
+      {body}
+    </Screen>
+  );
 }
 
 // ── Home (event hero + purchases panel) ────────────────────────────────────────
-function Home({ event, onLogout, onRefreshEvent }) {
+// Renders only the body under Panel's Screen + chrome (see Panel).
+function Home({ event, onRefreshEvent }) {
   const { t } = useLanguage();
   const { openCustom } = useDialog();
   const navigate = useNavigate();
@@ -326,16 +331,7 @@ function Home({ event, onLogout, onRefreshEvent }) {
     : '—';
 
   return (
-    <Screen seed={11}>
-      <StorageErrorBanner />
-      <div className="topbar" style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--black)' }}>
-        <Link to="/admin" style={{ textDecoration: 'none' }}>
-          <div className="serif" style={{ fontSize: 18, color: 'var(--cream)' }}>Sígale</div>
-          <div className="muted" style={{ fontSize: 12 }}>Administración</div>
-        </Link>
-        <OrganizerMenu onLogout={onLogout} />
-      </div>
-
+    <>
       <div className="scr-body pad" style={{ zIndex: 1, overflowY: 'auto', paddingBottom: 24 }}>
         <div style={{ maxWidth: 960, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
@@ -558,7 +554,7 @@ function Home({ event, onLogout, onRefreshEvent }) {
           onClose={() => setShareOrder(null)}
         />
       )}
-    </Screen>
+    </>
   );
 }
 

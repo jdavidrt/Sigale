@@ -1,7 +1,15 @@
 /*
- * EventSelector — plain <select> the organizer uses to switch which event
- * every admin page/endpoint is scoped to. Lives inside OrganizerMenu's
- * slide-out panel (the fetch that populates it runs unconditionally in
+ * ============================================================
+ * RETIRED — NOT PART OF THE RUNNING SYSTEM.
+ * This file has zero importers and is never executed. Do not
+ * import it, run it, or copy patterns from it. See
+ * legacy/README.md for why it was retired and what replaced it.
+ * ============================================================
+ */
+/*
+ * EventSelector — plain <select> the organizer used to switch which event
+ * every admin page/endpoint is scoped to. Lived inside OrganizerMenu's
+ * slide-out panel (the fetch that populated it ran unconditionally in
  * OrganizerMenu itself, not gated behind the panel being open — see there).
  */
 import { useEvent } from '../../context/EventContext';

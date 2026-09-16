@@ -1,6 +1,6 @@
-import { createContext, useContext, useMemo, useState, useCallback } from "react";
+import { createContext, useContext, useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { eventsApi } from "../api/events";
-import { getAuth } from "../api/admin";
+import { getAuth, isLoggedIn } from "../api/admin";
 import { useLocalStorageValue } from "../hooks/useLocalStorageValue";
 
 /** Build the organizer Basic-auth header for write calls, or undefined if not logged in. */
@@ -33,7 +33,30 @@ export const EventProvider = ({ children }) => {
   // events (stale creds, cold dyno, network blip). Surfacing the error lets
   // the page show a retry instead of a wrong redirect.
   const [organizerEventsError, setOrganizerEventsError] = useState(null);
+  // False until GET /api/events/all has resolved at least once. An empty
+  // `organizerEvents` before that means "not fetched yet", not "this
+  // organizer has zero events" — AdminPage must not redirect a super_admin
+  // to /create-event on that first, still-empty render.
+  const [organizerEventsLoaded, setOrganizerEventsLoaded] = useState(false);
   const [selectedEventId, setSelectedEventId] = useLocalStorageValue("sigale-selected-event-id", "");
+
+  // "Latest value" refs read by refreshOrganizerEvents (identity-stable, deps
+  // []) so its "already on the right event" check compares against current
+  // state instead of whatever event/selectedEventId were at the render where
+  // it was last recreated — that staleness was why it never actually skipped
+  // the redundant selectEvent() call, and why /api/events/:id kept refiring.
+  const eventRef = useRef(event);
+  eventRef.current = event;
+  const selectedEventIdRef = useRef(selectedEventId);
+  selectedEventIdRef.current = selectedEventId;
+  // Collapses overlapping refreshOrganizerEvents() calls (e.g. EventProvider's
+  // own bootstrap firing around the same time as OrganizerMenu's mount-time
+  // call) into the one in-flight request.
+  const inFlightRef = useRef(null);
+  // Runs the bootstrap fetch once per EventProvider mount (i.e. once per
+  // session — EventProvider itself never unmounts), not once per mount of
+  // whichever page happens to render OrganizerMenu first.
+  const bootstrappedRef = useRef(false);
 
   /** Public pages: resolve an event by its URL slug (LandingPage, PurchaseFlowPage). */
   const loadEventBySlug = useCallback((slug) => {
@@ -76,37 +99,68 @@ export const EventProvider = ({ children }) => {
     [setSelectedEventId],
   );
 
+  // Kept in a ref for the same reason as eventRef/selectedEventIdRef above:
+  // refreshOrganizerEvents must call the *current* selectEvent without
+  // taking on its identity as a dependency.
+  const selectEventRef = useRef(selectEvent);
+  selectEventRef.current = selectEvent;
+
   /**
    * Organizer event selector: fetch every event, then restore the persisted
    * selection if it still exists, else default to the most recent
-   * (eventsApi.listAll is ORDER BY eventDate DESC). Called once by
-   * OrganizerMenu on mount — the only chrome shared by every organizer page
-   * (AdminLayout-wrapped pages, plus the hand-rolled /admin and /scan).
+   * (eventsApi.listAll is ORDER BY eventDate DESC). Referentially stable
+   * (deps []) and idempotent — safe to call from both EventProvider's own
+   * bootstrap and OrganizerMenu's mount effect without re-fetching the
+   * already-selected event or racing itself when both fire close together.
    */
-  const refreshOrganizerEvents = useCallback(async () => {
-    try {
-      const rows = await eventsApi.listAll(authOpts());
-      setOrganizerEvents(rows);
-      setOrganizerEventsError(null);
-      const stillExists = selectedEventId && rows.some((r) => String(r.id) === String(selectedEventId));
-      if (stillExists) {
-        if (!event || String(event.id) !== String(selectedEventId)) {
-          await selectEvent(selectedEventId);
+  const refreshOrganizerEvents = useCallback(() => {
+    if (inFlightRef.current) return inFlightRef.current;
+    const promise = (async () => {
+      try {
+        const rows = await eventsApi.listAll(authOpts());
+        setOrganizerEvents(rows);
+        setOrganizerEventsError(null);
+        setOrganizerEventsLoaded(true);
+        const currentSelectedId = selectedEventIdRef.current;
+        const stillExists = currentSelectedId && rows.some((r) => String(r.id) === String(currentSelectedId));
+        if (stillExists) {
+          if (!eventRef.current || String(eventRef.current.id) !== String(currentSelectedId)) {
+            await selectEventRef.current(currentSelectedId);
+          }
+        } else if (rows.length > 0) {
+          await selectEventRef.current(rows[0].id);
+        } else {
+          setEvent(null);
         }
-      } else if (rows.length > 0) {
-        await selectEvent(rows[0].id);
-      } else {
-        setEvent(null);
+        return rows;
+      } catch (err) {
+        // Leave organizerEvents/event untouched — a transient failure must not
+        // erase an already-loaded list, and must not read as "no events".
+        setOrganizerEventsError(err?.message || 'No se pudieron cargar los eventos');
+        throw err;
+      } finally {
+        inFlightRef.current = null;
       }
-      return rows;
-    } catch (err) {
-      // Leave organizerEvents/event untouched — a transient failure must not
-      // erase an already-loaded list, and must not read as "no events".
-      setOrganizerEventsError(err?.message || 'No se pudieron cargar los eventos');
-      throw err;
+    })();
+    inFlightRef.current = promise;
+    return promise;
+  }, []);
+
+  // Bootstrap once per session (EventProvider mounts once for the app's
+  // lifetime) when the organizer already has credentials — e.g. an F5 on
+  // /admin with a persisted login. Previously this list only ever got fetched
+  // when OrganizerMenu happened to mount, which never happened from Panel's
+  // own loading/error/empty branches, so a cold reload could get stuck
+  // reading "zero events" forever. OrganizerMenu's own mount-time call still
+  // matters — it's what fetches this list right after a fresh login, since
+  // that happens after this effect has already run once.
+  useEffect(() => {
+    if (bootstrappedRef.current) return;
+    bootstrappedRef.current = true;
+    if (isLoggedIn()) {
+      refreshOrganizerEvents().catch(() => {});
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedEventId, selectEvent]);
+  }, [refreshOrganizerEvents]);
 
   /** Re-fetch whatever event is currently loaded (by id — works for both a
    * slug-loaded public event and an organizer-selected one). Swallows
@@ -174,6 +228,7 @@ export const EventProvider = ({ children }) => {
       // Multi-event additions — organizer selector + public slug resolution.
       organizerEvents,
       organizerEventsError,
+      organizerEventsLoaded,
       selectedEventId,
       selectEvent,
       refreshOrganizerEvents,
@@ -189,6 +244,7 @@ export const EventProvider = ({ children }) => {
       refreshEvent,
       organizerEvents,
       organizerEventsError,
+      organizerEventsLoaded,
       selectedEventId,
       selectEvent,
       refreshOrganizerEvents,

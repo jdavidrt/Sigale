@@ -1,0 +1,125 @@
+/*
+ * EventBadge — topbar trigger + the event-switcher sheet it opens via
+ * useDialog().openCustom(). The sheet renders inside Modal's `.modal-light`
+ * surface, which re-aliases --cream/--frame/--purple/etc. to their light-bg
+ * values, so the same tokens used for the dark-topbar trigger read correctly
+ * there too.
+ */
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 4px 10px 4px 4px;
+  border-radius: var(--r-md);
+  background: var(--black-2);
+  border: 1px solid var(--hair);
+  color: var(--cream);
+  font: inherit;
+  cursor: pointer;
+}
+
+.trigger:disabled {
+  cursor: default;
+}
+
+.thumb {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--black-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lilac);
+}
+
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.chev {
+  flex: none;
+  color: var(--lilac);
+}
+
+/* ── Switcher sheet ─────────────────────────────────── */
+.sheetTitle {
+  margin: 0 0 14px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.sheetList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.sheetRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--frame);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sheetRow[aria-current="true"] {
+  border-color: var(--purple);
+  background: rgba(139, 74, 145, 0.08);
+}
+
+.sheetInfo {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sheetName {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheetDate {
+  font-size: 12px;
+  color: var(--cream-dim);
+}
+
+.sheetCheck {
+  flex: none;
+  color: var(--purple);
+}

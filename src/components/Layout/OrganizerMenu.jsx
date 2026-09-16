@@ -14,7 +14,7 @@ import { Ic } from '../ui/Ic';
 import { useLanguage } from '../../context/LanguageContext';
 import { useEvent } from '../../context/EventContext';
 import { isSuperAdmin } from '../../api/admin';
-import { EventSelector } from './EventSelector';
+import { EventBadge } from './EventBadge';
 
 // Destination list. Icons are Astromelias `Ic` glyph names. /admin is the
 // single organizer home — there's no longer a separate /admin/create page.
@@ -42,16 +42,20 @@ export function OrganizerMenu({ onLogout }) {
   const visibleLinks = LINKS.filter((l) => !l.superOnly || isSuperAdmin());
 
   // OrganizerMenu is the one chrome shared by every organizer page (both
-  // AdminLayout-wrapped pages and the hand-rolled /admin + /scan topbars), so
-  // it's the natural place to populate + restore the selected event — run
+  // AdminLayout-wrapped pages and the hand-rolled /admin topbar), so it's the
+  // natural place to populate + restore the selected event — run
   // unconditionally on mount, not gated behind the slide-out panel being open.
-  // refreshOrganizerEvents now throws on failure (Phase 2 fix) — the pages
-  // that need to react to that read organizerEventsError from context, so
-  // here we just need to stop it from surfacing as an unhandled rejection.
+  // EventProvider also bootstraps this list once per session on its own, so
+  // most of the time this call is a cheap no-op (refreshOrganizerEvents
+  // collapses overlapping calls and skips re-selecting an already-current
+  // event); it's still what fetches the list right after a fresh login,
+  // since that happens after EventProvider's own bootstrap already ran.
+  // refreshOrganizerEvents throws on failure (Phase 2 fix) — the pages that
+  // need to react to that read organizerEventsError from context, so here we
+  // just need to stop it from surfacing as an unhandled rejection.
   useEffect(() => {
     refreshOrganizerEvents().catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refreshOrganizerEvents]);
 
   return (
     <>
@@ -102,7 +106,7 @@ export function OrganizerMenu({ onLogout }) {
               </button>
             </div>
 
-            <EventSelector />
+            <EventBadge />
 
             {visibleLinks.map((l) => {
               const active = location.pathname === l.to;
