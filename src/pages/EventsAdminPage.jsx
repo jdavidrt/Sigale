@@ -76,10 +76,15 @@ export function EventsAdminPage() {
     <div style={{ maxWidth: 960, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div className="serif" style={{ fontSize: 22, color: 'var(--cream)' }}>{t('eventsAdminTitle')}</div>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--cream-dim)' }}>
-          <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
-          {t('showArchived')}
-        </label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--cream-dim)', minHeight: 44 }}>
+            <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
+            {t('showArchived')}
+          </label>
+          <button className="btn sm" type="button" onClick={() => navigate('/create-event')}>
+            <Ic n="plus" s={18} /> {t('createEvent')}
+          </button>
+        </div>
       </div>
 
       {loading ? (
