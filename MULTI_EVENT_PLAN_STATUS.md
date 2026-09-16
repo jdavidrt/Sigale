@@ -5,102 +5,54 @@
 
 ## Current state (2026-09-15)
 
-**Phase 1 (multi-event platform) is shipped and in production** since
-2026-08-05. Everything from "TL;DR" down is that day's snapshot and has not
-changed since — `git log` shows no code commit after `fb3d4fc` (2026-08-05).
+**Phase 1 (multi-event) shipped 2026-08-05.** Everything from "TL;DR" down is
+that day's snapshot.
 
-**Phase 2 (roles, archive, public scanner, preferred artist) is implemented
-in code (2026-09-15 session), not deployed or verified.** Spec:
-`MULTI_EVENT_PLAN.md` → "Phase 2". Schema: `docs/architecture/DB_SCHEMA.md`
-(+ `DB_SCHEMA.svg`). Migrations `server/migrations/010`–`013` were already
-drafted; this session wrote the backend (`server/utils/authz.js`,
-`requireOrganizer.js`'s `requireSuperAdmin`, every controller/route touched
-by roles/archive/scanner/artist, new `organizers.controllers.js` +
-`organizers.routes.js`) and the frontend (`RequireSuperAdmin` in `App.jsx`,
-role-gated `OrganizerMenu`, `CreateEvent`'s scan-keyword field and
-event_admin carve-outs, new `EventsAdminPage`/`OrganizersAdminPage`, a
-rebuilt public-scan `ScanPage`, `preferredArtist` in `TicketForm` and
-`PurchaseFlow`). `npm run lint` and `npm run build` are both clean.
-**Nothing has been deployed, no migration has run against any database, and
-none of it has been exercised against a live server** — that's the entire
-remaining scope: sync + deploy the backend, confirm migrations 010–013 apply
-cleanly and promote the existing account to `super_admin`, then work through
-the "Verification" checklist at the bottom of `MULTI_EVENT_PLAN.md`'s Phase 2
-section with the user driving every write (Ring B discipline). Known gaps
-left for a follow-up: the dashboard's "Boletas por artista" breakdown and a
-`preferredArtist` CSV column were deliberately skipped to avoid touching
-`TicketContext.getStats`/`csvUtils`'s tested public API.
+**Phase 2 (roles, archive, public scanner, preferred artist) — code complete
+and the backend is live on production.** Spec: `MULTI_EVENT_PLAN.md` → "Phase
+2"; schema: `docs/architecture/DB_SCHEMA.md`. Migrations 010–014 applied (the runner runs before `listen`;
+`GET /api/scan/events` answers 200; login returns `role`; the account is
+`super_admin`). Not yet done: the Phase 2 "Verification" click-through. Skipped
+on purpose: the dashboard "Boletas por artista" breakdown and a
+`preferredArtist` CSV column (would touch tested `getStats` / `csvUtils`).
 
-**⚠ Deployment note (2026-09-15, later the same day):** the "nothing has
-been deployed" claim above is **no longer true for the backend** —
-`GET https://coffeserver.onrender.com/api/scan/events` answers `200` with the
-demo event, and that route only exists in the Phase 2 code, so the BlackCoffe
-server is running the synced Phase 2 backend. Whether migrations 010–013 ran
-and the existing account was promoted to `super_admin` has not been confirmed
-from the DB, but the `/admin` reload symptom below is only reachable when the
-login response carries `role: 'super_admin'`, which implies 010 did apply.
-Treat every "Phase 2, not deployed" label in this file, `CLAUDE.md` and
-`docs/architecture/*` as stale until the deploy is written up here properly
-(what was synced, which migrations applied, which Verification items passed).
-
-**Frontend fix + UX pass shipped same day (2026-09-15, after Phase 2 above):**
-the organizer panel had a cold-load dead end — `refreshOrganizerEvents` closed
-over `event`/`selectedEventId` instead of reading current state, so its
-"already on the right event" check never actually skipped, and
-`GET /api/events/:id` refired on every `OrganizerMenu` remount; worse,
-`AdminPage`'s `Panel` only ever rendered `OrganizerMenu` (the one thing that
-triggered the fetch) once an event was already loaded, so a fresh `/admin`
-load with a "zero events" first paint had nothing to correct it. Fixed by
-making `refreshOrganizerEvents` ref-based + idempotent (deps `[]`, no
-eslint-disable, in-flight guard) and moving the bootstrap fetch into
-`EventProvider` itself (once per session, gated on `isLoggedIn()`). New
-`OrganizerTopbar` component (brand + event switcher + `OrganizerMenu`) now
-renders in every `Panel` branch, including loading/error/empty, so there's
-always a working menu even mid-fetch. **Second pass, same day, after the
-user reported the reload still happening:** reproduced locally (headless
-Chrome against a mock API with 2.5s latency and a `super_admin` login) —
-`Panel` was reading the initial `organizerEvents = []` as "zero events" and,
-since roles are live in production (`GET /api/scan/events` answers 200 — see
-the deployment note below), `isSuperAdmin()` is now true, so every cold load
-of `/admin` `<Navigate>`d to `/create-event` before `/api/events/all` could
-resolve. Fix: `EventContext` exposes `organizerEventsLoaded`; `Panel` treats
-"not loaded yet" as loading and only branches on zero events once the list
-has resolved; `Panel` also owns the `Screen` + chrome and swaps only the
-body, so `OrganizerTopbar` mounts once per visit (`/api/events/all` ×1,
-`/api/events/:id` ×1 on a cold load — verified). Also replaced the old plain-`<select>`
-`EventSelector` with `EventBadge` — a flyer-thumbnail + name trigger that
-opens a switcher sheet, gated on `organizerEvents.length > 1` rather than
-`isSuperAdmin()` (which is dead in production until Phase 2 deploys).
-`EventSelector` is retired to `legacy/src/`. `npm run lint` / `npm run build`
-clean; not yet click-tested by the user (bullet 4 below updated accordingly).
+**Frontend fixes shipped 2026-09-15:**
+- `/admin` reload bounce to `/create-event`: `Panel` treated the initial
+  `organizerEvents = []` as "zero events" while the list was still loading;
+  with `super_admin` live that fired `<Navigate>` on first render. Fixed with
+  `organizerEventsLoaded` in `EventContext`; `Panel` now owns the `Screen` +
+  `OrganizerTopbar` and swaps only the body. Reproduced and verified in
+  headless Chrome against a mock API (2.5s latency): `/api/events/all` ×1,
+  `/api/events/:id` ×1 per cold load.
+- `refreshOrganizerEvents` made ref-based, `deps []`, in-flight guarded;
+  `EventProvider` bootstraps it once per session when logged in.
+- `EventSelector` (`<select>`) → `EventBadge` (flyer thumb + name + switcher
+  sheet, tappable when >1 event) in the new `OrganizerTopbar` and in
+  `OrganizerMenu`; old component in `legacy/src/`.
+- `/events-admin` gained a "Crear evento" button; `.modal-light` now
+  re-aliases `--lilac` so form labels read on the cream surface.
+- Not yet click-tested by the user.
 
 **Corrections to the 2026-08-05 snapshot below:**
-- The "Modo demostración" banner no longer exists — commits `ea3187e` /
-  `f4f55f3` removed it the same afternoon, after the snapshot's text was
-  written. Demo wizard steps 1–5 give no on-screen hint that the purchase is
-  simulated while step 4 still renders the real bank QR. Left as-is by user
-  decision (2026-09-11). Orphaned: the `demoModeBanner` translation keys and
-  the always-`undefined` `banner` prop on `Step6` / `FlowShell`.
-- Every "still open" item below is **unverified as of today**, not just as of
-  2026-08-05. They were DB/API actions, so git can't confirm them either way.
+- The "Modo demostración" banner was removed (`ea3187e` / `f4f55f3`); steps
+  1–5 give no simulated-purchase hint. Left as-is (user decision 2026-09-11).
+- Every "still open" item below is unverified as of today.
 
 **Still open from Phase 1 (production data, not code):**
-1. **Girasoles rests dirty** — 5 test tickets (orders 166–169), Etapa 1
-   `closed` 4/5, Etapa 2 `active` 0/10, and **`salesOpen = 1`**: anyone with
-   the `/girasoles` link can place a real order. Set `salesOpen = 0` via
-   `/edit`, which also exercises the never-clicked event form.
-2. **orderId-never-reused is unverified** — `order_counter.highWaterMark` is
-   164 while `MAX(orderId)` is 169. Run "Delete All Tickets" on Girasoles (or
-   `scratchpad/b7-orderid.mjs`) to close it, or record it as accepted-unverified.
-3. **Nightly rearm unverified** — demo ticket 97 (`95cb147cf9b94482`) was
-   left `isUsed = 1` on 2026-08-05; a scan returning `ok` proves the job runs.
-4. **Never clicked** — the event switcher (`EventBadge`, in `OrganizerTopbar`/
-   `OrganizerMenu` — replaced `EventSelector` 2026-09-15) across the organizer
-   pages, the delete-all confirm naming the event, `/demo/compra` steps 2–6 +
-   WhatsApp hand-off, the `/create-event` + `/edit` form UI.
+1. **Girasoles rests dirty** — orders 166–169, Etapa 1 `closed` 4/5, Etapa 2
+   `active` 0/10, **`salesOpen = 1`** (anyone with the link can order). Set
+   `salesOpen = 0` via `/edit`.
+2. **orderId-never-reused unverified** — `order_counter.highWaterMark` 164 vs
+   `MAX(orderId)` 169. Run delete-all on Girasoles (or
+   `scratchpad/b7-orderid.mjs`) or record as accepted-unverified.
+3. **Nightly rearm unverified** — demo ticket 97 (`95cb147cf9b94482`) left
+   `isUsed = 1` on 2026-08-05; a scan returning `ok` proves the job.
+4. **Never clicked** — the event switcher, the delete-all confirm naming the
+   event, `/demo/compra` steps 2–6 + WhatsApp hand-off, the `/create-event` +
+   `/edit` forms.
 
 **Do not re-send Ring A's pre-flip probe** (`POST /api/purchases` on a
-Girasoles stage): `salesOpen` is 1, so it would mint a real pending order.
+Girasoles stage) — `salesOpen` is 1, it would mint a real order.
 
 ---
 

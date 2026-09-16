@@ -1,7 +1,6 @@
-# `sigale` database — schema reference (after migrations 010–013)
+# `sigale` database — schema reference (after migrations 010–014)
 
-**Status:** migrations drafted, application code written (2026-09-15
-session), **not applied or deployed anywhere** (not local, not production).
+**Status:** migrations 010–014 applied on production (2026-09-15).
 Migrations `010_organizer_roles.sql` (organizer roles + event ownership),
 `011_preferred_artist.sql` (buyer's preferred act), `012_event_archive.sql`
 (`events.isArchived`), and `013_scan_keyword.sql` (`events.scanKeyword`) sit

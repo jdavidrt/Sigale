@@ -87,11 +87,7 @@ Drafted in `server/migrations/011_preferred_artist.sql`. **Application code
 now reads/writes it** (`resolvePreferredArtist()` in
 `purchases.controllers.js`, used by `createPurchase` and `createWalkInSale`;
 `getAdminPurchases`/`getAdminTickets` surface it; `TicketForm` and
-`PurchaseFlow` collect it — written 2026-09-15), but the migration itself
-**has not been applied anywhere** (not local, not production) and none of
-this has run against a real database — listed here so the live column set
-above stays the source of truth while the addition is tracked. See
-`MULTI_EVENT_PLAN_STATUS.md` for what's built vs. deployed.
+`PurchaseFlow` collect it — written 2026-09-15), and migration 011 is applied on production (2026-09-15).
 
 | Column | Type | Set when | Meaning |
 |---|---|---|---|

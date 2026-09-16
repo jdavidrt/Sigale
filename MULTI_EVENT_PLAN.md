@@ -319,7 +319,7 @@ above this heading is shipped history.
 | 7 | `preferredArtist` is required on every new order (wizard and walk-in) **when the event has a line-up**; captured on wizard step 1. The walk-in form drops its phone field. |
 | 8 | Guest passes are role-scoped like everything else. |
 
-### Schema — migrations 010–013 (drafted, not applied)
+### Schema — migrations 010–014 (applied on production 2026-09-15)
 
 | Migration | Adds |
 |---|---|
