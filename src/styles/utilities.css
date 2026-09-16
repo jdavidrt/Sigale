@@ -162,6 +162,10 @@
   --frame: rgba(70, 41, 76, 0.25);
   --hair: rgba(70, 41, 76, 0.16);
   --hair-2: rgba(70, 41, 76, 0.10);
+  /* .label / icon accents read as pale lilac on the dark screens; on this
+     cream surface that's near-invisible, so drop them to the deep plum. */
+  --lilac: var(--am-purple-deep);
+  --lilac-deep: var(--am-purple);
 
   /* Semantic tokens (consumed by CSS Modules) */
   --color-text-primary: var(--am-black-2);
