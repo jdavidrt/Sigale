@@ -41,6 +41,17 @@
   --hair: rgba(237, 217, 186, 0.13);
   --hair-2: rgba(237, 217, 186, 0.08);
 
+  /* Channel triplets + darker gradient stops (see astromelias.skin.css's
+     header comment for the full contract). */
+  --yellow-rgb: 199, 154, 58;
+  --orange-rgb: 181, 118, 58;
+  --lilac-rgb: 237, 198, 155;
+  --orange-deep: #6B4526;
+  --yellow-deep: #8F6B28;
+  /* .scr::after ambient glow — gold below, a cool marble-vein violet above */
+  --aura-1-rgb: 199, 154, 58;
+  --aura-2-rgb: 70, 50, 80;
+
   /* ── Direction theme ── */
   --title-font: 'DM Serif Display', serif;
   --title-weight: 400;
@@ -56,4 +67,139 @@
   --cta-shadow: 0 10px 26px rgba(199, 154, 58, 0.42);
   --badge-bg: var(--orange);
   --badge-fg: #fff;
+}
+
+/* ============================================================
+   BESPOKE LAYOUT — ROCK EN VIVO only
+   These selectors only ever match inside .skin-rock, so they have zero
+   effect on any other event. The elements they target (.rock-stagelist,
+   .lhero-date, .rock-artist, .skin-rock-card) are rendered conditionally
+   in LandingPage.jsx / EventsListPage.jsx only when the event's slug is
+   'rock-en-vivo' — see useEventSkin.js's EVENT_SKINS map.
+   ============================================================ */
+
+/* ── Stage list — flyer's "1era Etapa ———— ($30K)" price-pill rows ── */
+.skin-rock .rock-stagelist {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 4px 6px;
+}
+.skin-rock .rock-stage-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.skin-rock .rock-stage-name {
+  font-family: var(--title-font);
+  font-size: 15px;
+  color: var(--cream-dim);
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+.skin-rock .rock-stage-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--frame) 20%, var(--frame) 80%, transparent);
+}
+.skin-rock .rock-stage-price {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 78px;
+  padding: 7px 18px;
+  border-radius: var(--r-full);
+  border: 1.5px solid var(--yellow);
+  font-family: var(--title-font);
+  font-size: 17px;
+  color: var(--yellow);
+  white-space: nowrap;
+}
+.skin-rock .rock-stage-row.is-active .rock-stage-name {
+  color: var(--cream);
+  font-weight: 600;
+}
+.skin-rock .rock-stage-row.is-active .rock-stage-price {
+  background: var(--cta-bg);
+  color: var(--cta-text);
+  border-color: transparent;
+  box-shadow: var(--cta-shadow);
+}
+.skin-rock .rock-stage-row.is-done {
+  opacity: 0.4;
+}
+.skin-rock .rock-stage-row.is-done .rock-stage-price {
+  text-decoration: line-through;
+  border-color: var(--hair);
+  color: var(--cream-faint);
+}
+.skin-rock .rock-cupos {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--cream-dim);
+}
+.skin-rock .rock-cupos .serif {
+  color: var(--yellow);
+  font-size: 20px;
+  margin-right: 4px;
+}
+.skin-rock .rock-perk {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--yellow);
+  letter-spacing: 0.3px;
+}
+
+/* ── Hero date badge — flyer's stacked "SÁBADO / 03 / OCTUBRE" corner ── */
+.skin-rock .lhero-date {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+}
+.skin-rock .lhero-date-w {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+.skin-rock .lhero-date-d {
+  font-family: var(--title-font);
+  font-size: 44px;
+  color: var(--cream);
+  margin-top: 2px;
+}
+.skin-rock .lhero-date-m {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--cream-dim);
+  margin-top: 2px;
+}
+
+/* ── Lineup — gold-foil text instead of the rotating Astromelias hues ── */
+.skin-rock .rock-artist {
+  background: linear-gradient(160deg, var(--cream) 0%, var(--yellow) 55%, var(--orange-deep) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── / events grid — gold frame on this event's own card only ──
+   The grid at / always renders under body's default .skin-astromelias
+   (it lists every published event at once, so it can't swap skins per
+   card) — this rule is scoped there on purpose, using the raw --am-yellow
+   canonical token rather than the skin-aliased --yellow, since this
+   card's gold identity is fixed to this one event, not to whichever body
+   skin happens to be active. */
+.skin-astromelias .rock-card {
+  border-color: var(--am-yellow);
+  box-shadow: 0 0 0 1px rgba(231, 174, 63, 0.35), 0 8px 24px rgba(0, 0, 0, 0.35);
 }

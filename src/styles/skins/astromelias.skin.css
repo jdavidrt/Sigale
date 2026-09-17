@@ -19,6 +19,10 @@
  *   --orange --orange-soft
  *   --green --red --blue
  *   --frame --hair --hair-2
+ * ── RGB triplets + gradient stops (for rgba()/gradients astromelias.css builds) ──
+ *   --yellow-rgb --orange-rgb --lilac-rgb
+ *   --orange-deep --yellow-deep
+ *   --aura-1-rgb --aura-2-rgb
  * ── Direction-theme vars (consumed by .t3 rules, .btn, .tile, …) ──
  *   --title-font --title-weight --title-track
  *   --card-bg --card-border --card-blur
@@ -49,6 +53,19 @@
   --frame: var(--am-frame);
   --hair: var(--am-hair);
   --hair-2: var(--am-hair-2);
+
+  /* Channel triplets (for rgba() alpha compositing) + darker gradient
+     stops that astromelias.css needs but the palette above doesn't
+     otherwise provide. Values match the hardcoded literals they replace
+     exactly — this skin must stay a pixel-for-pixel no-op. */
+  --yellow-rgb: 231, 174, 63;
+  --orange-rgb: 213, 88, 46;
+  --lilac-rgb: 203, 183, 218;
+  --orange-deep: #a23c1f;
+  --yellow-deep: #b07e1f;
+  /* .scr::after ambient glow (bottom, top) */
+  --aura-1-rgb: 139, 74, 145;  /* am-purple */
+  --aura-2-rgb: 231, 174, 63;  /* am-yellow */
 
   /* ── Direction theme — COLLAGE (Astromelias shipping skin) ── */
   --title-font: 'DM Serif Display', serif;

@@ -7,7 +7,7 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEvent } from '../context/EventContext';
-import { useEventSkin } from '../hooks/useEventSkin';
+import { useEventSkin, getSkinStarDecor } from '../hooks/useEventSkin';
 import { StarField } from '../components/ui/StarField';
 import { Ic } from '../components/ui/Ic';
 import { resolveActiveStage, stageCupos } from '../utils/sampleEvent';
@@ -52,6 +52,12 @@ export function LandingPage() {
   // slug, not the fetched event — so it applies from first paint instead of
   // flashing the default skin while the event loads.
   useEventSkin(slug);
+  // Bespoke layout branches (stage-row pills, date badge, foil lineup text)
+  // gated on this — keep in sync with useEventSkin.js's EVENT_SKINS map.
+  const isRock = slug === 'rock-en-vivo';
+  // StarField's gold-dust look for rock; {} (StarField's own white default)
+  // for every other event.
+  const starDecor = getSkinStarDecor(slug);
 
   // Fresh fetch by slug every time the user lands here so they never see a
   // stale stage or accidentally try to buy a sold-out ticket. A slug that
@@ -131,7 +137,7 @@ export function LandingPage() {
   if (eventLoading && !ctxEvent) {
     return (
       <div style={{ height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
-        <StarField seed={2} density={34} w={430} h={880} />
+        <StarField seed={2} density={34} w={430} h={880} {...starDecor} />
         <p className="muted" style={{ position: 'relative', zIndex: 1 }}>Cargando…</p>
       </div>
     );
@@ -158,6 +164,18 @@ export function LandingPage() {
     ? `${parseLocalDate(event.date)?.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })} \xB7 ${formatTo12Hour(event.entranceTime || '00:00')}`
     : '';
 
+  // Flyer's stacked "SÁBADO / 03 / OCTUBRE" hero corner — rock only.
+  const rockDate = (() => {
+    if (!isRock || !event.date) return null;
+    const d = parseLocalDate(event.date);
+    if (!d) return null;
+    return {
+      weekday: d.toLocaleDateString('es-CO', { weekday: 'long' }),
+      day: d.toLocaleDateString('es-CO', { day: '2-digit' }),
+      month: d.toLocaleDateString('es-CO', { month: 'long' }),
+    };
+  })();
+
   return (
     <div className="scr" style={{ height: '100dvh' }}>
       <div className="lscroll" ref={scrollRef}>
@@ -176,8 +194,15 @@ export function LandingPage() {
         </div>
 
         <section className="lhero">
-          <StarField seed={2} density={42} w={430} h={880} />
+          <StarField seed={2} density={42} w={430} h={880} {...starDecor} />
           <div className="lhero-overlay" ref={overlayRef} style={{ opacity: 0 }} />
+          {rockDate && (
+            <div className="lhero-date">
+              <span className="lhero-date-w">{rockDate.weekday}</span>
+              <span className="lhero-date-d">{rockDate.day}</span>
+              <span className="lhero-date-m">{rockDate.month}</span>
+            </div>
+          )}
           <div className="lhero-sb" ref={sbRef}>
             <span className="kicker">Bogotá, CO</span>
           </div>
@@ -191,7 +216,7 @@ export function LandingPage() {
         </section>
 
         <section className="lbody">
-          <StarField seed={9} density={34} w={430} h={1500} />
+          <StarField seed={9} density={34} w={430} h={1500} {...starDecor} />
           <div className="lbody-inner">
 
             <div className="lbody-col lbody-col--lineup">
@@ -211,7 +236,13 @@ export function LandingPage() {
                     <div className="label" style={{ color: 'var(--orange-soft)', textAlign: 'center', marginBottom: 18 }}>Line-up</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'center' }}>
                       {event.artists.map((a, i) => (
-                        <div key={i} className="serif actbig" style={{ fontSize: 32, color: ARTIST_COLORS[i % ARTIST_COLORS.length], lineHeight: 1.04 }}>{a}</div>
+                        <div
+                          key={i}
+                          className={`serif actbig${isRock ? ' rock-artist' : ''}`}
+                          style={{ fontSize: 32, lineHeight: 1.04, ...(isRock ? {} : { color: ARTIST_COLORS[i % ARTIST_COLORS.length] }) }}
+                        >
+                          {a}
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -221,34 +252,40 @@ export function LandingPage() {
 
             <div className="lbody-col lbody-col--tickets">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {active && (
-                  <div className="tile purple stub" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div className="chip" style={{ background: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.24)', color: '#fff', marginBottom: 8 }}>Etapa activa</div>
-                      <div className="label" style={{ color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>{active.name}</div>
-                      <div className="serif" style={{ fontSize: 38, color: 'var(--yellow)', lineHeight: 1, marginTop: 3 }}>{formatCurrency(active.price)}</div>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px', marginTop: 6 }}>✦ Toda entrada incluye pola</div>
-                    </div>
-                    {/* Cupos count only means something while online sales are open.
-                        With box-office-only sales it would read a misleading "0 cupos". */}
-                    {salesOpenForBuyer && (
-                      <div style={{ textAlign: 'center' }}>
-                        <div className="serif" style={{ fontSize: 36, color: '#fff' }}>{stageCupos(active)}</div>
-                        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.75)' }}>{stageCupos(active) === 1 ? 'cupo' : 'cupos'}</div>
+                {isRock ? (
+                  <RockStageBlock event={event} active={active} salesOpenForBuyer={salesOpenForBuyer} />
+                ) : (
+                  <>
+                    {active && (
+                      <div className="tile purple stub" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div className="chip" style={{ background: 'rgba(255,255,255,0.16)', borderColor: 'rgba(255,255,255,0.24)', color: '#fff', marginBottom: 8 }}>Etapa activa</div>
+                          <div className="label" style={{ color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>{active.name}</div>
+                          <div className="serif" style={{ fontSize: 38, color: 'var(--yellow)', lineHeight: 1, marginTop: 3 }}>{formatCurrency(active.price)}</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--yellow)', letterSpacing: '0.5px', marginTop: 6 }}>✦ Toda entrada incluye pola</div>
+                        </div>
+                        {/* Cupos count only means something while online sales are open.
+                            With box-office-only sales it would read a misleading "0 cupos". */}
+                        {salesOpenForBuyer && (
+                          <div style={{ textAlign: 'center' }}>
+                            <div className="serif" style={{ fontSize: 36, color: '#fff' }}>{stageCupos(active)}</div>
+                            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.75)' }}>{stageCupos(active) === 1 ? 'cupo' : 'cupos'}</div>
+                          </div>
+                        )}
                       </div>
                     )}
-                  </div>
-                )}
-                {upcoming.length > 0 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: upcoming.length === 1 ? '1fr' : '1fr 1fr', gap: 12 }}>
-                    {upcoming.slice(0, 2).map((s, i) => (
-                      <div className={`tile ${i === 0 ? 'yellow' : 'orange'}`} key={i}>
-                        <div className="label" style={i === 0 ? undefined : { color: 'rgba(255,255,255,0.85)' }}>{s.name}</div>
-                        <div className="serif" style={{ fontSize: 26, color: i === 0 ? undefined : '#fff' }}>{formatCurrency(s.price)}</div>
-                        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>Próximamente</div>
+                    {upcoming.length > 0 && (
+                      <div style={{ display: 'grid', gridTemplateColumns: upcoming.length === 1 ? '1fr' : '1fr 1fr', gap: 12 }}>
+                        {upcoming.slice(0, 2).map((s, i) => (
+                          <div className={`tile ${i === 0 ? 'yellow' : 'orange'}`} key={i}>
+                            <div className="label" style={i === 0 ? undefined : { color: 'rgba(255,255,255,0.85)' }}>{s.name}</div>
+                            <div className="serif" style={{ fontSize: 26, color: i === 0 ? undefined : '#fff' }}>{formatCurrency(s.price)}</div>
+                            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>Próximamente</div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 )}
                 {salesOpenForBuyer ? (
                   active ? (
@@ -303,6 +340,40 @@ export function LandingPage() {
           </div>
         </section>
       </div>
+    </div>
+  );
+}
+
+// ── ROCK EN VIVO bespoke stage list ─────────────────────────────────────────────
+// Mirrors the flyer's own "1era Etapa ———— ($30K)" price-pill rows — every
+// stage shown at once (not just active + 2 upcoming), sorted by sortOrder.
+// Rendered only when isRock (see LandingPage above); the astromelias tile
+// grid it replaces is untouched for every other event. Styling lives in
+// skins/rock.skin.css (.rock-stagelist and friends) — nothing here reaches
+// into astromelias.css.
+function RockStageBlock({ event, active, salesOpenForBuyer }) {
+  const stages = [...(event.stages || [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  if (stages.length === 0) return null;
+  return (
+    <div className="rock-stagelist">
+      {stages.map((s) => {
+        const isActive = s.status === 'active';
+        const isDone = s.status === 'closed' || s.status === 'sold_out';
+        return (
+          <div className={`rock-stage-row${isActive ? ' is-active' : ''}${isDone ? ' is-done' : ''}`} key={s.id ?? s.name}>
+            <span className="rock-stage-name">{s.name}</span>
+            <span className="rock-stage-rule" />
+            <span className="rock-stage-price">{formatCurrency(s.price)}</span>
+          </div>
+        );
+      })}
+      {active && salesOpenForBuyer && (
+        <div className="rock-cupos">
+          <span className="serif">{stageCupos(active)}</span>
+          {stageCupos(active) === 1 ? ' cupo disponible' : ' cupos disponibles'} · {active.name}
+        </div>
+      )}
+      <div className="rock-perk">✦ Toda entrada incluye pola</div>
     </div>
   );
 }

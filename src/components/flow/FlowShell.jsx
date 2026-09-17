@@ -22,9 +22,11 @@ export function FlowShell({
   footnote,
   ghost,
   banner,
+  starColor,
+  starGlowRgb,
 }) {
   return (
-    <Screen seed={30 + step}>
+    <Screen seed={30 + step} starColor={starColor} starGlowRgb={starGlowRgb}>
       <div className="topbar" style={{ paddingBottom: 8 }}>
         {/* Once the buyer commits to paying (step 4+) we lock the back button so
             they cannot rewind through previous steps. The 44px placeholder

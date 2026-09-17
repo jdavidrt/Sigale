@@ -21,6 +21,23 @@ const EVENT_SKINS = {
   'rock-en-vivo': 'skin-rock',
 };
 
+// Per-skin decorative constants that live in JS, not CSS, because they feed
+// component props (StarField's inline-styled canvas) rather than stylesheet
+// rules. Keyed by the same skin class as EVENT_SKINS above.
+const SKIN_STAR_DECOR = {
+  'skin-rock': { starColor: '#F0D69C', starGlowRgb: '240,214,156' }, // gold dust, not white stars
+};
+
+/** Resolves the `.skin-*` body class for a slug (same lookup useEventSkin uses). */
+export function getSkinClass(slug) {
+  return EVENT_SKINS[slug] || DEFAULT_SKIN;
+}
+
+/** StarField color/glowRgb props for a slug's skin, or {} to keep StarField's white default. */
+export function getSkinStarDecor(slug) {
+  return SKIN_STAR_DECOR[getSkinClass(slug)] || {};
+}
+
 export function useEventSkin(slug) {
   useEffect(() => {
     const skinClass = EVENT_SKINS[slug] || DEFAULT_SKIN;
