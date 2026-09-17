@@ -56,7 +56,11 @@ export function EventsListPage() {
         ) : (
           <div className={s.grid}>
             {events.map((event) => (
-              <Link key={event.id} to={`/${event.slug}`} className={`card ${s.card}`}>
+              <Link
+                key={event.id}
+                to={`/${event.slug}`}
+                className={`card ${s.card}${event.slug === 'rock-en-vivo' ? ' rock-card' : ''}`}
+              >
                 <div className={s.flyerWrap}>
                   {event.flyerImageUrl ? (
                     <img className={s.flyer} src={event.flyerImageUrl} alt="" />

@@ -2,11 +2,17 @@ import { useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams, useNavigate } from "react-router-dom";
 
 // Style foundation — import order is intentional:
-// tokens → global → utilities → astromelias (each layer builds on the previous)
+// tokens → global → utilities → astromelias → skins (each layer builds on
+// the previous). astromelias.css is structure only; each skins/*.skin.css
+// supplies one event's full color-token contract, scoped to its own
+// `.skin-*` body class (see skins/astromelias.skin.css for the contract and
+// useEventSkin.js for how the class is chosen/swapped per event).
 import "./styles/tokens.css";
 import "./styles/global.css";
 import "./styles/utilities.css";
 import "./styles/astromelias.css";
+import "./styles/skins/astromelias.skin.css";
+import "./styles/skins/rock.skin.css";
 import { LanguageProvider } from "./context/LanguageContext";
 import { EventProvider } from "./context/EventContext";
 import { TicketProvider } from "./context/TicketContext";

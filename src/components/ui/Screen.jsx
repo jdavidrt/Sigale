@@ -5,10 +5,10 @@
  */
 import { StarField } from './StarField';
 
-export function Screen({ seed = 1, density = 40, className = '', style, children }) {
+export function Screen({ seed = 1, density = 40, className = '', style, children, starColor, starGlowRgb }) {
   return (
     <div className={`scr ${className}`} style={{ minHeight: '100dvh', ...style }}>
-      <StarField seed={seed} density={density} />
+      <StarField seed={seed} density={density} starColor={starColor} starGlowRgb={starGlowRgb} />
       {children}
     </div>
   );

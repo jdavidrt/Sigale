@@ -17,6 +17,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEvent } from '../../context/EventContext';
+import { useEventSkin, getSkinStarDecor } from '../../hooks/useEventSkin';
 import { useDialog } from '../../context/DialogContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Ic } from '../ui/Ic';
@@ -68,6 +69,16 @@ export function PurchaseFlow() {
   const { event: ctxEvent, eventLoading, loadEventBySlug } = useEvent();
   const { openCustom } = useDialog();
   const { t } = useLanguage();
+
+  // Per-event skin (e.g. ROCK EN VIVO's gold/marble look), keyed on the
+  // route slug so it's applied from first paint. Modal/Toast portal into
+  // document.body, so this also themes step 4's payment-info modal and any
+  // toast raised during the flow.
+  useEventSkin(slug);
+  // StarField's per-event look (e.g. gold dust instead of white stars) is a
+  // component prop, not a stylesheet rule — {} for every non-rock event, so
+  // every <Screen>/<FlowShell> below is an exact no-op unless spread here.
+  const starDecor = getSkinStarDecor(slug);
 
   // All hooks first — they must run on every render in the same order.
   const [step, setStep] = useState(1);
@@ -261,7 +272,7 @@ export function PurchaseFlow() {
   // real event finishes loading; show a friendly message if none exists.
   if (eventLoading) {
     return (
-      <Screen seed={42}>
+      <Screen seed={42} {...starDecor}>
         <div className="scr-body pad" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
           <p className="muted">Cargando evento…</p>
         </div>
@@ -270,7 +281,7 @@ export function PurchaseFlow() {
   }
   if (!hasRealEvent) {
     return (
-      <Screen seed={42}>
+      <Screen seed={42} {...starDecor}>
         <div className="scr-body pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12, zIndex: 1 }}>
           <div className="charly" style={{ width: 64, height: 64, fontSize: 28 }}>✦</div>
           <div className="serif" style={{ fontSize: 22 }}>Aún no hay boletas disponibles</div>
@@ -285,7 +296,7 @@ export function PurchaseFlow() {
   // the demo bypasses this (salesOpenForBuyer is true whenever isDemo is).
   if (!salesOpenForBuyer) {
     return (
-      <Screen seed={42}>
+      <Screen seed={42} {...starDecor}>
         <div className="scr-body pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12, zIndex: 1 }}>
           <div className="charly" style={{ width: 64, height: 64, fontSize: 28 }}>✦</div>
           <div className="serif" style={{ fontSize: 22 }}>Adquiere tu entrada en taquilla</div>
@@ -299,7 +310,7 @@ export function PurchaseFlow() {
   }
   if (!hasRealStage) {
     return (
-      <Screen seed={42}>
+      <Screen seed={42} {...starDecor}>
         <div className="scr-body pad" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 12, zIndex: 1 }}>
           <div className="charly" style={{ width: 64, height: 64, fontSize: 28 }}>✦</div>
           <div className="serif" style={{ fontSize: 22 }}>Aún no hay boletas disponibles</div>
@@ -313,7 +324,7 @@ export function PurchaseFlow() {
   // ── Step 1 · Selección ────────────────────────────────────────────────────────
   if (step === 1) {
     return (
-      <FlowShell step={1} kicker="Selección" title="Elige tu boleta" onNext={next} onBack={back}
+      <FlowShell {...starDecor} step={1} kicker="Selección" title="Elige tu boleta" onNext={next} onBack={back}
         cta="Continuar" ctaIcon={<Ic n="chevR" s={20} />} ctaDisabled={artistRequired && !preferredArtist}>
         <div className="tile purple" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
@@ -368,7 +379,7 @@ export function PurchaseFlow() {
           </div>
         )}
 
-        <div className="card" style={{ padding: 16, marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderColor: 'rgba(231,174,63,0.25)' }}>
+        <div className="card" style={{ padding: 16, marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderColor: 'rgba(var(--yellow-rgb), 0.25)' }}>
           <div className="label" style={{ color: 'var(--cream-dim)' }}>Total</div>
           <div className="serif" style={{ fontSize: 28, color: 'var(--yellow)' }}>{formatCurrency(total)}</div>
         </div>
@@ -396,7 +407,7 @@ export function PurchaseFlow() {
       : delivery.contact.length > 0 && !validators.phone(delivery.contact);
 
     return (
-      <FlowShell step={2} kicker="Datos de boletas" title="¿Para quién son?" onNext={next} onBack={back}
+      <FlowShell {...starDecor} step={2} kicker="Datos de boletas" title="¿Para quién son?" onNext={next} onBack={back}
         cta={reserving ? 'Reservando…' : 'Continuar'} ctaIcon={<Ic n="chevR" s={20} />} ctaDisabled={!datosValid || reserving}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {holders.map((h, i) => {
@@ -472,7 +483,7 @@ export function PurchaseFlow() {
   // ── Step 3 · Confirmar → reserved (orden) ──────────────────────────────────────
   if (step === 3) {
     return (
-      <FlowShell step={3} kicker="Confirmar compra" title="Tu cupo está reservado" onNext={next} onBack={back}
+      <FlowShell {...starDecor} step={3} kicker="Confirmar compra" title="Tu cupo está reservado" onNext={next} onBack={back}
         cta="Ir a pagar" ctaIcon={<Ic n="chevR" s={20} />}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: 8 }}>
           <div className="charly" style={{ width: 76, height: 76, fontSize: 34 }}>✦</div>
@@ -503,9 +514,9 @@ export function PurchaseFlow() {
   // ── Step 4 · Pago (emotional center) ──────────────────────────────────────────
   if (step === 4) {
     return (
-      <FlowShell step={4} kicker="Realiza el pago" title="Transfiere y guarda el pantallazo" onNext={next} onBack={back}
+      <FlowShell {...starDecor} step={4} kicker="Realiza el pago" title="Transfiere y guarda el pantallazo" onNext={next} onBack={back}
         cta="Ya transferí, continuar" ctaIcon={<Ic n="check" s={20} />}>
-        <div className="tile" style={{ background: 'rgba(231,174,63,0.10)', border: '1px solid rgba(231,174,63,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px' }}>
+        <div className="tile" style={{ background: 'rgba(var(--yellow-rgb), 0.10)', border: '1px solid rgba(var(--yellow-rgb), 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px' }}>
           <div>
             <div className="label" style={{ color: 'var(--cream-dim)' }}>Tienes</div>
             <div className="count"><span className="t">{mmss(secondsLeft)}</span><span className="muted" style={{ fontSize: 14 }}>min</span></div>
@@ -519,7 +530,7 @@ export function PurchaseFlow() {
           <div className="label" style={{ color: 'var(--cream-dim)', whiteSpace: 'nowrap' }}>Total a transferir</div>
           <div className="serif" style={{ fontSize: 40, color: 'var(--yellow)', lineHeight: 1 }}>{formatCurrency(total)}</div>
           {event.bankQrImageUrl
-            ? <img src={event.bankQrImageUrl} alt="QR de pago" style={{ width: 350, height: 'auto', marginTop: 14, borderRadius: 'var(--r-md)', background: '#fff', padding: 10 }} />
+            ? <img src={event.bankQrImageUrl} alt="QR de pago" style={{ width: '100%', maxWidth: 350, height: 'auto', marginTop: 14, borderRadius: 'var(--r-md)', background: '#fff', padding: 10 }} />
             : <div className="qr" style={{ marginTop: 14 }} />}
 
           <button
@@ -550,7 +561,7 @@ export function PurchaseFlow() {
   if (step === 5) {
     const link = whatsappLink(event.whatsappNumber, orderId);
     return (
-      <FlowShell step={5} kicker="Enviar comprobante" title="Envíanos tu pantallazo" onBack={back}
+      <FlowShell {...starDecor} step={5} kicker="Enviar comprobante" title="Envíanos tu pantallazo" onBack={back}
         footnote={
           <a
             className="btn"
@@ -602,11 +613,12 @@ export function PurchaseFlow() {
       isDemo={isDemo}
       event={event}
       t={t}
+      starDecor={starDecor}
     />
   );
 }
 
-function Step6({ orderId, stage, qty, total, delivery, navigate, isDemo, event, t, banner }) {
+function Step6({ orderId, stage, qty, total, delivery, navigate, isDemo, event, t, banner, starDecor }) {
   // Submit was already marked from step 5 → 6; this is a no-op if so. Demo
   // orders never touched the server in the first place — nothing to submit.
   useEffect(() => {
@@ -632,6 +644,7 @@ function Step6({ orderId, stage, qty, total, delivery, navigate, isDemo, event, 
 
   return (
     <FlowShell
+      {...starDecor}
       step={6}
       kicker="¡Listo!"
       title="Recibimos tu mensaje"
@@ -695,7 +708,7 @@ function PaymentInfoModal({ onOk }) {
         // to read as an unmissable "pay now" alert against the dark page.
         margin: 'calc(var(--space-6) * -1)',
         padding: '28px 20px',
-        background: 'var(--am-orange)',
+        background: 'var(--orange)',
       }}
     >
       <div className="charly" style={{ width: 64, height: 64, fontSize: 28, margin: '0 auto' }}>✦</div>
@@ -706,7 +719,7 @@ function PaymentInfoModal({ onOk }) {
       </p>
       <button
         className="btn"
-        style={{ marginTop: 18, width: '100%', background: '#fff', color: 'var(--am-orange)', boxShadow: 'none' }}
+        style={{ marginTop: 18, width: '100%', background: '#fff', color: 'var(--orange)', boxShadow: 'none' }}
         onClick={onOk}
       >
         <Ic n="wa" s={18} fill /> Entendido, ir a pagar
