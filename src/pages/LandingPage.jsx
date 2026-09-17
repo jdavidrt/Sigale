@@ -7,6 +7,7 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEvent } from '../context/EventContext';
+import { useEventSkin } from '../hooks/useEventSkin';
 import { StarField } from '../components/ui/StarField';
 import { Ic } from '../components/ui/Ic';
 import { resolveActiveStage, stageCupos } from '../utils/sampleEvent';
@@ -46,6 +47,11 @@ export function LandingPage() {
   const navigate = useNavigate();
   const { slug } = useParams();
   const { event: ctxEvent, eventLoading, loadEventBySlug } = useEvent();
+
+  // Per-event skin (e.g. ROCK EN VIVO's gold/marble look) keyed on the route
+  // slug, not the fetched event — so it applies from first paint instead of
+  // flashing the default skin while the event loads.
+  useEventSkin(slug);
 
   // Fresh fetch by slug every time the user lands here so they never see a
   // stale stage or accidentally try to buy a sold-out ticket. A slug that

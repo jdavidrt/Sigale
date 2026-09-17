@@ -17,6 +17,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEvent } from '../../context/EventContext';
+import { useEventSkin } from '../../hooks/useEventSkin';
 import { useDialog } from '../../context/DialogContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Ic } from '../ui/Ic';
@@ -68,6 +69,12 @@ export function PurchaseFlow() {
   const { event: ctxEvent, eventLoading, loadEventBySlug } = useEvent();
   const { openCustom } = useDialog();
   const { t } = useLanguage();
+
+  // Per-event skin (e.g. ROCK EN VIVO's gold/marble look), keyed on the
+  // route slug so it's applied from first paint. Modal/Toast portal into
+  // document.body, so this also themes step 4's payment-info modal and any
+  // toast raised during the flow.
+  useEventSkin(slug);
 
   // All hooks first — they must run on every render in the same order.
   const [step, setStep] = useState(1);
@@ -519,7 +526,7 @@ export function PurchaseFlow() {
           <div className="label" style={{ color: 'var(--cream-dim)', whiteSpace: 'nowrap' }}>Total a transferir</div>
           <div className="serif" style={{ fontSize: 40, color: 'var(--yellow)', lineHeight: 1 }}>{formatCurrency(total)}</div>
           {event.bankQrImageUrl
-            ? <img src={event.bankQrImageUrl} alt="QR de pago" style={{ width: 350, height: 'auto', marginTop: 14, borderRadius: 'var(--r-md)', background: '#fff', padding: 10 }} />
+            ? <img src={event.bankQrImageUrl} alt="QR de pago" style={{ width: '100%', maxWidth: 350, height: 'auto', marginTop: 14, borderRadius: 'var(--r-md)', background: '#fff', padding: 10 }} />
             : <div className="qr" style={{ marginTop: 14 }} />}
 
           <button

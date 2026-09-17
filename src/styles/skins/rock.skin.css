@@ -1,0 +1,59 @@
+/*
+ * ============================================================
+ * SKIN — rock (ROCK EN VIVO, /rock-en-vivo)
+ * ============================================================
+ * Fulfills the token contract documented at the top of
+ * astromelias.skin.css. Palette sampled from the event flyer: black marble
+ * field, brass/champagne gold foil (flyer's "1era Etapa —— $30K" pill
+ * treatment, DM Serif Display headings already match its Didone type).
+ *
+ * This is the palette-level skin only (applied via `.skin-rock` on <body>,
+ * set by useEventSkin for the /rock-en-vivo landing + its /compra wizard).
+ * Bespoke layout — the flyer's price-pill stage rows, stacked date block,
+ * marble hero texture, foil lineup type — is a separate follow-up pass
+ * scoped to .skin-rock selectors in this same file; nothing rock-specific
+ * belongs in astromelias.css.
+ * ============================================================
+ */
+.skin-rock {
+  /* ── Palette — black marble + brass/champagne gold ── */
+  --black: #08080A;
+  --black-2: #101013;
+  --black-3: #181419;
+  --cream: #EDD9BA;                          /* champagne — primary text */
+  --cream-dim: rgba(237, 217, 186, 0.60);
+  --cream-faint: rgba(237, 217, 186, 0.34);
+  --yellow: #C79A3A;                         /* brass gold — prices */
+  --lilac: #EDC69B;                          /* peach — secondary text */
+  --lilac-deep: #C9A876;
+  --purple: #8A6423;                         /* bronze-gold (tile.purple → "etapa activa") */
+  --purple-2: #C79A3A;
+  --purple-deep: #3D2C10;
+  --orange: #B5763A;                         /* ember — CTA / attention */
+  --orange-soft: #D9A868;
+  /* Status colors kept semantic (success/error/info), not brand — same
+     values as the default skin so a confirmed/rejected state still reads
+     the same regardless of which event the organizer is looking at. */
+  --green: var(--am-green);
+  --red: var(--am-red);
+  --blue: var(--am-blue);
+  --frame: rgba(199, 154, 58, 0.42);         /* gold hairline, echoes the flyer's pill outlines */
+  --hair: rgba(237, 217, 186, 0.13);
+  --hair-2: rgba(237, 217, 186, 0.08);
+
+  /* ── Direction theme ── */
+  --title-font: 'DM Serif Display', serif;
+  --title-weight: 400;
+  --title-track: 0px;
+  --card-bg: var(--black-2);
+  --card-border: var(--hair);
+  --card-blur: 0px;
+  --accent: var(--orange);
+  --num-color: var(--yellow);
+  --price-color: var(--yellow);
+  --cta-bg: linear-gradient(160deg, #F0D69C 0%, #C79A3A 55%, #8A6423 100%);
+  --cta-text: #1A1205;                       /* dark ink on gold, mirrors .t3 .tile.yellow */
+  --cta-shadow: 0 10px 26px rgba(199, 154, 58, 0.42);
+  --badge-bg: var(--orange);
+  --badge-fg: #fff;
+}

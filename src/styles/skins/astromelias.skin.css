@@ -1,0 +1,68 @@
+/*
+ * ============================================================
+ * SKIN CONTRACT — astromelias (default)
+ * ============================================================
+ * Every skin file in this directory must define this full token set,
+ * scoped to its own `.skin-<name>` class on <body> (set by useEventSkin,
+ * src/hooks/useEventSkin.js). Nothing here lives in a global `:root` or in
+ * `.t3` — that's what keeps one event's palette from leaking into another's
+ * (or into the organizer chrome, which always carries `.skin-astromelias`).
+ *
+ * Deleting this file's `.skin-rock` sibling must restore the app to
+ * exactly this appearance — that's the isolation test.
+ *
+ * ── Palette aliases (consumed throughout astromelias.css / *.jsx) ──
+ *   --black --black-2 --black-3
+ *   --cream --cream-dim --cream-faint
+ *   --yellow --lilac --lilac-deep
+ *   --purple --purple-2 --purple-deep
+ *   --orange --orange-soft
+ *   --green --red --blue
+ *   --frame --hair --hair-2
+ * ── Direction-theme vars (consumed by .t3 rules, .btn, .tile, …) ──
+ *   --title-font --title-weight --title-track
+ *   --card-bg --card-border --card-blur
+ *   --accent --num-color --price-color
+ *   --cta-bg --cta-text --cta-shadow
+ *   --badge-bg --badge-fg
+ * ============================================================
+ */
+.skin-astromelias {
+  /* ── Alias the prototype palette onto canonical --am-* tokens ── */
+  --black: var(--am-black);
+  --black-2: var(--am-black-2);
+  --black-3: var(--am-black-3);
+  --cream: var(--am-cream);
+  --cream-dim: var(--am-cream-dim);
+  --cream-faint: var(--am-cream-faint);
+  --yellow: var(--am-yellow);
+  --lilac: var(--am-lilac);
+  --lilac-deep: var(--am-lilac-deep);
+  --purple: var(--am-purple);
+  --purple-2: var(--am-purple-2);
+  --purple-deep: var(--am-purple-deep);
+  --orange: var(--am-orange);
+  --orange-soft: var(--am-orange-soft);
+  --green: var(--am-green);
+  --red: var(--am-red);
+  --blue: var(--am-blue);
+  --frame: var(--am-frame);
+  --hair: var(--am-hair);
+  --hair-2: var(--am-hair-2);
+
+  /* ── Direction theme — COLLAGE (Astromelias shipping skin) ── */
+  --title-font: 'DM Serif Display', serif;
+  --title-weight: 400;
+  --title-track: 0px;
+  --card-bg: var(--black-2);
+  --card-border: var(--hair);
+  --card-blur: 0px;
+  --accent: var(--orange);
+  --num-color: var(--yellow);
+  --price-color: var(--yellow);
+  --cta-bg: var(--orange);
+  --cta-text: #fff;
+  --cta-shadow: 0 10px 26px rgba(213, 88, 46, 0.42);
+  --badge-bg: var(--orange);
+  --badge-fg: #fff;
+}

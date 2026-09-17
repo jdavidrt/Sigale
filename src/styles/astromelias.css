@@ -16,28 +16,11 @@
  */
 
 :root {
-  /* ── Alias the prototype palette onto canonical --am-* tokens ── */
-  --black: var(--am-black);
-  --black-2: var(--am-black-2);
-  --black-3: var(--am-black-3);
-  --cream: var(--am-cream);
-  --cream-dim: var(--am-cream-dim);
-  --cream-faint: var(--am-cream-faint);
-  --yellow: var(--am-yellow);
-  --lilac: var(--am-lilac);
-  --lilac-deep: var(--am-lilac-deep);
-  --purple: var(--am-purple);
-  --purple-2: var(--am-purple-2);
-  --purple-deep: var(--am-purple-deep);
-  --orange: var(--am-orange);
-  --orange-soft: var(--am-orange-soft);
-  --green: var(--am-green);
-  --red: var(--am-red);
-  --blue: var(--am-blue);
-  --frame: var(--am-frame);
-  --hair: var(--am-hair);
-  --hair-2: var(--am-hair-2);
-
+  /* Structural/typography tokens shared by every skin — NOT color. Each
+   * skin's color identity (--black, --cream, --yellow, --purple, …) lives
+   * in src/styles/skins/*.skin.css, scoped to its `.skin-*` body class, so
+   * two events never fight over the same global names. See that directory's
+   * header comment for the full token contract every skin must define. */
   --font-ui: var(--font-base);
 
   /* Prototype radii scale (kept distinct from the app's --radius-* set). */
@@ -684,25 +667,10 @@
   color: var(--red);
 }
 
-/* ============================================================
-   DIRECTION THEME — COLLAGE (Astromelias shipping skin)
-   ============================================================ */
-.t3 {
-  --title-font: 'DM Serif Display', serif;
-  --title-weight: 400;
-  --title-track: 0px;
-  --card-bg: var(--black-2);
-  --card-border: var(--hair);
-  --card-blur: 0px;
-  --accent: var(--orange);
-  --num-color: var(--yellow);
-  --price-color: var(--yellow);
-  --cta-bg: var(--orange);
-  --cta-text: #fff;
-  --cta-shadow: 0 10px 26px rgba(213, 88, 46, 0.42);
-  --badge-bg: var(--orange);
-  --badge-fg: #fff;
-}
+/* Direction-theme color variables (--title-font, --accent, --cta-bg, …)
+   moved to src/styles/skins/*.skin.css, scoped per `.skin-*` body class —
+   see that directory for the Astromelias and ROCK EN VIVO definitions. The
+   structural rules below (shapes, spacing) stay skin-agnostic. */
 .t3 .tile {
   border-radius: var(--r-xl);
   padding: 16px;
