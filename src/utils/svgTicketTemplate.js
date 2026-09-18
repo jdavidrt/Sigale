@@ -18,6 +18,30 @@ export const loadFlyerImage = (base64Data) => {
   catch (e) { console.error('Failed to load flyer image:', e); flyerImage = null; }
 };
 
+/* ── Per-event flyer (event.flyerImageUrl) ────────────────────
+   Fetched once per URL and cached as a data: URL so the generated
+   ticket SVG stays fully self-contained (no runtime image request,
+   no canvas-taint risk when it's later rasterised to PNG). */
+const flyerDataURLCache = new Map();
+export const getEventFlyerDataURL = async (event) => {
+  const url = event?.flyerImageUrl;
+  if (!url) return null;
+  if (flyerDataURLCache.has(url)) return flyerDataURLCache.get(url);
+
+  const promise = fetch(url)
+    .then((res) => res.blob())
+    .then((blob) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    }))
+    .catch((e) => { console.error('Failed to load event flyer image:', e); return null; });
+
+  flyerDataURLCache.set(url, promise);
+  return promise;
+};
+
 /* ── Embedded fonts ───────────────────────────────────────────
    The SVG falls back to serif / sans-serif system fonts so it
    still renders when rasterised to a PNG. Font embedding was never
