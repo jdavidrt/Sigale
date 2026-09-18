@@ -482,6 +482,11 @@ function Home({ event, onRefreshEvent }) {
                           </span>
                         )
                       )}
+                      {row.preferredArtist && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--lilac)' }}>
+                          <Ic n="star" s={13} /> {row.preferredArtist}
+                        </span>
+                      )}
                       {row.createdAt && (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                           <Ic n="clock" s={13} /> {t('reservedAt')} {formatDateTime(row.createdAt)}

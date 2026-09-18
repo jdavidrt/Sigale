@@ -91,6 +91,8 @@ export const TicketsPage = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState(searchParams.get("type") || "all");
+  const [selectedArtist, setSelectedArtist] = useState("all");
+  const artists = Array.isArray(event?.artists) ? event.artists : [];
   // Persisted view preference: "cards" (default) or "table". One key per device,
   // stored under "sigale-tickets-view" via the small useLocalStorageValue hook.
   const [view, setView] = useLocalStorageValue("sigale-tickets-view", "cards");
@@ -101,9 +103,12 @@ export const TicketsPage = () => {
   }, [searchParams]);
 
   const searchedTickets = searchTickets(searchQuery);
-  const filteredTickets = selectedType === "all"
+  const typeFiltered = selectedType === "all"
     ? searchedTickets
     : searchedTickets.filter((ticket) => ticket.ticketType === selectedType);
+  const filteredTickets = selectedArtist === "all"
+    ? typeFiltered
+    : typeFiltered.filter((ticket) => ticket.preferredArtist === selectedArtist);
 
   const handleTypeChange = (e) => {
     const newType = e.target.value;
@@ -190,6 +195,21 @@ export const TicketsPage = () => {
               ))}
             </select>
           </div>
+          {artists.length > 0 && (
+            <div className={s.filterWrapper}>
+              <FontAwesomeIcon icon={faFilter} className={s.filterIcon} />
+              <select
+                value={selectedArtist}
+                onChange={(e) => setSelectedArtist(e.target.value)}
+                className={`glass-clean ${s.filterSelect}`}
+              >
+                <option value="all">{t("preferredArtist")}: {t("filterAll")}</option>
+                {artists.map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className={s.filterWrapper}>
             <FontAwesomeIcon icon={faFilter} className={s.filterIcon} />
             <select
