@@ -2,7 +2,7 @@ import { useRef, useCallback, useState, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { generateQRData } from "../../utils/qrGenerator";
 import { copySVGToClipboard, copyPNGToClipboard, shareQR } from "../../utils/qrCopy";
-import { generateTicketSVG } from "../../utils/svgTicketTemplate";
+import { generateTicketSVG, getEventFlyerDataURL } from "../../utils/svgTicketTemplate";
 import { useLanguage } from "../../context/LanguageContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faImage, faShareNodes } from "@fortawesome/free-solid-svg-icons";
@@ -25,14 +25,15 @@ export const QRDisplay = ({ ticket, event, showActions = true, compact = false }
           const ctx = canvas.getContext("2d");
           const img = new Image();
 
-          img.onload = () => {
+          img.onload = async () => {
             canvas.width = img.width;
             canvas.height = img.height;
             ctx.fillStyle = "white";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0);
             const qrDataURL = canvas.toDataURL("image/png");
-            setTicketSVG(generateTicketSVG(ticket, event, qrDataURL));
+            const flyerDataURL = await getEventFlyerDataURL(event);
+            setTicketSVG(generateTicketSVG(ticket, event, qrDataURL, { flyerDataURL }));
           };
 
           const svgData = new XMLSerializer().serializeToString(svg);

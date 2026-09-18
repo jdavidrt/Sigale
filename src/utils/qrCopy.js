@@ -1,5 +1,5 @@
 import { formatTo12Hour, formatCurrency } from './timeFormat';
-import { generateTicketSVG } from './svgTicketTemplate';
+import { generateTicketSVG, getEventFlyerDataURL } from './svgTicketTemplate';
 
 /**
  * Render a QR code SVG element onto a white-backed canvas and return
@@ -193,7 +193,8 @@ export const sharePngBlob = async (blob, { fileName, title, text }) => {
 export const copySVGToClipboard = async (qrSvgElement, ticket, event) => {
   try {
     const qrDataURL = await qrToDataURL(qrSvgElement);
-    const ticketSVG = generateTicketSVG(ticket, event, qrDataURL);
+    const flyerDataURL = await getEventFlyerDataURL(event);
+    const ticketSVG = generateTicketSVG(ticket, event, qrDataURL, { flyerDataURL });
     await navigator.clipboard.writeText(ticketSVG);
     return true;
   } catch (error) {
@@ -210,7 +211,8 @@ export const copySVGToClipboard = async (qrSvgElement, ticket, event) => {
 export const copyPNGToClipboard = async (qrSvgElement, ticket, event) => {
   try {
     const qrDataURL = await qrToDataURL(qrSvgElement);
-    const ticketSVG = generateTicketSVG(ticket, event, qrDataURL);
+    const flyerDataURL = await getEventFlyerDataURL(event);
+    const ticketSVG = generateTicketSVG(ticket, event, qrDataURL, { flyerDataURL });
     const blob = await svgToPngBlob(ticketSVG);
     if (!blob) return false;
 
@@ -234,7 +236,8 @@ export const copyPNGToClipboard = async (qrSvgElement, ticket, event) => {
 export const shareQR = async (qrSvgElement, ticket, event, language = 'en') => {
   try {
     const qrDataURL = await qrToDataURL(qrSvgElement);
-    const ticketSVG = generateTicketSVG(ticket, event, qrDataURL);
+    const flyerDataURL = await getEventFlyerDataURL(event);
+    const ticketSVG = generateTicketSVG(ticket, event, qrDataURL, { flyerDataURL });
     const blob = await svgToPngBlob(ticketSVG);
     if (!blob) return false;
 

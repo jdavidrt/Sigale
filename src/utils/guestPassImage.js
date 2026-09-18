@@ -1,5 +1,5 @@
 import { formatTo12Hour } from './timeFormat';
-import { generateTicketSVG } from './svgTicketTemplate';
+import { generateTicketSVG, getEventFlyerDataURL } from './svgTicketTemplate';
 import { svgToPngBlob, writePngBlobToClipboard, sharePngBlob } from './qrCopy';
 
 /* ============================================================
@@ -18,7 +18,7 @@ export const GUEST_TYPE_LABEL_ES = {
 };
 
 /** Map a guest pass to the ticket-shaped object the SVG template expects. */
-const buildGuestSvg = (pass, event) => {
+const buildGuestSvg = async (pass, event) => {
   const typeLabel = GUEST_TYPE_LABEL_ES[pass.type] || pass.type;
   const ticketLike = {
     buyerName: pass.holderName,
@@ -26,8 +26,10 @@ const buildGuestSvg = (pass, event) => {
     ticketId: `PASE-${pass.id}`,
     folio: String(pass.id),
   };
+  const flyerDataURL = await getEventFlyerDataURL(event);
   return generateTicketSVG(ticketLike, event, null, {
     guest: { typeLabel, band: pass.band },
+    flyerDataURL,
   });
 };
 
@@ -90,7 +92,7 @@ Present this pass with your ID at the entrance.
  */
 export const copyGuestPassPNG = async (pass, event) => {
   try {
-    const svg = buildGuestSvg(pass, event);
+    const svg = await buildGuestSvg(pass, event);
     const blob = await svgToPngBlob(svg);
     if (!blob) return false;
     return await writePngBlobToClipboard(blob);
@@ -107,7 +109,7 @@ export const copyGuestPassPNG = async (pass, event) => {
  */
 export const shareGuestPass = async (pass, event, language = 'es') => {
   try {
-    const svg = buildGuestSvg(pass, event);
+    const svg = await buildGuestSvg(pass, event);
     const blob = await svgToPngBlob(svg);
     if (!blob) return false;
 
