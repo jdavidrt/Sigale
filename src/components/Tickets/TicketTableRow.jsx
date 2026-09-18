@@ -232,6 +232,11 @@ export const TicketTableRow = ({ ticket }) => {
                 {statusLabel}
               </span>
             )}
+            {ticket.preferredArtist && (
+              <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "var(--lilac)" }}>
+                {t("preferredArtist")}: {ticket.preferredArtist}
+              </span>
+            )}
           </span>
         )}
       </div>

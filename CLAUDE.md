@@ -12,6 +12,7 @@ Depth: `docs/architecture/PROJECT_OVERVIEW.md`. Live status: `MULTI_EVENT_PLAN_S
 
 ## Rules
 
+- **Work directly on `main`, always** — never create a feature/topic branch, and never open a PR. Commit straight to `main` and push there.
 - **`legacy/`, `archive/`, `reference/` are out of bounds** — never import, run, or read them as a description of the app. Obsolete code moves to `legacy/` with the RETIRED banner (`legacy/README.md`).
 - **Plain CSS only**: `tokens.css` → `global.css` → `utilities.css` → `astromelias.css` → co-located `*.module.css`. No Tailwind, no `@apply`. Mobile-first (`min-width` queries), touch targets ≥ 44px, base font 16px. Inside `.modal-light` the short tokens (`--cream`, `--cream-dim`, `--frame`, `--hair`, `--lilac`, `--lilac-deep`) are re-aliased for the cream surface — use tokens, never hardcoded colors, in modal content.
 - **Dates / currency**: `parseLocalDate`, `toLocalDateString`, `formatTo12Hour`, `formatCurrency` from `src/utils/timeFormat.js`. Never `new Date('YYYY-MM-DD')`. America/Bogota, AM/PM.

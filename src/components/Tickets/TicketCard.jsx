@@ -134,6 +134,13 @@ export const TicketCard = ({ ticket }) => {
                 </p>
               </div>
             )}
+            {ticket.preferredArtist && (
+              <div className={s.detailRow}>
+                <p className={s.metaText} style={{ color: "var(--lilac)" }}>
+                  {t("preferredArtist")}: {ticket.preferredArtist}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
