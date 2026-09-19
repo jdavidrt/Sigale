@@ -125,14 +125,18 @@ export function PurchaseFlow() {
 
   const total = (Number(stage?.price) || 0) * qty;
 
+  // Bre-B "Llave" = the organizer's phone, same account as the WhatsApp
+  // contact. Stored as "57XXXXXXXXXX"; the key is the 10-digit local number.
+  const paymentKey = String(event?.whatsappNumber || '').replace(/[^\d]/g, '').replace(/^57(?=\d{10}$)/, '');
+
   const handleCopyKey = async () => {
     try {
-      await navigator.clipboard.writeText('3212619103');
+      await navigator.clipboard.writeText(paymentKey);
       setKeyCopied(true);
       setTimeout(() => setKeyCopied(false), 2000);
     } catch {
       const ta = document.createElement('textarea');
-      ta.value = '3212619103';
+      ta.value = paymentKey;
       ta.style.position = 'fixed';
       ta.style.opacity = '0';
       document.body.appendChild(ta);
@@ -533,15 +537,17 @@ export function PurchaseFlow() {
             ? <img src={event.bankQrImageUrl} alt="QR de pago" style={{ width: '100%', maxWidth: 350, height: 'auto', marginTop: 14, borderRadius: 'var(--r-md)', background: '#fff', padding: 10 }} />
             : <div className="qr" style={{ marginTop: 14 }} />}
 
-          <button
-            type="button"
-            onClick={handleCopyKey}
-            className={`copy-key-btn${keyCopied ? ' copied' : ''}`}
-          >
-            {keyCopied
-              ? <><span className="copy-key-icon">✓</span> ¡Copiada!</>
-              : <><span className="copy-key-icon">📋</span> Copiar Llave <span className="copy-key-number">3212619103</span></>}
-          </button>
+          {paymentKey && (
+            <button
+              type="button"
+              onClick={handleCopyKey}
+              className={`copy-key-btn${keyCopied ? ' copied' : ''}`}
+            >
+              {keyCopied
+                ? <><span className="copy-key-icon">✓</span> ¡Copiada!</>
+                : <><span className="copy-key-icon">📋</span> Copiar Llave <span className="copy-key-number">{paymentKey}</span></>}
+            </button>
+          )}
 
           <div className="muted" style={{ fontSize: 13, marginTop: 10 }}>Transfiere y guarda el comprobante</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '8px 14px', borderRadius: 'var(--r-full)', background: 'var(--black-3)' }}>
