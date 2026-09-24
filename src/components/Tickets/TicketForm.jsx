@@ -15,9 +15,8 @@ import { faTicketSimple, faPenToSquare, faUser, faIdCard, faChevronDown, faPlusC
 import s from "./TicketForm.module.css";
 import btn from "../Common/Button.module.css";
 
-// "Optional phone" sentinel — kept for back-compat with TicketCard, which
-// hides the phone line when the value is exactly "000". When the user
-// leaves the phone blank we save the sentinel so the card stays clean.
+// "No phone" sentinel: TicketCard hides the phone line when the value is
+// exactly "000", so a blank phone is kept locally as the sentinel.
 const NO_PHONE = "000";
 const MIN_FOR_ALERT = 4; // don't pop validation errors before this many chars
 
@@ -39,7 +38,7 @@ export const TicketForm = () => {
 
   const editTicket = location.state?.editTicket;
   const isEditMode = !!editTicket;
-  // Required whenever the event has a line-up (Phase 2, migration 011) — the
+  // Required whenever the event has a line-up — the
   // server 400s a walk-in sale that omits it in that case. Sourced straight
   // from the event, same list the wizard's step 1 dropdown uses.
   const artists = Array.isArray(event?.artists) ? event.artists : [];
@@ -96,11 +95,9 @@ export const TicketForm = () => {
         notify({ message: t("ticketUpdatedFromForm"), tone: "success" });
         navigate("/tickets");
       } else {
-        // Walk-in / door sale. Persist through the server so the sale becomes
-        // a confirmed purchase with a sequential orderId and a server-minted
-        // ticket — visible at /admin and /tickets, not just this device's
-        // localStorage. (The old addTicket() path only wrote local state and
-        // was wiped by /tickets' refreshFromServer on next mount.)
+        // Walk-in / door sale. Persisted through the server as a confirmed
+        // order with a sequential orderId and a server-minted hash — never a
+        // localStorage-only addTicket().
         const stage = (event.stages || []).find(
           (st) => String(st.name).toLowerCase().trim() === formData.ticketType
         );

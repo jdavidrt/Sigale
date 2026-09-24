@@ -1,11 +1,8 @@
 /*
  * OrganizerTopbar — the "Sígale / Administración" brand + EventBadge +
- * OrganizerMenu row shared by every organizer screen. Extracted from
- * AdminLayout and AdminPage's Home (previously identical, hand-duplicated
- * markup in both places) so it can also render in AdminPage.Panel's loading,
- * error and empty branches — those used to render no chrome at all, which
- * meant a stuck fetch or a "no events" misread had no menu, no selector, and
- * no way out short of a manual URL edit.
+ * OrganizerMenu row shared by every organizer screen: AdminLayout, and
+ * AdminPage.Panel in all of its branches (loading, error, empty, home), so a
+ * stuck fetch or a "no events" state still has a menu and a way out.
  */
 import { Link } from 'react-router-dom';
 import { OrganizerMenu } from './OrganizerMenu';

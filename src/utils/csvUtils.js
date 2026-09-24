@@ -1,7 +1,7 @@
 /**
  * CSV utility functions for ticket import/export.
  *
- * L4: there are TWO distinct CSV shapes in the app. They are not interchangeable.
+ * There are TWO distinct CSV shapes in the app. They are not interchangeable.
  *
  *   1. `ticketsToRoundTripCSV` + `csvToTickets`
  *      - 5 columns: buyerName, buyerId, buyerPhone, ticketType, purchaseDate
@@ -12,7 +12,7 @@
  *      - 6 columns: Buyer Name, Buyer ID, Buyer Phone, Ticket Type, Purchase Date, Ticket Price
  *      - Title-Case headers, includes derived Ticket Price column for reporting
  *      - Opens cleanly in Excel/Sheets; NOT importable back (price is not on ticket)
- *      - Used by the Copy Event Page for human-facing exports
+ *      - Not wired to any UI today; pinned by tests/csvUtils.test.js
  *
  * Mixing the two shapes breaks round-tripping; keep them separate on purpose.
  */
@@ -37,7 +37,7 @@ const FORMULA_PREFIX = /^[=+\-@\t\r]/;
 const sanitizeCell = (stringValue) =>
   FORMULA_PREFIX.test(stringValue) ? `'${stringValue}` : stringValue;
 
-// H7: field length caps — must match the `maxLength` on the form inputs so
+// Field length caps — must match the `maxLength` on the form inputs so
 // CSV import cannot be used as an end-run around UI validation. Values that
 // exceed the cap are rejected with an explicit error instead of truncated
 // silently, so the operator sees the bad row.
@@ -170,7 +170,7 @@ export const csvToTickets = (csvString) => {
         continue;
       }
 
-      // H7: enforce field length limits (matches UI maxLength)
+      // Enforce field length limits (matches UI maxLength)
       let overLength = false;
       for (const [field, max] of Object.entries(CSV_FIELD_LIMITS)) {
         if (ticketData[field] && ticketData[field].length > max) {

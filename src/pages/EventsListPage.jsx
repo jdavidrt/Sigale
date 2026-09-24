@@ -1,7 +1,6 @@
 /*
- * EventsListPage — /  (public root landing, multi-event)
- * Replaces the pre-2.0 "single active event" landing: shows every
- * published event as a card grid; tapping one goes to its own /:slug.
+ * EventsListPage — /  (public root landing)
+ * Shows every published event as a card grid; tapping one goes to its own /:slug.
  * Mobile-first single column, grid at wider breakpoints (module CSS).
  */
 import { useEffect, useState } from 'react';

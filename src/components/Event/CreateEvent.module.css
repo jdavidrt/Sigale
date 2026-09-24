@@ -1,8 +1,7 @@
 /*
  * ============================================================
  * SÍGALE — CreateEvent Module
- * Event creation & edit form with ticket type management
- * and a danger zone for deletion.
+ * Event creation & edit form with stage management.
  * ============================================================
  */
 
@@ -137,7 +136,7 @@
 }
 
 
-/* ── 2.0 stage editor (price + quota + optional activation) ─ */
+/* ── Stage editor (price + quota + optional activation) ─── */
 .stageList {
   display: flex;
   flex-direction: column;
@@ -207,54 +206,7 @@
 }
 
 
-/* ── Danger zone ────────────────────────────────────────── */
-.dangerZone {
-  background: var(--color-tint-error);
-  border: 1px solid var(--color-border-error);
-  padding: var(--space-7);
-  border-radius: var(--radius-4xl);
-}
-
-.dangerZoneHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--color-error);
-  margin-bottom: var(--space-6);
-  margin-left: var(--space-2);
-  font-weight: var(--weight-bold);
-}
-
-.dangerZoneText {
-  font-size: var(--text-base);
-  color: var(--color-error-text-light);
-  opacity: 0.90;
-  margin-bottom: var(--space-6);
-  margin-left: var(--space-2);
-}
-
-.dangerCheckboxRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  cursor: pointer;
-  padding: var(--space-6);
-  background: var(--color-tint-danger-dark);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-danger-sm);
-  margin-bottom: var(--space-6);
-}
-
-/* Native checkbox size override — prevents iOS 16pt minimum from
-   inflating the checkbox inside the .dangerCheckboxRow flex row */
-.dangerCheckboxInput {
-  min-height: auto;
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-/* Multi-event (2.0) — slug prefix + isPublished/salesOpen toggles */
+/* Slug prefix + isPublished/salesOpen toggles */
 .slugField {
   display: flex;
   align-items: center;
@@ -306,19 +258,4 @@
   font-size: var(--text-xs);
   color: var(--color-error);
   margin: calc(var(--space-2) * -1) 0 var(--space-2);
-}
-
-.dangerCheckboxText {
-  font-size: var(--text-base);
-  color: var(--color-error-text-light);
-}
-
-.dangerActions {
-  display: flex;
-  gap: var(--space-4);
-}
-
-/* Each button in .dangerActions stretches to fill half the row */
-.dangerActionsBtn {
-  flex: 1;
 }

@@ -18,7 +18,7 @@ export const generateValidationHash = async (ticketData) => {
   return hashHex.substring(0, 16);
 };
 
-// L5: Math.random() * 1000 + Date.now() collides whenever two ids are
+// Math.random() * 1000 + Date.now() collides whenever two ids are
 // issued in the same millisecond with the same random slot — a real
 // scenario during CSV bulk import. Use crypto.randomUUID() for a
 // guaranteed-unique suffix; fall back to the old pattern only if the

@@ -24,17 +24,15 @@ import { Ic } from '../ui/Ic';
 import { FlowShell } from './FlowShell';
 import { purchases, whatsappLink } from '../../api/purchases';
 import { Screen } from '../ui/Screen';
-import { resolveActiveStage, stageCupos } from '../../utils/sampleEvent';
+import { resolveActiveStage, stageCupos } from '../../utils/stages';
 import { formatCurrency } from '../../utils/timeFormat';
 
 const MAX_QTY = 6;
 const COUNTDOWN_SECONDS = 20 * 60; // cosmetic only (real hold is 24h server-side)
-// Demo mode never calls the server — this fake order number is hardcoded to
-// match the real seeded "Invitado Demo" walk-in's orderId (Step 2.3 of
-// MULTI_EVENT_PLAN.md, run once against production before the demo flag was
-// flipped). Order 165 = five confirmed "Invitado Demo 1–5" tickets on the
-// demo event's Etapa 3, seeded 2026-08-05; the organizer shares any of their
-// QRs back from /tickets when a visitor sends the WhatsApp hand-off below.
+// Demo mode never calls the server — this fake order number matches the real
+// seeded demo order: five confirmed "Invitado Demo 1–5" tickets on the demo
+// event's Etapa 3. The organizer shares any of their QRs from /tickets when a
+// visitor sends the WhatsApp hand-off below.
 const DEMO_ORDER_NUMBER = 165;
 
 // ── Field validators (regex-driven) ─────────────────────────────────────────────
@@ -84,7 +82,7 @@ export function PurchaseFlow() {
   const [step, setStep] = useState(1);
   const [qty, setQty] = useState(1);
   const [holders, setHolders] = useState([{ name: '', idNumber: '' }]);
-  // Buyer's chosen act (Phase 2, migration 011) — required whenever the
+  // Buyer's chosen act (tickets.preferredArtist) — required whenever the
   // event has a line-up; captured on step 1 alongside quantity.
   const [preferredArtist, setPreferredArtist] = useState('');
   const [delivery, setDelivery] = useState({ method: 'whatsapp', contact: '' });
@@ -94,9 +92,8 @@ export function PurchaseFlow() {
   const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
   const [keyCopied, setKeyCopied] = useState(false);
 
-  // With EventContext's auto-getActive() gone (multi-event), a refresh or
-  // deep link straight to /:slug/compra must resolve the event itself rather
-  // than assuming LandingPage already loaded it.
+  // A refresh or deep link straight to /:slug/compra must resolve the event
+  // itself rather than assuming LandingPage already loaded it.
   useEffect(() => {
     loadEventBySlug(slug);
   }, [slug, loadEventBySlug]);
@@ -112,9 +109,8 @@ export function PurchaseFlow() {
   const hasRealStage = !!stage && Number.isFinite(Number(stage.id));
   const artists = Array.isArray(event?.artists) ? event.artists : [];
   const artistRequired = artists.length > 0;
-  // Per-event replacement for the retired global ONLINE_SALES_OPEN flag. The
-  // demo always allows walking the wizard (it's simulated) regardless of its
-  // own salesOpen value.
+  // Per-event online-sales switch. The demo always allows walking the wizard
+  // (it's simulated) regardless of its own salesOpen value.
   const isDemo = !!ctxEvent?.isDemo;
   const salesOpenForBuyer = !!ctxEvent && (ctxEvent.salesOpen || isDemo);
 
@@ -166,7 +162,7 @@ export function PurchaseFlow() {
     return () => clearInterval(id);
   }, [step]);
 
-  // Preselect the sole artist on a single-act line-up (Phase 2) — matches
+  // Preselect the sole artist on a single-act line-up — matches
   // TicketForm's walk-in dropdown behavior. A multi-act line-up starts
   // unselected so the buyer makes an explicit choice.
   useEffect(() => {
@@ -296,8 +292,7 @@ export function PurchaseFlow() {
     );
   }
   // Online sales are closed for this event — tickets are box-office only.
-  // Per-event replacement for the retired global ONLINE_SALES_OPEN flag;
-  // the demo bypasses this (salesOpenForBuyer is true whenever isDemo is).
+  // The demo bypasses this (salesOpenForBuyer is true whenever isDemo is).
   if (!salesOpenForBuyer) {
     return (
       <Screen seed={42} {...starDecor}>

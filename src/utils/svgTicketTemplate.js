@@ -1,5 +1,4 @@
 import { formatTo12Hour, parseLocalDate, formatCurrency } from './timeFormat';
-import { cleanBase64 } from './base64Cleaner';
 
 /* ============================================================
    ASTROMELIAS · "Editorial" premium ticket
@@ -8,15 +7,6 @@ import { cleanBase64 } from './base64Cleaner';
    Everything is self-contained (embedded image + fonts) so the
    SVG rasterises identically wherever it's shared.
    ============================================================ */
-
-/* ── Flyer artwork (embedded as base64, like Charly was) ──────
-   Call once at startup with the event flyer. You can also pass a
-   ready data-URL per ticket via opts.flyerDataURL (takes priority). */
-let flyerImage = null;
-export const loadFlyerImage = (base64Data) => {
-  try { flyerImage = cleanBase64(base64Data); }
-  catch (e) { console.error('Failed to load flyer image:', e); flyerImage = null; }
-};
 
 /* ── Per-event flyer (event.flyerImageUrl) ────────────────────
    Fetched once per URL and cached as a data: URL so the generated
@@ -95,8 +85,7 @@ export const generateTicketSVG = (ticket, event, qrDataURL, opts = {}) => {
   const holderLines = splitTextIntoLines((ticket.buyerName || '').split(' ')[0], 16).slice(0, 2);
   const venueLines  = splitTextIntoLines(event.venue || '', 18).slice(0, 2);
 
-  const flyerHref = opts.flyerDataURL
-    || (flyerImage ? `data:image/jpeg;base64,${flyerImage}` : null);
+  const flyerHref = opts.flyerDataURL || null;
 
   /* ── geometry (matches the approved mockup at 384px wide) ─ */
   const W = 384, pX = 28, R = 18, rn = 14;

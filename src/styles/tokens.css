@@ -10,7 +10,7 @@
 :root {
 
   /* ── Astromelias raw palette (flyer-abstracted) ──────── */
-  /* Single source of the 2.0 skin. Semantic tokens below point here. */
+  /* Single source of the Astromelias palette. Semantic tokens below point here. */
   --am-black:       #09060A;  /* page night field (warm near-black) */
   --am-black-2:     #120C14;  /* raised surface */
   --am-black-3:     #1B1320;  /* higher surface */

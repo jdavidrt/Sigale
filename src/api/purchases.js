@@ -1,18 +1,15 @@
 /*
  * ============================================================
- * SÍGALE — PURCHASES API (2.0)
- * Client functions for the purchase endpoints + the five-state
- * machine metadata.
- *
- * The `purchases` facade at the bottom is what the UI imports.
- * It calls the real API (server is the source of truth). No more
- * localStorage simulation — every purchase is persisted to the DB.
+ * SÍGALE — PURCHASES API
+ * Client functions for the public purchase endpoints + the
+ * order status metadata. The `purchases` facade at the bottom
+ * is what the UI imports; every purchase is persisted server-side.
  * ============================================================
  */
 
 import { api } from './client';
 
-// ── Five-state machine (IMPLEMENTATION_GUIDE §6) ───────────────────────────────
+// ── Order status (tickets.status) ──────────────────────────────────────────────
 export const PURCHASE_STATUS = {
   PENDING: 'pending_payment',
   SUBMITTED: 'payment_submitted',
@@ -32,21 +29,23 @@ export const STATUS_META = {
 
 export const statusMeta = (status) => STATUS_META[status] || STATUS_META.pending_payment;
 
-/** WhatsApp deep link for sending the payment screenshot (Guide §5.3). */
-export function whatsappLink(whatsappNumber, orderId, landing) {
-  const num = String(whatsappNumber || '').replace(/[^\d]/g, '');
-  var text = encodeURIComponent(`¡Hola! Envío pantallazo de orden #${orderId}`);
-  if (landing) {
-    text = "Hola, quiero más info sobre el evento Festival Astromelias, por favor";
-    return `https://wa.me/${num}?text=${text}`;
-  }
-  return `https://wa.me/${num}?text=${text}`;
+const waNumber = (whatsappNumber) => String(whatsappNumber || '').replace(/[^\d]/g, '');
+
+/** WhatsApp deep link for sending the payment screenshot of an order. */
+export function whatsappLink(whatsappNumber, orderId) {
+  const text = encodeURIComponent(`¡Hola! Envío pantallazo de orden #${orderId}`);
+  return `https://wa.me/${waNumber(whatsappNumber)}?text=${text}`;
 }
 
-// ── Real API client functions ──────────────────────────────────────────────────
-// The public status / recover endpoints were removed (the buyer no longer has
-// a "Ver el estado de mi compra" page). The flow now ends on a terminal
-// success screen, and tickets are delivered out-of-band by the organizer.
+/** WhatsApp deep link asking the organizer for more info about an event. */
+export function whatsappInfoLink(whatsappNumber, eventName) {
+  const text = encodeURIComponent(`Hola, quiero más info sobre el evento ${eventName}, por favor`);
+  return `https://wa.me/${waNumber(whatsappNumber)}?text=${text}`;
+}
+
+// ── API client functions ───────────────────────────────────────────────────────
+// The public flow is one-way: it ends on a terminal success screen and the
+// organizer delivers tickets out-of-band, so there is no status/recover call.
 export const purchasesApi = {
   create: (payload) => api.post('/api/purchases', payload),
   // submit accepts an optional body { deliveryMethod, deliveryContact, holders }

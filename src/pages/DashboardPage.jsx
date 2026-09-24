@@ -18,8 +18,7 @@ export const DashboardPage = () => {
   // Sales/check-in stats are derived from `tickets` in TicketContext. Pull
   // the canonical list from the server — scoped to the organizer's currently
   // selected event — on mount and whenever that selection changes, so the
-  // dashboard reflects every confirmed order for THIS event, not just what
-  // was produced on this device (or a previously selected event). Explicit
+  // dashboard reflects every confirmed order for THIS event. Explicit
   // 'confirmed' (not relying on the server-side default) — stats must never
   // silently include pending/rejected/expired rows.
   useEffect(() => {

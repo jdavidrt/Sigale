@@ -1,6 +1,6 @@
 #Requires -Version 5.1
 <#
-  dev-local.ps1 - Sigale 2.0 local stack launcher (Windows / PowerShell)
+  dev-local.ps1 - Sigale local stack launcher (Windows / PowerShell)
 
   Boots the WHOLE local stack for testing and tears it down cleanly:
     1. Frees ports 25060 (API) and 5173 (client) so no stale instance lingers.
@@ -146,12 +146,12 @@ try {
   if(-not $nodeRaw){ throw 'Node.js not found in PATH.' }
   $v = ($nodeRaw -replace '^v','').Split('.')
   if([int]$v[0] -lt 20 -or ([int]$v[0] -eq 20 -and [int]$v[1] -lt 6)){
-    throw "Node $nodeRaw found; need >= 20.6 for --env-file. Upgrade Node, or add dotenv (see docs\LOCAL_TESTING.md)."
+    throw "Node $nodeRaw found; need >= 20.6 for --env-file. Upgrade Node, or add dotenv (see server\README.md)."
   }
   Ok "Node $nodeRaw"
 
   if(-not (Test-Path (Join-Path $ServerDir '.env'))){
-    throw "server\.env is missing. See docs\LOCAL_TESTING.md, Section 2."
+    throw "server\.env is missing. See server\README.md -> Local stack."
   }
 
   # Ensure MySQL is running before anything touches the DB.

@@ -39,9 +39,7 @@ Write-Host ""
 # --- Mirror --------------------------------------------------------------
 # /MIR  - mirror (copies new + modified, deletes files in dst not in src).
 #         /MIR already implies /E (subdirs, including empty ones).
-# /XD   - exclude dirs: node_modules, .git. ("current-server" is kept as a
-#         defensive no-op: the read-only BlackCoffe mirror was moved out of
-#         server/ to /reference/ on 2026-08-04 and must NEVER be synced back.)
+# /XD   - exclude dirs: node_modules, .git
 # /XF   - exclude files: .env* (environment-specific), *.log
 # /NP   - no per-file progress %      /NDL - no directory list (cleaner output)
 # /NJH  - no job header (we already printed FROM/TO above)
@@ -49,7 +47,7 @@ Write-Host ""
 # Output is captured instead of printed: we re-print just the file lines and
 # replace robocopy's summary table with a single clear verdict line below.
 $log = robocopy $src $dst /MIR `
-    /XD "current-server" "node_modules" ".git" `
+    /XD "node_modules" ".git" `
     /XF ".env" ".env.*" "*.log" `
     /NP /NDL /NJH /BYTES
 

@@ -73,8 +73,7 @@ export const formatDateTime = (value) => {
  * thousands separators. Co-located here while there's only one formatter;
  * split to a dedicated `formatters.js` when a second one shows up.
  *
- * Falsy or non-numeric input renders as "$0" rather than the legacy
- * "$undefined" the optional-chaining call sites used to emit.
+ * Falsy or non-numeric input renders as "$0".
  *
  * @param {number|string|null|undefined} n - Numeric value to format
  * @param {string} [locale] - BCP-47 locale (defaults to the browser's)
@@ -87,7 +86,7 @@ export const formatCurrency = (n, locale) => {
 };
 
 /**
- * H5: determine whether a check-in "now" falls within a reasonable window
+ * Determine whether a check-in "now" falls within a reasonable window
  * around the event date. Operators often rehearse the day before, and
  * teardown may run the day after, so we accept [event-1d, event+1d] by
  * default. Anything outside that window returns an `outside` status the

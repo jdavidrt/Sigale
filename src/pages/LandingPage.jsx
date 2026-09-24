@@ -10,9 +10,9 @@ import { useEvent } from '../context/EventContext';
 import { useEventSkin, getSkinStarDecor } from '../hooks/useEventSkin';
 import { StarField } from '../components/ui/StarField';
 import { Ic } from '../components/ui/Ic';
-import { resolveActiveStage, stageCupos } from '../utils/sampleEvent';
+import { resolveActiveStage, stageCupos } from '../utils/stages';
 import { formatCurrency, formatTo12Hour, parseLocalDate } from '../utils/timeFormat';
-import { whatsappLink } from '../api/purchases';
+import { whatsappInfoLink } from '../api/purchases';
 import flyerImg from '../assets/flyer.png';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -153,8 +153,7 @@ export function LandingPage() {
   // If upcoming stages still have inventory, show them as "Próximamente" with no buy button.
   const isSoldOut = !active && upcoming.length === 0 && (event.stages || []).some((s) => s.status === 'sold_out' || s.status === 'closed');
   const flyerSrc = event.flyerImageUrl || flyerImg;
-  // Per-event replacement for the retired global ONLINE_SALES_OPEN flag. The
-  // demo always shows the buy flow (its wizard simulates the purchase
+  // Per-event online-sales switch. The demo always shows the buy flow (its wizard simulates the purchase
   // locally) regardless of its own salesOpen value.
   const salesOpenForBuyer = event.salesOpen || event.isDemo;
 
@@ -327,7 +326,7 @@ export function LandingPage() {
                           <div className="label" style={{ color: 'var(--cream-dim)' }}>Info y reservas</div>
                           <div style={{ fontWeight: 600 }}>{formatPhone(event.whatsappNumber)}</div>
                         </div>
-                        <a className="chip green" href={whatsappLink(event.whatsappNumber, '', true)} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                        <a className="chip green" href={whatsappInfoLink(event.whatsappNumber, event.name)} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
                           <Ic n="wa" s={14} fill /> WhatsApp
                         </a>
                       </div>

@@ -1,15 +1,9 @@
 /*
  * ============================================================
- * SÍGALE — EVENTS API (2.0)
- * Real client functions for the backend events endpoints plus the
- * mappers between the app's internal event shape and the API payload.
- *
- * STATUS: WIRED BUT NOT YET THE SOURCE OF TRUTH.
- * The backend isn't running locally yet, so EventContext still reads/
- * writes localStorage. Everything here is ready: when the server is
- * live (VITE_API_URL set), flip the commented blocks in EventContext
- * to call these functions and delete the localStorage path. The shapes
- * already match server/controllers/events.controllers.js.
+ * SÍGALE — EVENTS API
+ * Client functions for the events endpoints plus the mappers between
+ * the app's internal event shape and the API payload. The shapes match
+ * server/controllers/events.controllers.js.
  *
  * Internal event shape (what the app/form uses):
  *   {
@@ -17,10 +11,10 @@
  *     venue, address, venueCapacity, artists: string[],
  *     whatsappNumber, flyerImageUrl, bankQrImageUrl,
  *     stages: [{ name, price, totalQuantity, sortOrder, activatesAt, status }],
- *     ticketTypes: { <name>: <price> }   // derived, back-compat
+ *     ticketTypes: { <name>: <price> }   // derived from stages
  *   }
  *
- * API event shape: see ADR-0001 §5 + events.controllers.js
+ * API event shape: see events.controllers.js
  * (eventDate/openingTime are Bogotá wall-clock 'YYYY-MM-DD HH:mm:ss';
  *  the server converts to UTC on write and back on read).
  * ============================================================
@@ -38,9 +32,8 @@ function toSqlDateTime(date, time) {
 /** App event shape -> API request payload (used by create/update). */
 export function toApiEventPayload(event) {
   return {
-    // Absent/undefined is valid — the server treats a missing slug as NULL
-    // (deploy-window compat). isDemo is never sent: it's only ever set by
-    // the one-off prod flip, never through this form.
+    // Absent/undefined is valid — the server stores a missing slug as NULL.
+    // isDemo is never sent: the API never writes it.
     slug: event.slug || undefined,
     name: event.name,
     description: event.description || null,
@@ -111,13 +104,12 @@ export function fromApiEvent(apiEvent) {
     flyerImageUrl: apiEvent.flyerImageUrl || '',
     bankQrImageUrl: apiEvent.bankQrImageUrl || '',
     whatsappNumber: apiEvent.whatsappNumber || '',
-    isActive: !!apiEvent.isActive, // retired semantics — column stays, nothing new reads/writes it
     isPublished: !!apiEvent.isPublished,
     isDemo: !!apiEvent.isDemo,
     salesOpen: !!apiEvent.salesOpen,
     stages,
     activeStage: apiEvent.activeStage || null,
-    // back-compat for legacy consumers (Home, TicketContext stats)
+    // { <lowercased stage name>: price } — used by ticket stats, CSV and the ticket SVG
     ticketTypes: deriveTicketTypes(stages),
   };
 }
@@ -148,7 +140,7 @@ export function fromApiEventListItem(row) {
   };
 }
 
-/** stages[] -> { <lowercased name>: price } map (legacy `ticketTypes`). */
+/** stages[] -> { <lowercased name>: price } map (`ticketTypes`). */
 export function deriveTicketTypes(stages) {
   const map = {};
   (stages || []).forEach((s) => {
@@ -158,8 +150,6 @@ export function deriveTicketTypes(stages) {
 }
 
 export const eventsApi = {
-  /** GET /api/events/active — deploy-window compat only; the old "one active event" resolver. */
-  getActive: () => api.get('/api/events/active').then(fromApiEvent),
   /** GET /api/events/:id */
   getById: (id) => api.get(`/api/events/${id}`).then(fromApiEvent),
   /** GET /api/events/by-slug/:slug — public, resolves an event by its URL slug. */

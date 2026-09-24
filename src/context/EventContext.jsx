@@ -17,21 +17,18 @@ export const useEvent = () => {
   return context;
 };
 
-// Multi-event (2.0): there is no more "the one active event" to auto-load on
-// mount. Public pages resolve an event by URL slug (loadEventBySlug); the
-// organizer panel scopes to whichever event is selected (selectEvent),
-// restored across visits via a persisted id. Source of truth is still the
-// DB — nothing here is cached to localStorage except the selected event id,
-// which is just a preference, not event/ticket data.
+// Nothing auto-loads on mount. Public pages resolve an event by URL slug
+// (loadEventBySlug); the organizer panel scopes to whichever event is
+// selected (selectEvent), restored across visits via a persisted id. The DB
+// is the source of truth — only the selected event id (a preference) is
+// kept in localStorage.
 export const EventProvider = ({ children }) => {
   const [event, setEvent] = useState(null);
   const [eventLoading, setEventLoading] = useState(false);
   const [organizerEvents, setOrganizerEvents] = useState([]);
-  // Phase 2 fix: refreshOrganizerEvents used to swallow a failed
-  // GET /api/events/all silently, which AdminPage read as "zero events" and
-  // bounced to /create-event even when the organizer legitimately has
-  // events (stale creds, cold dyno, network blip). Surfacing the error lets
-  // the page show a retry instead of a wrong redirect.
+  // A failed GET /api/events/all must not read as "zero events" (AdminPage
+  // would bounce to /create-event); surfacing the error lets the page show a
+  // retry instead (stale creds, cold dyno, network blip).
   const [organizerEventsError, setOrganizerEventsError] = useState(null);
   // False until GET /api/events/all has resolved at least once. An empty
   // `organizerEvents` before that means "not fetched yet", not "this
@@ -148,12 +145,10 @@ export const EventProvider = ({ children }) => {
 
   // Bootstrap once per session (EventProvider mounts once for the app's
   // lifetime) when the organizer already has credentials — e.g. an F5 on
-  // /admin with a persisted login. Previously this list only ever got fetched
-  // when OrganizerMenu happened to mount, which never happened from Panel's
-  // own loading/error/empty branches, so a cold reload could get stuck
-  // reading "zero events" forever. OrganizerMenu's own mount-time call still
-  // matters — it's what fetches this list right after a fresh login, since
-  // that happens after this effect has already run once.
+  // /admin with a persisted login, so Panel's loading/error/empty branches
+  // never wait on OrganizerMenu mounting. OrganizerMenu's own mount-time call
+  // is what fetches the list right after a fresh login, since that happens
+  // after this effect has already run once.
   useEffect(() => {
     if (bootstrappedRef.current) return;
     bootstrappedRef.current = true;
@@ -209,12 +204,6 @@ export const EventProvider = ({ children }) => {
     [event],
   );
 
-  const clearEvent = useCallback(() => {
-    setEvent(null);
-  }, []);
-
-  const hasEvent = useCallback(() => event !== null, [event]);
-
   const value = useMemo(
     () => ({
       event,
@@ -222,10 +211,8 @@ export const EventProvider = ({ children }) => {
       eventId: event?.id ?? null,
       createEvent,
       updateEvent,
-      clearEvent,
-      hasEvent,
       refreshEvent,
-      // Multi-event additions — organizer selector + public slug resolution.
+      // Organizer event selection + public slug resolution.
       organizerEvents,
       organizerEventsError,
       organizerEventsLoaded,
@@ -239,8 +226,6 @@ export const EventProvider = ({ children }) => {
       eventLoading,
       createEvent,
       updateEvent,
-      clearEvent,
-      hasEvent,
       refreshEvent,
       organizerEvents,
       organizerEventsError,

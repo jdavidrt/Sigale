@@ -10,10 +10,10 @@ export const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 // Deliberately does NOT include 'demo' — that slug is protected by the DB's
 // uniqueness constraint (ordinary event data), not a literal app route.
 export const RESERVED_SLUGS = new Set([
-  'admin', 'scan', 'compra', 'tickets', 'dashboard', 'evento', 'edit',
-  'edit-event', 'create-event', 'sell-tickets', 'guest-passes',
-  'lista-puerta', 'validate-qr', 'api', 'assets', 'sw.js', 'manifest.json',
-  'robots.txt', 'favicon.ico', 'events-admin', 'organizers',
+  'admin', 'scan', 'tickets', 'dashboard', 'edit', 'create-event',
+  'sell-tickets', 'guest-passes', 'lista-puerta', 'events-admin',
+  'organizers', 'api', 'assets', 'sw.js', 'manifest.json', 'robots.txt',
+  'favicon.ico',
 ]);
 
 /** Strip characters a slug may never contain as the user types. */

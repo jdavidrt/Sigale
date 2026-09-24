@@ -12,15 +12,15 @@ export const generateQRData = (ticket) => {
 
 /**
  * Parse a scanned QR string back into { hash }. Accepts the current bare-hash
- * payload; also tolerates the legacy JSON payload ({ id, hash, ... }) so codes
- * printed before this change still scan.
+ * payload; also tolerates a JSON payload ({ id, hash, ... }), pinned by
+ * tests/qrGenerator.test.js.
  */
 export const parseQRData = (qrString) => {
   if (typeof qrString !== 'string') return null;
   const trimmed = qrString.trim();
   if (!trimmed) return null;
 
-  // Legacy JSON payload — pull the hash out of it.
+  // JSON payload — pull the hash out of it.
   if (trimmed.startsWith('{')) {
     try {
       const data = JSON.parse(trimmed);

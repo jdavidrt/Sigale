@@ -1,6 +1,5 @@
 /*
- * FlowShell — the shared chrome for every purchase step (ported from
- * docs/design2.0/flow.jsx). Back button + wordmark + progress dots +
+ * FlowShell — the shared chrome for every purchase step. Back button + wordmark + progress dots +
  * "Paso N de total · kicker" header + a single pinned bottom CTA.
  * Calm, one primary action per screen.
  */

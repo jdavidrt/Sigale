@@ -5,11 +5,9 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  // `dist` is build output; `reference` is a read-only vendored copy of
-  // BlackCoffe's server kept only for comparison -- not ours to lint;
-  // `legacy` is retired code that is never imported or executed (see
-  // legacy/README.md) and is deliberately kept out of every tool's view.
-  globalIgnores(['dist', 'reference', 'legacy']),
+  // `dist` is build output; `reference` is an optional, git-ignored local
+  // snapshot of BlackCoffe's server -- not ours to lint.
+  globalIgnores(['dist', 'reference']),
   {
     // Sigale backend (server/) is a separate Node app, not browser code.
     files: ['server/**/*.js'],

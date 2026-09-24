@@ -3,12 +3,10 @@
  * (when there's more than one to choose from) doubles as the switcher. Lives
  * in OrganizerTopbar (between the brand and the Menu button) and inside
  * OrganizerMenu's slide-out panel — same component, same sheet, so there is
- * exactly one switcher UI instead of the old plain <select> plus this.
+ * exactly one switcher UI.
  *
- * Gated on data (organizerEvents.length > 1), not on isSuperAdmin() — that
- * role check is dead in production today (Phase 2 roles aren't deployed), so
- * gating on it would hide the switcher for every organizer regardless of how
- * many events they actually have.
+ * Gated on data (organizerEvents.length > 1), not on isSuperAdmin(): an
+ * event_admin assigned to several events needs the switcher too.
  */
 import { useEvent } from '../../context/EventContext';
 import { useLanguage } from '../../context/LanguageContext';

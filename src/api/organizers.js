@@ -1,7 +1,7 @@
 /*
  * ============================================================
  * SÍGALE — ORGANIZERS (ACCOUNTS) API
- * Account management, Phase 2. Every call is super_admin-only server-side
+ * Account management. Every call is super_admin-only server-side
  * (requireSuperAdmin) — this wrapper doesn't gate anything itself, it just
  * carries the Basic auth header like every other admin.* wrapper.
  * ============================================================

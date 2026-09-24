@@ -1,7 +1,7 @@
 /*
- * Ic — the Astromelias stroke icon set (ported from docs/design2.0/lib.jsx).
+ * Ic — the Astromelias stroke icon set.
  * One compact <svg> per glyph, 24-viewbox, currentColor, stroke ~1.7.
- * Use as the canonical icon throughout the 2.0 screens; `wa` is the
+ * Use as the canonical icon throughout the app; `wa` is the
  * WhatsApp glyph used across the purchase flow.
  *
  *   <Ic n="ticket" />            // stroke, size 22

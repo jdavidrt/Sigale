@@ -112,8 +112,8 @@ export const adminApi = {
   // Ticket rows joined with their stage. `status` defaults to 'confirmed'
   // server-side when omitted — pass a comma-separated list or 'all' to see
   // pending/rejected/expired orders too (used by /tickets' status filter).
-  // `eventId` is optional (deploy-window compat) — the new frontend always
-  // sends it so the panel only ever sees the currently selected event.
+  // `eventId` is required server-side; the panel always passes the currently
+  // selected event.
   listTickets: (status, eventId) => {
     const params = {};
     if (status) params.status = status;

@@ -1,5 +1,5 @@
 /*
- * OfflineScanner — the camera + result surface for the door scanner.
+ * DoorScanner — the camera + result surface for the door scanner.
  * Reuses html5-qrcode: it decodes the QR and hands the hash to `validate`,
  * which checks it against the live ticket DB on the server and marks entry.
  *
@@ -26,7 +26,7 @@ const VERDICT = {
   [SCAN_RESULT.ERROR]: { pill: 'dead', icon: 'bell', title: 'Sin conexión', sub: 'Reintenta el escaneo' },
 };
 
-export function OfflineScanner({ validate }) {
+export function DoorScanner({ validate }) {
   const [result, setResult] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
@@ -166,4 +166,4 @@ export function OfflineScanner({ validate }) {
   );
 }
 
-export default OfflineScanner;
+export default DoorScanner;

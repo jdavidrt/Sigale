@@ -6,7 +6,7 @@ import { useDialog } from "../../context/DialogContext";
 import { isSuperAdmin } from "../../api/admin";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faWandMagicSparkles, faFloppyDisk, faTriangleExclamation, faTrash,
+  faWandMagicSparkles, faFloppyDisk, faTrash,
   faCalendarDay, faPlus, faUsers, faLayerGroup, faQrcode,
 } from "@fortawesome/free-solid-svg-icons";
 import { sanitizeSlugInput, isSlugFormatValid } from "../../utils/slug";
@@ -22,11 +22,8 @@ export const CreateEvent = ({ isEditing = false }) => {
   const { t } = useLanguage();
   const { notify } = useDialog();
 
-  const [showDangerZone, setShowDangerZone] = useState(false);
-  const [deleteConfirmChecked, setDeleteConfirmChecked] = useState(false);
-
-  // 2.0 canonical form shape (richer than the 1.0 event). On save we hand this
-  // to EventContext, which normalizes stages -> ticketTypes for back-compat.
+  // Form shape. On save EventContext maps it to the API payload
+  // (toApiEventPayload in api/events.js).
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -51,7 +48,7 @@ export const CreateEvent = ({ isEditing = false }) => {
   // events.controllers.js) — lock the slug field to match, so the organizer
   // isn't misled into thinking a copy-edit could change it.
   const isDemoEvent = isEditing && !!event?.isDemo;
-  // Phase 2: slug and isPublished are super_admin-only edits — the server
+  // Slug and isPublished are super_admin-only edits — the server
   // silently keeps the stored value for either field from a non-super_admin
   // caller, so lock them client-side too rather than let an event_admin
   // change a value that won't actually save.
@@ -219,13 +216,6 @@ export const CreateEvent = ({ isEditing = false }) => {
     }
   };
 
-  const handleDeleteEvent = () => {
-    if (!deleteConfirmChecked) return;
-    localStorage.removeItem("sigale-event-data");
-    notify({ message: t("eventDeleted"), tone: "success" });
-    window.location.href = "/";
-  };
-
   // Block submit while over capacity so the meter is a hard guardrail, not advice.
   const submitDisabled = overCapacity;
 
@@ -319,7 +309,7 @@ export const CreateEvent = ({ isEditing = false }) => {
                   </label>
                 </div>
 
-                {/* Public scan keyword (Phase 2) — never prefilled from the
+                {/* Public scan keyword — never prefilled from the
                     getById response (security invariant), only from the
                     matching organizerEvents entry; see the effect above. */}
                 <div className={s.field}>
@@ -383,7 +373,7 @@ export const CreateEvent = ({ isEditing = false }) => {
               </div>
             </div>
 
-            {/* Additional Details Section (2.0) */}
+            {/* Additional Details Section */}
             <div className={`${s.section} glass-clean`}>
               <div className={s.sectionHeader}>
                 <FontAwesomeIcon icon={faUsers} className="label-icon" />
@@ -438,7 +428,7 @@ export const CreateEvent = ({ isEditing = false }) => {
               </div>
             </div>
 
-            {/* Stages Section (2.0) — replaces the flat ticket-types map */}
+            {/* Stages Section */}
             <div className={`${s.section} glass-clean`}>
               <div className={s.sectionHeader}>
                 <FontAwesomeIcon icon={faLayerGroup} className="label-icon" />
@@ -532,41 +522,6 @@ export const CreateEvent = ({ isEditing = false }) => {
           </div>
         </div>
 
-        {/* Danger Zone trigger */}
-        {isEditing && !showDangerZone && (
-          <button type="button" onClick={() => setShowDangerZone(true)} className={`${btn.btn} ${btn.danger} ${btn.lg}`}>
-            <FontAwesomeIcon icon={faTrash} />
-            {t("deleteEvent")}
-          </button>
-        )}
-
-        {/* Danger Zone panel */}
-        {isEditing && showDangerZone && (
-          <div className={`${s.dangerZone} glass-elevated`}>
-            <div className={s.dangerZoneHeader}>
-              <FontAwesomeIcon icon={faTriangleExclamation} />
-              <h2>{t("dangerZone")}</h2>
-            </div>
-            <p className={s.dangerZoneText}>{t("deleteEventWarning")}</p>
-            <label className={s.dangerCheckboxRow}>
-              <input
-                type="checkbox"
-                checked={deleteConfirmChecked}
-                onChange={(e) => setDeleteConfirmChecked(e.target.checked)}
-                className={s.dangerCheckboxInput}
-              />
-              <span className={s.dangerCheckboxText}>{t("confirmDeleteMessage")}</span>
-            </label>
-            <div className={s.dangerActions}>
-              <button type="button" onClick={() => setShowDangerZone(false)} className={`${btn.btn} ${btn.ghost} ${btn.md} ${s.dangerActionsBtn}`}>
-                {t("cancel").toUpperCase()}
-              </button>
-              <button type="button" onClick={handleDeleteEvent} disabled={!deleteConfirmChecked} className={`${btn.btn} ${btn.dangerConfirm} ${btn.md} ${s.dangerActionsBtn}`}>
-                {t("delete").toUpperCase()}
-              </button>
-            </div>
-          </div>
-        )}
       </form>
     </div>
   );

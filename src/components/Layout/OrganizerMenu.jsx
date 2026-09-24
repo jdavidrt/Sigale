@@ -1,5 +1,5 @@
 /*
- * OrganizerMenu — slide-out navigation for the 2.0 admin surface (/admin).
+ * OrganizerMenu — slide-out navigation for the organizer surface.
  * The organizer tools (sell, ticket list, scan, dashboard, edit) live on
  * separate routes; this menu is how they are reached
  * from the purchases panel. Styled with the Astromelias tokens so it sits
@@ -17,9 +17,8 @@ import { isSuperAdmin } from '../../api/admin';
 import { EventBadge } from './EventBadge';
 
 // Destination list. Icons are Astromelias `Ic` glyph names. /admin is the
-// single organizer home — there's no longer a separate /admin/create page.
-// `superOnly` entries (Phase 2) are hidden for an event_admin — the server
-// would 403 them anyway, so there's no reason to show a dead link.
+// organizer home. `superOnly` entries are hidden for an event_admin — the
+// server would 403 them anyway, so there's no reason to show a dead link.
 const LINKS = [
   { to: '/admin', icon: 'bell', es: 'Panel de compras', en: 'Purchases panel' },
   { to: '/sell-tickets', icon: 'plus', es: 'Vender en taquilla', en: 'Sell at the door' },
@@ -50,7 +49,7 @@ export function OrganizerMenu({ onLogout }) {
   // collapses overlapping calls and skips re-selecting an already-current
   // event); it's still what fetches the list right after a fresh login,
   // since that happens after EventProvider's own bootstrap already ran.
-  // refreshOrganizerEvents throws on failure (Phase 2 fix) — the pages that
+  // refreshOrganizerEvents throws on failure — the pages that
   // need to react to that read organizerEventsError from context, so here we
   // just need to stop it from surfacing as an unhandled rejection.
   useEffect(() => {

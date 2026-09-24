@@ -107,18 +107,6 @@
   transform: scale(1.02);
 }
 
-/* Danger confirm — solid gradient red. Final irreversible action. */
-.dangerConfirm {
-  background: var(--gradient-danger);
-  border: none;
-  color: white;
-  box-shadow: var(--shadow-btn-error);
-}
-
-.dangerConfirm:hover:not(:disabled) {
-  transform: scale(1.02);
-}
-
 /* Orange — Astromelias CTA orange. Walk-in / sell actions. */
 .orange {
   background: var(--orange);
@@ -130,16 +118,4 @@
   filter: brightness(1.08);
   transform: scale(1.02);
   box-shadow: 0 14px 32px rgba(213, 88, 46, 0.45);
-}
-
-/* Ghost — transparent with subtle tint. Cancel / dismiss. */
-.ghost {
-  background: var(--color-tint-white-md);
-  border: 1px solid var(--color-border-primary-xl);
-  color: var(--color-primary);
-}
-
-.ghost:hover:not(:disabled) {
-  background: var(--color-tint-primary);
-  transform: scale(1.02);
 }

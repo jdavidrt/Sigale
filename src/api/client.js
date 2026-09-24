@@ -3,12 +3,10 @@
  * SÍGALE — API CLIENT
  * Thin fetch wrapper around the Sígale Express backend.
  * The single place that knows the base URL and the request
- * shape; EventContext / TicketContext read and write through
- * it instead of owning truth in localStorage (2.0 migration).
+ * shape; every src/api/*.js module calls through it.
  *
- * Base URL comes from VITE_API_URL (see .env / .env.example).
- * No behavior is wired into the app yet — this is the data
- * layer that later phases build on.
+ * Base URL comes from VITE_API_URL (.env.production); in dev it
+ * is blank and Vite proxies /api to production (vite.config.js).
  * ============================================================
  */
 
@@ -96,7 +94,7 @@ export const api = {
   patch: (path, body, opts) => request(path, { ...opts, method: 'PATCH', body }),
   del: (path, opts) => request(path, { ...opts, method: 'DELETE' }),
 
-  /** Backend liveness probe — used to confirm connectivity (Phase 0 exit). */
+  /** Backend liveness probe. */
   health: () => request('/api/health', { method: 'GET' }),
 };
 

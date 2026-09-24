@@ -42,7 +42,7 @@ export const TicketTableRow = ({ ticket }) => {
   const firstInputRef = useRef(null);
 
   // validationHash (and thus the QR) only exists once an order is confirmed
-  // — see docs/architecture/TICKETS_SCHEMA.md. Rows with no `status` are
+  // — see docs/architecture/DB_SCHEMA.md. Rows with no `status` are
   // locally-added tickets that never went through the server; treat those
   // as confirmed for backwards compatibility.
   const isConfirmed = ticket.status ? ticket.status === "confirmed" : true;
@@ -305,7 +305,7 @@ export const TicketTableRow = ({ ticket }) => {
             })}
           </select>
         ) : isEditing && !ticket.dbId && event?.ticketTypes ? (
-          // Local-only ticket (no server row) → legacy type picker, label only.
+          // Local-only ticket (no server row, e.g. a CSV paste) → type picker, label only.
           <select
             className={s.typeCellSelect}
             value={draft.ticketType}

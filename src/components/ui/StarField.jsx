@@ -1,6 +1,6 @@
 /*
  * StarField — the seeded night-sky layer behind every Astromelias screen.
- * Ported from docs/design2.0/lib.jsx. A deterministic PRNG (mulberry32)
+ * A deterministic PRNG (mulberry32)
  * keeps each screen's star layout stable across renders for a given seed,
  * so the sky doesn't "shimmer" on every state change.
  *

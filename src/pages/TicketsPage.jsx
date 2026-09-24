@@ -78,9 +78,8 @@ export const TicketsPage = () => {
   const { t } = useLanguage();
   const { openCustom, notify } = useDialog();
 
-  // Defaults to 'confirmed' — same set /tickets has always shown. The status
-  // filter below lets the organizer opt into seeing pending/rejected/expired
-  // orders too, which previously only ever appeared on /admin's queue.
+  // Defaults to 'confirmed'. The status filter below lets the organizer opt
+  // into seeing pending/rejected/expired orders too.
   const [statusFilter, setStatusFilter] = useState("confirmed");
 
   useEffect(() => {
@@ -117,9 +116,8 @@ export const TicketsPage = () => {
     else setSearchParams({ type: newType });
   };
 
-  // H1: a hard-coded password in a static bundle is not access control — anyone
-  // can read it with DevTools. Two-step typed-DELETE confirmation instead.
-  // Operators needing real access control should deploy behind an auth'd proxy.
+  // Two-step typed-DELETE confirmation. The real gate is server-side:
+  // DELETE /api/admin/purchases is super_admin-only.
   const handleClearAllTickets = () => {
     if (tickets.length === 0 || !event?.id) return;
     openCustom((close) => (

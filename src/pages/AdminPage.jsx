@@ -1,10 +1,9 @@
 /*
  * AdminPage — /admin (single organizer home + purchase queue)
  *
- * Previously split between /admin/create (Home) and /admin (Panel); both are
- * now merged into this single screen. Login → event-hero (name/venue/address/
- * date/stats) on top → purchase queue below. If no event exists, redirects to
- * the create-event form.
+ * Login → event hero (name/venue/address/date/stats) on top → purchase queue
+ * below. With zero events a super_admin is redirected to /create-event and an
+ * event_admin sees an empty state.
  *
  * All admin pages share the same chrome: AdminLayout (Screen + topbar +
  * OrganizerMenu sidebar — the menu shown in the design reference).
@@ -125,10 +124,9 @@ function Panel({ onLogout }) {
       </div>
     );
   } else if (!event && organizerEventsError && organizerEvents.length === 0) {
-    // Phase 2 fix: a failed GET /api/events/all used to read exactly like
-    // "this organizer has zero events" and silently redirect to
-    // /create-event. Surface the error with a retry instead — it might be a
-    // stale-creds/cold-dyno blip, and redirecting hides that from the user.
+    // A failed GET /api/events/all is not "zero events": surface the error
+    // with a retry instead of redirecting to /create-event — it might be a
+    // stale-creds/cold-dyno blip.
     body = (
       <div className="scr-body pad" style={{ ...centered, flexDirection: 'column', gap: 12, textAlign: 'center' }}>
         <p style={{ color: 'var(--red, #f87171)' }}>{t('organizerEventsLoadError')}</p>

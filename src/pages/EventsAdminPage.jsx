@@ -1,5 +1,5 @@
 /*
- * EventsAdminPage — /events-admin  (super_admin only, Phase 2)
+ * EventsAdminPage — /events-admin  (super_admin only)
  * Every event (with a "show archived" toggle), per-row published/salesOpen/
  * archived state, a link into the existing edit form, and archive/unarchive.
  * Assigning event_admins to an event happens on /organizers (an

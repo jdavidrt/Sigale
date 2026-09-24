@@ -2,8 +2,8 @@
  * Parse pasted clipboard text into name+id pairs.
  *
  * Two entry points:
- *   - `parseSingleNameAndId(text)` → one `{name, id}` for filling a single form.
- *     This is the legacy behavior previously inlined in TicketForm.handlePasteInfo.
+ *   - `parseSingleNameAndId(text)` → one `{name, id}` for filling a single form
+ *     (TicketForm's paste button).
  *   - `parseTicketRows(text)` → an array of `{name, id}` for the bulk-paste flow
  *     in the editable ticket table. Each newline becomes a candidate row.
  *
@@ -62,9 +62,8 @@ const normalizeId = (str) => str.replace(/[^\d]/g, "");
 export const parseSingleNameAndId = (text) => {
   if (!text) return { name: "", id: "" };
 
-  // The legacy splitter conflates rows with columns. For the single-pair
-  // case that was fine because we wanted "all the tokens"; we keep that
-  // behavior here for backward compatibility with the existing form button.
+  // Single-pair mode deliberately treats rows and columns alike: every token
+  // is a candidate for the one name + id the form needs.
   const lines = text.trim().split(/[\n\t]+/).map((l) => l.trim()).filter(Boolean);
   let name = "";
   let id = "";

@@ -308,7 +308,7 @@ async function handleCrossOrigin(request) {
     const response = await fetch(request);
     // Only http(s) requests are cacheable. Browser-extension and other
     // non-http schemes throw on cache.put(), so skip them silently.
-    // /api/ responses are NEVER cached (multi-event): this handler is
+    // /api/ responses are NEVER cached: this handler is
     // network-first, so a cache entry only ever serves when the live fetch
     // fails — for event/stage data that means a flaky connection could show
     // yesterday's cuposRestantes or an unpublished/deleted event, which is

@@ -1,15 +1,13 @@
 /*
  * ============================================================
- * SÍGALE 2.0 — ASTROMELIAS COMPONENT CLASSES
- * Ported from docs/design2.0/styles.css (the prototype source of truth).
- * The prototype defines its own short palette vars (--purple, --cream…);
- * here we ALIAS those names onto the app's canonical --am-* tokens
- * (tokens.css) so there is still a single source of color truth.
+ * SÍGALE — ASTROMELIAS COMPONENT CLASSES
+ * Short palette vars (--purple, --cream…) are ALIASES onto the canonical
+ * --am-* tokens (tokens.css) and are re-pointed per event by the skins in
+ * styles/skins/, so there is still a single source of color truth.
  *
- * These are additive global classes used by the new 2.0 screens
- * (landing, home, purchase flow, extended event form). Legacy screens
- * keep their CSS-Module styles untouched. The theme lives behind `.t3`
- * (set on <body> in index.html).
+ * Global classes used by the public screens, the organizer home and the
+ * event form; other organizer pages add co-located CSS Modules on top.
+ * The theme lives behind `.t3` (set on <body> in index.html).
  *
  * Import order: tokens -> global -> utilities -> astromelias.
  * ============================================================
@@ -548,9 +546,8 @@
   box-shadow: 0 0 0 6px #fbf3e6;
 }
 
-/* orden token (legacy .folio kept as alias) */
-.orden,
-.folio {
+/* orden token */
+.orden {
   font-family: var(--font-mono);
   font-size: 26px;
   font-weight: 700;
@@ -715,7 +712,6 @@
 
 /* ============================================================
    PUBLIC LANDING — flyer hero + scroll parallax
-   Ported from prototype-2.0/styles.css (wireLanding motion).
    Motion is gated behind @media (prefers-reduced-motion: no-preference).
    ============================================================ */
 
@@ -990,7 +986,7 @@
 
 /* ============================================================
    SPINNER — "Verificando pago" (step 6 / status: payment_submitted)
-   Ported from prototype-2.0/styles.css. The ring's rotation is gated
+   The ring's rotation is gated
    behind prefers-reduced-motion so it stays still when motion is reduced.
    ============================================================ */
 .spinner {

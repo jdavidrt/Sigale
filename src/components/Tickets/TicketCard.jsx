@@ -23,11 +23,11 @@ export const TicketCard = ({ ticket }) => {
   const [copyStatus, setCopyStatus] = useState("");
   const qrData = generateQRData(ticket);
   // validationHash is only ever set once an order is confirmed (see
-  // docs/architecture/TICKETS_SCHEMA.md) — pending/rejected/expired rows
+  // docs/architecture/DB_SCHEMA.md) — pending/rejected/expired rows
   // have no QR to show or share yet.
   const isConfirmed = ticket.status ? ticket.status === "confirmed" : true;
   const meta = ticket.status ? statusMeta(ticket.status) : null;
-  // M9: dropped the per-card scroll parallax — at scale it spawned N scroll
+  // Dropped the per-card scroll parallax — at scale it spawned N scroll
   // listeners that stuttered phones. The effect was decorative; we can add
   // a single shared rAF-driven version later if we miss it.
 

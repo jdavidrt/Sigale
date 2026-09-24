@@ -1,22 +1,22 @@
 /*
- * ScanPage — /scan  (public door check-in, Phase 2)
+ * ScanPage — /scan  (public door check-in)
  *
  * No organizer login required: anyone opens /scan, picks the event they're
  * working, types its shared scanKeyword, and can then scan + mark-used FOR
- * THAT EVENT ONLY. This replaces the old "device logged in once via /admin"
- * model — many people can scan the same event at once from their own phones.
+ * THAT EVENT ONLY — many people can scan the same event at once from their
+ * own phones.
  * The chosen { eventId, keyword } is remembered in sessionStorage so a
  * refresh mid-door doesn't re-ask; "Cambiar evento" clears it manually (also
  * how to recover from a mistyped keyword, surfaced as its own verdict).
  *
  * Each verdict speaks the .pill color language (green adelante / red ya
- * ingresó / grey no válida / grey sin conexión). Online-only — no manifest
- * download, no offline cache (see components/Scanner/OfflineScanner.jsx).
+ * ingresó / grey no válida / grey sin conexión). Online-only: one request
+ * per scan (see components/Scanner/DoorScanner.jsx).
  */
 import { useEffect, useState } from 'react';
 import { Screen } from '../components/ui/Screen';
 import { Ic } from '../components/ui/Ic';
-import { OfflineScanner } from '../components/Scanner/OfflineScanner';
+import { DoorScanner } from '../components/Scanner/DoorScanner';
 import { scanAndAdmit, listScanEvents } from '../api/scan';
 import { useLanguage } from '../context/LanguageContext';
 import { parseLocalDate } from '../utils/timeFormat';
@@ -93,7 +93,7 @@ export function ScanPage() {
         style={{ zIndex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14 }}
       >
         {scope ? (
-          <OfflineScanner validate={validate} />
+          <DoorScanner validate={validate} />
         ) : (
           <EventKeywordForm onSubmit={selectScope} />
         )}

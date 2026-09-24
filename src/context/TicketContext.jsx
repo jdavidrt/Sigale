@@ -38,12 +38,12 @@ export const fromServerTicket = (row) => {
     folio: String(row.orderId),
     deliveryMethod: row.deliveryMethod,
     deliveryContact: row.deliveryContact,
-    // Buyer's chosen act (Phase 2, migration 011) — null for legacy rows and
-    // for events with no line-up. Order-invariant, same on every seat of one
+    // Buyer's chosen act — null for orders placed before the column existed
+    // and for events with no line-up. Order-invariant, same on every seat of one
     // orderId (see resolvePreferredArtist in purchases.controllers.js).
     preferredArtist: row.preferredArtist || null,
     // Order lifecycle status. Only 'confirmed' rows have a validationHash
-    // (and thus a scannable QR) — see docs/architecture/TICKETS_SCHEMA.md.
+    // (and thus a scannable QR) — see docs/architecture/DB_SCHEMA.md.
     status: row.status,
   };
 };
@@ -56,14 +56,14 @@ export const useTickets = () => {
   return context;
 };
 
-// H6: identify duplicate rows on CSV re-import by hashing the natural key.
+// Identify duplicate rows on CSV re-import by hashing the natural key.
 // We do NOT include purchaseDate in the dedupe key — that field is assigned
 // at import time, so a second upload of the same export would always see a
 // different date and skip nothing.
 const dedupeKey = (t) =>
   `${(t.buyerId || "").trim()}|${(t.buyerName || "").trim().toLowerCase()}|${(t.ticketType || "").trim()}`;
 
-// H3: pure, pullable-out-of-the-provider stats computation. Kept as a module
+// Pure, pullable-out-of-the-provider stats computation. Kept as a module
 // function so the useMemo dep list in the provider is straightforward.
 const computeStats = (tickets, event) => {
   const stats = {
@@ -252,13 +252,13 @@ export const TicketProvider = ({ children }) => {
     setData({ ...fresh, tickets: updatedTickets });
   }, [data, setData]);
 
-  // H3: memoize stats so every card re-render doesn't re-iterate the array.
+  // Memoize stats so every card re-render doesn't re-iterate the array.
   const stats = useMemo(
     () => computeStats(data.tickets ?? [], data.event),
     [data.tickets, data.event]
   );
   // Stats are computed against an event's ticketTypes price map. EventContext
-  // keeps the active event in memory only (never localStorage, per 2.0), so
+  // keeps the active event in memory only (never localStorage), so
   // data.event is null here — callers must pass the live event from
   // useEvent() to get non-zero sold/revenue figures. No-arg keeps the old
   // behavior for tests.
@@ -281,9 +281,8 @@ export const TicketProvider = ({ children }) => {
     setData({ ...fresh, tickets: [] });
   }, [data, setData]);
 
-  // M7: device-handoff wipe — clears event AND tickets in one shot so the
-  // next operator doesn't see stale data. Called by an explicit "Reset this
-  // device" button, not by createEvent (which may be in-progress).
+  // Local wipe of the cached event AND tickets. No UI calls it today; it is
+  // part of the context's tested public API (tests/TicketContext.test.jsx).
   const clearAllData = useCallback(() => {
     setData({ event: null, tickets: [] });
   }, [setData]);
@@ -293,7 +292,7 @@ export const TicketProvider = ({ children }) => {
     const newTickets = [];
 
     const fresh = loadFromStorage() || data;
-    // H6: pre-seed with existing keys so the new batch is deduped against
+    // Pre-seed with existing keys so the new batch is deduped against
     // both (a) tickets already in storage and (b) other rows in the same import.
     const seenKeys = new Set(fresh.tickets.map(dedupeKey));
 
@@ -330,7 +329,7 @@ export const TicketProvider = ({ children }) => {
     return results;
   }, [data, setData]);
 
-  // H2: memoize the context value so consumers don't re-render on every
+  // Memoize the context value so consumers don't re-render on every
   // provider render with a fresh object identity.
   const value = useMemo(
     () => ({

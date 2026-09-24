@@ -1,7 +1,7 @@
 /*
  * Screen — the Astromelias full-screen shell: a `.scr` night field with the
- * seeded StarField and the CSS aura (.scr::after). Ported from lib.jsx.
- * Public 2.0 screens (landing, flow, status) render inside one of these.
+ * seeded StarField and the CSS aura (.scr::after). Public screens and the
+ * organizer chrome render inside one of these.
  */
 import { StarField } from './StarField';
 

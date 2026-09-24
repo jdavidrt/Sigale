@@ -1,6 +1,6 @@
 const STORAGE_KEY = "sigale-event-data";
 
-// M4: bump this when the persisted schema changes in a way that needs
+// Bump this when the persisted schema changes in a way that needs
 // migration. Migrations live in SCHEMA_MIGRATIONS below — keyed by the
 // version they UPGRADE FROM. Today no migrations exist because we're just
 // introducing the version field, but the scaffold is in place for future
@@ -36,7 +36,7 @@ const migrate = (raw) => {
 // silently-failed write leaves the UI out of sync with disk.
 export const saveToStorage = (data) => {
   try {
-    // M4: always stamp the current schema version on write, so any read
+    // Always stamp the current schema version on write, so any read
     // can confidently skip the migration loop.
     const stamped = { ...data, schemaVersion: CURRENT_SCHEMA_VERSION };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stamped));

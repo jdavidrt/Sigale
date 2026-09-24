@@ -14,7 +14,6 @@ export const translations = {
     processing: "Procesando…",
     error: "Error",
     success: "Éxito",
-    optional: "Opcional",
 
     // Event Creation
     createNewEvent: "Crear Nuevo Evento",
@@ -31,7 +30,7 @@ export const translations = {
     ticketTypes: "Tipos de Boletas",
     price: "Precio",
     removeType: "Eliminar",
-    // 2.0 — extended event form
+    // Event form — extended fields
     additionalDetails: "Detalles Adicionales",
     description: "Descripción",
     descriptionPlaceholder: "Una noche de astromelias y buena música…",
@@ -58,7 +57,6 @@ export const translations = {
     pasteNameAndId: "Pegar Nombre y Cédula",
     buyerName: "Nombre",
     idNumber: "ID",
-    phoneNumber: "Número de Teléfono",
     ticketType: "Tipo de Boleta",
     selectTicketType: "Seleccione un tipo de boleta",
     createTicket: "Crear Boleta",
@@ -72,10 +70,6 @@ export const translations = {
     ticketWord: "Boleta",
     createAnother: "Crear Otra Boleta",
     copiedToClipboard: "Copiado al portapapeles",
-
-    // QR Scanner
-
-    // Validation Results
 
     // Ticket List
     allTickets: "Todas las Boletas",
@@ -91,7 +85,7 @@ export const translations = {
     noEventDesc: "Cree un evento para comenzar a vender boletas",
     editEvent: "Editar Evento",
 
-    // Dashboard (placeholder for Stage 3)
+    // Dashboard
     salesDashboard: "Panel de Ventas",
     checkInDashboard: "Panel de Registro",
     totalSold: "Total Vendidas",
@@ -116,13 +110,8 @@ export const translations = {
     atLeastOneTicketType: "Por favor agregue al menos un tipo de boleta",
     mustHaveOneTicketType: "Debe tener al menos un tipo de boleta",
 
-    // Delete Event
-    dangerZone: "Zona de Peligro",
-    deleteEvent: "Eliminar Evento",
-    deleteEventWarning: "Esta acción es IRREVERSIBLE. Se eliminarán permanentemente todos los datos del evento y todas las boletas vendidas.",
+    // Slide-to-confirm (reject an order)
     slideToDelete: "Desliza para eliminar",
-    confirmDeleteMessage: "Estás a punto de eliminar el evento y todas sus boletas. Esta acción NO se puede deshacer.",
-    eventDeleted: "Evento eliminado exitosamente",
 
     // CSV Import/Export
     csvExport: "Exportar CSV",
@@ -160,7 +149,6 @@ export const translations = {
 
     // Dialogs / table edit confirm
     confirm: "Confirmar",
-    yes: "Sí",
     no: "No",
     rowEditStart: "Editar fila",
     rowEditCommit: "Confirmar cambios",
@@ -187,22 +175,21 @@ export const translations = {
     failedToCreateToast: "No se pudo crear la boleta",
     ticketUpdatedFromForm: "Boleta actualizada exitosamente",
 
-    // H5 — check-in window warnings (soft, confirm-to-proceed)
+    // Check-in window warnings (soft, confirm-to-proceed)
 
     allTicketTypesMustHavePrice: "Todos los tipos de boleta deben tener un precio válido (0 o positivo).",
     type: "Tipo",
     newType: "Nuevo Tipo...",
 
-    // N2 — Ticket Form success state + update mode
+    // Ticket Form success state + update mode
     updateTicket: "Actualizar Boleta",
     readyToGo: "¡Lista!",
     ticketGenerated: "La boleta ha sido generada.",
     detailType: "TIPO",
     detailPrice: "PRECIO",
     detailId: "ID",
-    detailPhone: "TEL",
 
-    // N3 — Ticket Card toasts
+    // Ticket Card toasts
     copyFailed: "Error al copiar",
     shareNotSupported: "Compartir no disponible",
 
@@ -248,7 +235,6 @@ export const translations = {
     doorListName: "Nombre",
     doorListId: "Cédula",
     doorListOrder: "Orden",
-    doorListType: "Tipo",
     doorListNoPaid: "Aún no hay asistentes que hayan pagado.",
     doorListNoGuests: "Aún no hay artistas, invitados ni crew registrados.",
     guestPassAdded: "Acceso registrado",
@@ -271,8 +257,6 @@ export const translations = {
     filterRejected: "Rechazadas",
     paymentsToReview: "{n} pago(s) por revisar",
     confirmPayment: "Confirmar pago",
-    ticketsIssued: "Boletas emitidas",
-    noActionsAvailable: "Sin acciones disponibles",
     confirmPurchaseTitle: "¿Confirmar pago?",
     confirmPurchaseMsg: "Se confirma el pago y se emitirán las boletas.",
     rejectPurchaseTitle: "¿Eliminar esta orden?",
@@ -284,15 +268,12 @@ export const translations = {
     online: "En línea",
     offline: "Sin conexión",
 
-    // Multi-event (2.0) — root landing, demo mode, event selector, event form slug/toggles
+    // Events grid, demo mode, event form slug/toggles
     eventsListTitle: "Eventos",
     eventsListEmpty: "Por el momento no hay eventos publicados. ¡Vuelve pronto!",
     demoPillLabel: "Demo",
-    demoModeBanner: "Modo demostración — esta compra es simulada",
     demoConfirmWhatsApp: "Enviar confirmación por WhatsApp",
     demoConfirmMessage: "¡Hola! Recorrí la demo de Sígale y me gustaría ver una boleta de muestra. Mi número de orden demo es #{orderId}.",
-    eventSelectorLabel: "Evento",
-    noEventsForSelector: "Sin eventos todavía",
     switchEvent: "Cambiar de evento",
     currentEvent: "Evento actual",
     eventSlugLabel: "URL del evento",
@@ -306,7 +287,7 @@ export const translations = {
     demoReadOnlyTitle: "Modo demostración",
     demoReadOnlyDesc: "El evento de demostración es de solo lectura. Selecciona otro evento para vender boletas.",
 
-    // Phase 2 — roles, archive, public scanner, preferred artist
+    // Roles, archive, public scanner, preferred artist
     preferredArtist: "Artista preferido",
     selectArtist: "Selecciona un artista",
     artistRequired: "Selecciona el artista que prefieres ver",
@@ -352,7 +333,6 @@ export const translations = {
     processing: "Processing…",
     error: "Error",
     success: "Success",
-    optional: "Optional",
 
     // Event Creation
     createNewEvent: "Create New Event",
@@ -369,7 +349,7 @@ export const translations = {
     ticketTypes: "Ticket Types",
     price: "Price",
     removeType: "Remove",
-    // 2.0 — extended event form
+    // Event form — extended fields
     additionalDetails: "Additional Details",
     description: "Description",
     descriptionPlaceholder: "A night of astromelias and good music…",
@@ -396,7 +376,6 @@ export const translations = {
     pasteNameAndId: "Paste Name & ID",
     buyerName: "Buyer Name",
     idNumber: "ID Number",
-    phoneNumber: "Phone Number",
     ticketType: "Ticket Type",
     selectTicketType: "Select a ticket type",
     createTicket: "Create Ticket",
@@ -410,10 +389,6 @@ export const translations = {
     ticketWord: "Ticket",
     createAnother: "Create Another Ticket",
     copiedToClipboard: "Copied to clipboard",
-
-    // QR Scanner
-
-    // Validation Results
 
     // Ticket List
     allTickets: "All Tickets",
@@ -429,7 +404,7 @@ export const translations = {
     noEventDesc: "Create an event to start selling tickets",
     editEvent: "Edit Event",
 
-    // Dashboard (placeholder for Stage 3)
+    // Dashboard
     salesDashboard: "Sales Dashboard",
     checkInDashboard: "Check-In Dashboard",
     totalSold: "Total Sold",
@@ -454,13 +429,8 @@ export const translations = {
     atLeastOneTicketType: "Please add at least one ticket type",
     mustHaveOneTicketType: "You must have at least one ticket type",
 
-    // Delete Event
-    dangerZone: "Danger Zone",
-    deleteEvent: "Delete Event",
-    deleteEventWarning: "This action is IRREVERSIBLE. All event data and sold tickets will be permanently deleted.",
+    // Slide-to-confirm (reject an order)
     slideToDelete: "Slide to delete",
-    confirmDeleteMessage: "You are about to delete the event and all its tickets. This action CANNOT be undone.",
-    eventDeleted: "Event deleted successfully",
 
     // CSV Import/Export
     csvExport: "Export CSV",
@@ -498,7 +468,6 @@ export const translations = {
 
     // Dialogs / table edit confirm
     confirm: "Confirm",
-    yes: "Yes",
     no: "No",
     rowEditStart: "Edit row",
     rowEditCommit: "Confirm changes",
@@ -525,22 +494,21 @@ export const translations = {
     failedToCreateToast: "Could not create ticket",
     ticketUpdatedFromForm: "Ticket updated successfully",
 
-    // H5 — check-in window warnings (soft, confirm-to-proceed)
+    // Check-in window warnings (soft, confirm-to-proceed)
 
     allTicketTypesMustHavePrice: "All ticket types must have a valid price (0 or positive).",
     type: "Type",
     newType: "New Type...",
 
-    // N2 — Ticket Form success state + update mode
+    // Ticket Form success state + update mode
     updateTicket: "Update Ticket",
     readyToGo: "Ready to Go!",
     ticketGenerated: "Ticket has been generated.",
     detailType: "TYPE",
     detailPrice: "PRICE",
     detailId: "ID",
-    detailPhone: "PHONE",
 
-    // N3 — Ticket Card toasts
+    // Ticket Card toasts
     copyFailed: "Failed to copy",
     shareNotSupported: "Share not supported",
 
@@ -586,7 +554,6 @@ export const translations = {
     doorListName: "Name",
     doorListId: "ID",
     doorListOrder: "Order",
-    doorListType: "Type",
     doorListNoPaid: "No paid attendees yet.",
     doorListNoGuests: "No artists, guests or crew registered yet.",
     guestPassAdded: "Pass added",
@@ -609,8 +576,6 @@ export const translations = {
     filterRejected: "Rejected",
     paymentsToReview: "{n} payment(s) to review",
     confirmPayment: "Confirm payment",
-    ticketsIssued: "Tickets issued",
-    noActionsAvailable: "No actions available",
     confirmPurchaseTitle: "Confirm payment?",
     confirmPurchaseMsg: "The payment will be confirmed and tickets will be issued.",
     rejectPurchaseTitle: "Delete this order?",
@@ -622,15 +587,12 @@ export const translations = {
     online: "Online",
     offline: "Offline",
 
-    // Multi-event (2.0) — root landing, demo mode, event selector, event form slug/toggles
+    // Events grid, demo mode, event form slug/toggles
     eventsListTitle: "Events",
     eventsListEmpty: "No events are published yet. Check back soon!",
     demoPillLabel: "Demo",
-    demoModeBanner: "Demo mode — this purchase is simulated",
     demoConfirmWhatsApp: "Send confirmation on WhatsApp",
     demoConfirmMessage: "Hi! I just walked through the Sígale demo and would like to see a sample ticket. My demo order number is #{orderId}.",
-    eventSelectorLabel: "Event",
-    noEventsForSelector: "No events yet",
     switchEvent: "Switch event",
     currentEvent: "Current event",
     eventSlugLabel: "Event URL",
@@ -644,7 +606,7 @@ export const translations = {
     demoReadOnlyTitle: "Demo mode",
     demoReadOnlyDesc: "The demo event is read-only. Select another event to sell tickets.",
 
-    // Phase 2 — roles, archive, public scanner, preferred artist
+    // Roles, archive, public scanner, preferred artist
     preferredArtist: "Preferred artist",
     selectArtist: "Select an artist",
     artistRequired: "Select the artist you'd like to see",

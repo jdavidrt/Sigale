@@ -2,19 +2,15 @@
  * ============================================================
  * SÍGALE — SCAN API (online door check-in)
  * The door scanner validates every QR directly against the live
- * `tickets` table via the server: one request per scan, which both
- * checks the ticket and marks entry. No manifest, no IndexedDB, no
- * offline cache — online-only by design.
+ * `tickets` table: one request per scan, which both checks the
+ * ticket and marks entry. No login — the scope is an event plus
+ * that event's shared keyword.
  *
- *   POST /api/admin/scan  { hash }  -> markUsed(hash) on the server (organizer
- *     credentials, API-only — no UI calls this anymore):
- *     - ok           : first admit, usedAt stamped
- *     - already_used : ticket was already scanned in
- *     - invalid      : hash not found on a confirmed ticket (404)
- *
- *   Phase 2 public scanner — no organizer login:
- *   GET  /api/scan/events              -> events open to public scan
- *   POST /api/scan { eventId, keyword, hash } -> same verdicts, plus:
+ *   GET  /api/scan/events                     -> events open to public scan
+ *   POST /api/scan { eventId, keyword, hash } -> verdict:
+ *     - ok            : first admit, usedAt stamped
+ *     - already_used  : ticket was already scanned in
+ *     - invalid       : 404, hash not found on a confirmed ticket
  *     - wrong_keyword : 403, incorrect shared door code
  *     - wrong_event   : 409, the hash belongs to a different event
  * ============================================================

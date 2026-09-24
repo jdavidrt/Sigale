@@ -1,5 +1,5 @@
 /*
- * OrganizersAdminPage — /organizers  (super_admin only, Phase 2)
+ * OrganizersAdminPage — /organizers  (super_admin only)
  * List every organizer account, create one, change role/active state, reset
  * a password, and edit which events an account is assigned to.
  */
