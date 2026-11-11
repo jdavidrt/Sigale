@@ -73,9 +73,9 @@
    BESPOKE LAYOUT — ROCK EN VIVO only
    These selectors only ever match inside .skin-rock, so they have zero
    effect on any other event. The elements they target (.rock-stagelist,
-   .lhero-date, .rock-artist, .skin-rock-card) are rendered conditionally
-   in LandingPage.jsx / EventsListPage.jsx only when the event's slug is
-   'rock-en-vivo' — see useEventSkin.js's EVENT_SKINS map.
+   .lhero-date, .rock-artist) are rendered conditionally in LandingPage.jsx
+   only when the event's slug is 'rock-en-vivo' — see useEventSkin.js's
+   EVENT_SKINS map.
    ============================================================ */
 
 /* ── Stage list — flyer's "1era Etapa ———— ($30K)" price-pill rows ── */
@@ -190,16 +190,4 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-}
-
-/* ── / events grid — gold frame on this event's own card only ──
-   The grid at / always renders under body's default .skin-astromelias
-   (it lists every published event at once, so it can't swap skins per
-   card) — this rule is scoped there on purpose, using the raw --am-yellow
-   canonical token rather than the skin-aliased --yellow, since this
-   card's gold identity is fixed to this one event, not to whichever body
-   skin happens to be active. */
-.skin-astromelias .rock-card {
-  border-color: var(--am-yellow);
-  box-shadow: 0 0 0 1px rgba(231, 174, 63, 0.35), 0 8px 24px rgba(0, 0, 0, 0.35);
 }

@@ -78,6 +78,14 @@
   );
 }
 
+/* Bodoni Moda's optical-size axis thins the hairlines as text grows, which
+   gets hard to read on the dark field — pin it to the sturdier text cut and
+   use a heavier weight for every title / price / line-up name. */
+.skin-astromelias2 .serif {
+  font-weight: 600;
+  font-variation-settings: 'opsz' 11;
+}
+
 /* Line-up — Bodoni caps, each act in a different flyer color (ice, cherub
    orange, jellyfish cyan, hydrangea sage, rose blush) with a soft metallic
    sheen. -webkit-text-fill-color is never set inline, so it overrides
@@ -90,7 +98,6 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   text-transform: uppercase;
-  font-weight: 500;
   letter-spacing: 0.06em;
   /* background-clip:text only paints inside the box — room for accents (LÍBIDO) */
   padding-top: 0.15em;
@@ -111,4 +118,16 @@
 }
 .skin-astromelias2 .flow-wrap > .pad:first-child span.serif {
   font-style: italic;
+}
+
+/* ── /eventos grid — blue glow on this event's own card only ──
+   The grid renders under the default .skin-astromelias (it lists every
+   event at once, so it can't swap skins per card), hence the scope and
+   this event's raw jellyfish-cyan values. */
+.skin-astromelias .am2-card {
+  border-color: #4FC3D9;
+  box-shadow:
+    0 0 0 1px rgba(79, 195, 217, 0.45),
+    0 0 22px rgba(79, 195, 217, 0.45),
+    0 8px 24px rgba(0, 0, 0, 0.35);
 }

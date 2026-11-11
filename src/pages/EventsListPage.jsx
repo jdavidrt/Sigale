@@ -1,5 +1,5 @@
 /*
- * EventsListPage — /  (public root landing)
+ * EventsListPage — /eventos  (public grid; '/' redirects to the home event)
  * Shows every published event as a card grid; tapping one goes to its own /:slug.
  * Mobile-first single column, grid at wider breakpoints (module CSS).
  */
@@ -58,7 +58,7 @@ export function EventsListPage() {
               <Link
                 key={event.id}
                 to={`/${event.slug}`}
-                className={`card ${s.card}${event.slug === 'rock-en-vivo' ? ' rock-card' : ''}`}
+                className={`card ${s.card}${event.slug === 'astromelias2' ? ' am2-card' : ''}`}
               >
                 <div className={s.flyerWrap}>
                   {event.flyerImageUrl ? (

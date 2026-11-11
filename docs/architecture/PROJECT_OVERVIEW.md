@@ -54,8 +54,9 @@ to `/`.
 
 | Path | Page | Access |
 |---|---|---|
-| `/` | `EventsListPage` — grid of published, non-archived events | public |
-| `/:slug` | `LandingPage` — unpublished events still reachable (soft launch); 404 → `/` | public |
+| `/` | redirects to `/astromelias2` (the home event, hardcoded in `App.jsx`) | public |
+| `/eventos` | `EventsListPage` — grid of published, non-archived events | public |
+| `/:slug` | `LandingPage` — unpublished events still reachable (soft launch); 404 → `/eventos` | public |
 | `/:slug/compra` | `PurchaseFlowPage` — resolves its own event (deep-link safe) | public |
 | `/scan` | `ScanPage` — pick event + type its `scanKeyword` (kept in `sessionStorage`), then scan | public |
 | `/admin` | `AdminPage` — login, event hero, purchase queue (confirm / reject / share) | login |

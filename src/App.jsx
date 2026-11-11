@@ -80,8 +80,11 @@ function AppContent() {
             <DialogProvider>
               <Suspense fallback={<div className="route-fallback">Loading…</div>}>
                 <Routes>
-                  {/* Root landing — public grid of every published event. */}
-                  <Route path="/" element={<EventsListPage />} />
+                  {/* The site's home is Festival Astromelias 2's landing;
+                      the public grid of every published event lives at
+                      /eventos ('eventos' is in RESERVED_SLUGS). */}
+                  <Route path="/" element={<Navigate to="/astromelias2" replace />} />
+                  <Route path="/eventos" element={<EventsListPage />} />
 
                   {/* /admin is the organizer home (login + event hero +
                       purchase queue); it paints its own chrome. */}

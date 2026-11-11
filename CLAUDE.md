@@ -1,6 +1,6 @@
 # Sígale — Claude Agent Guide
 
-React 19 + Vite PWA (mobile-first, plain CSS, ES/EN) with an Express + MySQL backend. Buyers reserve online and send payment proof over WhatsApp; organizers confirm payments (minting per-seat QR hashes), deliver tickets by WhatsApp/email, and scan QRs at the door. Multi-event: each event has a `slug`, `/` lists published events, `salesOpen` is per event, and the organizer panel is scoped by the `EventBadge` switcher. Purchases never auto-deliver — the 6-step wizard at `/:slug/compra` ends on a terminal success screen; there is no status page.
+React 19 + Vite PWA (mobile-first, plain CSS, ES/EN) with an Express + MySQL backend. Buyers reserve online and send payment proof over WhatsApp; organizers confirm payments (minting per-seat QR hashes), deliver tickets by WhatsApp/email, and scan QRs at the door. Multi-event: each event has a `slug`, `/` redirects to the home event (`/astromelias2`, set in `App.jsx`), `/eventos` lists published events, `salesOpen` is per event, and the organizer panel is scoped by the `EventBadge` switcher. Purchases never auto-deliver — the 6-step wizard at `/:slug/compra` ends on a terminal success screen; there is no status page.
 
 Docs: `docs/architecture/PROJECT_OVERVIEW.md` (routes, API, frontend) · `docs/architecture/DB_SCHEMA.md` (schema, invariants, migrations) · `server/README.md` (env, deploy, local) · `docs/guides/css-architecture-guide.md` (styling, skins).
 

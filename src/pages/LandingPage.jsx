@@ -61,12 +61,13 @@ export function LandingPage() {
 
   // Fresh fetch by slug every time the user lands here so they never see a
   // stale stage or accidentally try to buy a sold-out ticket. A slug that
-  // doesn't resolve (404) bounces back to the root landing grid rather than
-  // stranding the visitor on a dead URL.
+  // doesn't resolve (404) bounces to the /eventos grid rather than stranding
+  // the visitor on a dead URL — not to '/', which redirects back to an event
+  // landing and would loop if that event ever stops resolving.
   useEffect(() => {
     let cancelled = false;
     loadEventBySlug(slug).then((e) => {
-      if (!cancelled && !e) navigate('/', { replace: true });
+      if (!cancelled && !e) navigate('/eventos', { replace: true });
     });
     return () => {
       cancelled = true;

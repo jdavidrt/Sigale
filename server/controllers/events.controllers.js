@@ -197,7 +197,7 @@ const RESERVED_SLUGS = new Set([
   'admin', 'scan', 'tickets', 'dashboard', 'edit', 'create-event',
   'sell-tickets', 'guest-passes', 'lista-puerta', 'events-admin',
   'organizers', 'api', 'assets', 'sw.js', 'manifest.json', 'robots.txt',
-  'favicon.ico',
+  'favicon.ico', 'eventos',
 ]);
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 

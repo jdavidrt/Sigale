@@ -286,7 +286,7 @@ export function PurchaseFlow() {
           <div className="charly" style={{ width: 64, height: 64, fontSize: 28 }}>✦</div>
           <div className="serif" style={{ fontSize: 22 }}>Aún no hay boletas disponibles</div>
           <p className="muted" style={{ maxWidth: 280 }}>No hay un evento publicado todavía. Vuelve más tarde.</p>
-          <button className="btn ghost sm" onClick={() => navigate('/')}>Volver al inicio</button>
+          <button className="btn ghost sm" onClick={() => navigate(`/${slug}`)}>Volver al inicio</button>
         </div>
       </Screen>
     );
@@ -302,7 +302,7 @@ export function PurchaseFlow() {
           <p className="muted" style={{ maxWidth: 280 }}>
             La venta en línea está cerrada. Las entradas se adquieren únicamente en la puerta del evento.
           </p>
-          <button className="btn ghost sm" onClick={() => navigate('/')}>Volver al inicio</button>
+          <button className="btn ghost sm" onClick={() => navigate(`/${slug}`)}>Volver al inicio</button>
         </div>
       </Screen>
     );
@@ -314,7 +314,7 @@ export function PurchaseFlow() {
           <div className="charly" style={{ width: 64, height: 64, fontSize: 28 }}>✦</div>
           <div className="serif" style={{ fontSize: 22 }}>Aún no hay boletas disponibles</div>
           <p className="muted" style={{ maxWidth: 280 }}>Ninguna etapa está activa en este momento. Vuelve más tarde.</p>
-          <button className="btn ghost sm" onClick={() => navigate('/')}>Volver al inicio</button>
+          <button className="btn ghost sm" onClick={() => navigate(`/${slug}`)}>Volver al inicio</button>
         </div>
       </Screen>
     );
@@ -630,9 +630,9 @@ function Step6({ orderId, stage, qty, total, delivery, navigate, isDemo, event, 
 
   const methodLabel = delivery.method === 'email' ? 'correo' : 'WhatsApp';
 
-  // navigate('/', { replace: true }) so the back button on the landing won't
-  // pop the wizard back onto the stack — Ir a pagar really is final.
-  const goHome = () => navigate('/', { replace: true });
+  // Back to this event's own landing, with replace so the back button there
+  // won't pop the wizard back onto the stack — Ir a pagar really is final.
+  const goHome = () => navigate(`/${event.slug}`, { replace: true });
 
   // Demo-only: hands the visitor off to the organizer on WhatsApp so they can
   // reply with the real seeded "Invitado Demo" QR from /tickets — the demo's
