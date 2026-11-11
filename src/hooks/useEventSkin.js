@@ -19,6 +19,7 @@ const DEFAULT_SKIN = 'skin-astromelias';
 // (imported in App.jsx) to give another event its own look.
 const EVENT_SKINS = {
   'rock-en-vivo': 'skin-rock',
+  'astromelias2': 'skin-astromelias2',
 };
 
 // Per-skin decorative constants that live in JS, not CSS, because they feed
@@ -26,6 +27,7 @@ const EVENT_SKINS = {
 // rules. Keyed by the same skin class as EVENT_SKINS above.
 const SKIN_STAR_DECOR = {
   'skin-rock': { starColor: '#F0D69C', starGlowRgb: '240,214,156' }, // gold dust, not white stars
+  'skin-astromelias2': { starColor: '#CAE0E6', starGlowRgb: '113,175,191' }, // ice-cyan, like the flyer title
 };
 
 /** Resolves the `.skin-*` body class for a slug (same lookup useEventSkin uses). */

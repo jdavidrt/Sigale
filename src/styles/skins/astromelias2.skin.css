@@ -1,0 +1,84 @@
+/*
+ * ============================================================
+ * SKIN — astromelias2 (Festival Astromelias Vol. 2, /astromelias2)
+ * ============================================================
+ * Fulfills the token contract documented at the top of
+ * astromelias.skin.css. Palette sampled from the Vol. 2 flyer: warm grainy
+ * charcoal field, ice-cyan title gradient, jellyfish teal, cherub orange,
+ * pale-ice frame. Applied via `.skin-astromelias2` on <body> (set by
+ * useEventSkin) for the /astromelias2 landing + its /compra wizard.
+ * ============================================================
+ */
+.skin-astromelias2 {
+  /* ── Palette — charcoal + ice cyan + jellyfish teal + cherub orange ── */
+  --black: #1E191A;                          /* flyer field */
+  --black-2: #262121;
+  --black-3: #2F2525;
+  --cream: #F1F6F7;                          /* ice white — primary text */
+  --cream-dim: rgba(241, 246, 247, 0.62);
+  --cream-faint: rgba(241, 246, 247, 0.34);
+  --yellow: #9AD3E0;                         /* ice cyan — prices / highlights */
+  --lilac: #CAE0E6;                          /* pale ice — labels / icons */
+  --lilac-deep: #71AFBF;
+  --purple: #17788B;                         /* jellyfish teal (tile.purple → "etapa activa") */
+  --purple-2: #4B9BB0;
+  --purple-deep: #0E3640;
+  --orange: #CC5D27;                         /* cherub / crab-claw orange — CTA */
+  --orange-soft: #EE9542;
+  /* Status colors stay semantic — same values as every other skin. */
+  --green: var(--am-green);
+  --red: var(--am-red);
+  --blue: var(--am-blue);
+  --frame: rgba(209, 232, 238, 0.42);        /* the flyer's pale-ice border */
+  --hair: rgba(241, 246, 247, 0.13);
+  --hair-2: rgba(241, 246, 247, 0.08);
+
+  /* Channel triplets + darker gradient stops (see astromelias.skin.css). */
+  --yellow-rgb: 154, 211, 224;
+  --orange-rgb: 204, 93, 39;
+  --lilac-rgb: 202, 224, 230;
+  --orange-deep: #8F3F1C;
+  --yellow-deep: #4B9BB0;
+  /* .scr::after ambient glow — jellyfish teal below, cherub warmth above */
+  --aura-1-rgb: 24, 139, 163;
+  --aura-2-rgb: 224, 126, 50;
+
+  /* ── Direction theme ── */
+  --title-font: 'DM Serif Display', serif;
+  --title-weight: 400;
+  --title-track: 0px;
+  --card-bg: var(--black-2);
+  --card-border: var(--hair);
+  --card-blur: 0px;
+  --accent: var(--orange);
+  --num-color: var(--yellow);
+  --price-color: var(--yellow);
+  --cta-bg: var(--orange);
+  --cta-text: #fff;
+  --cta-shadow: 0 10px 26px rgba(204, 93, 39, 0.42);
+  --badge-bg: var(--orange);
+  --badge-fg: #fff;
+}
+
+/* Sticky collapsed header: astromelias.css fades to the default near-black
+   (rgba(9,6,10,…)), which would leave a dark band over this lighter
+   charcoal field — fade to this skin's --black instead. */
+.skin-astromelias2 .lhead-grad {
+  background: linear-gradient(
+    180deg,
+    rgba(30, 25, 26, 0.35) 0%,
+    rgba(30, 25, 26, 0.55) 55%,
+    rgba(30, 25, 26, 0.96) 100%
+  );
+}
+
+/* Line-up in the flyer title's ice gradient. -webkit-text-fill-color is
+   never set inline, so it overrides LandingPage's inline ARTIST_COLORS
+   color without any JSX change. */
+.skin-astromelias2 .actbig {
+  background: linear-gradient(180deg, #F6F9FA 0%, #CAE0E6 55%, #71AFBF 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+}

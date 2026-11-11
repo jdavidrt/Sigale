@@ -108,7 +108,8 @@ src/
   flyer embedded as a data URL, QR, holder, price); `qrCopy` copies or shares
   it as SVG/PNG. Guest passes use the same template without a QR.
 - **Skins.** `useEventSkin(slug)` swaps a `.skin-*` class on `<body>`
-  (`rock-en-vivo` → `skin-rock`, everything else → `skin-astromelias`). See
+  (`rock-en-vivo` → `skin-rock`, `astromelias2` → `skin-astromelias2`,
+  everything else → `skin-astromelias`). See
   [`../guides/css-architecture-guide.md`](../guides/css-architecture-guide.md).
 - **PWA.** `public/sw.js` never caches `/api/` responses and always resolves
   navigation to a valid `index.html`. Scanning is online-only; IndexedDB is

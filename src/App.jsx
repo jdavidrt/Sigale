@@ -13,6 +13,7 @@ import "./styles/utilities.css";
 import "./styles/astromelias.css";
 import "./styles/skins/astromelias.skin.css";
 import "./styles/skins/rock.skin.css";
+import "./styles/skins/astromelias2.skin.css";
 import { LanguageProvider } from "./context/LanguageContext";
 import { EventProvider } from "./context/EventContext";
 import { TicketProvider } from "./context/TicketContext";
